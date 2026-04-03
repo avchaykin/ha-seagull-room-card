@@ -2,16 +2,44 @@
 
 Home Assistant custom card: `seagull-room-card`.
 
-## Install
+---
 
-Resource (recommended):
+## Installation
+
+### 1) Put files into HA `/www`
+
+Copy to Home Assistant:
+
+- `/config/www/seagull-room-card.js`
+- `/config/www/seagull-room-card-loader.js`
+
+### 2) Add Lovelace resource (recommended loader)
+
 - URL: `/local/seagull-room-card-loader.js`
 - Type: `JavaScript Module`
 
-## Card config (short)
+Loader adds cache-busting automatically, so after deploy you usually only need page refresh.
+
+---
+
+## Minimal config
 
 ```yaml
 type: custom:seagull-room-card
+buttons:
+  entities:
+    - entity: light.living_room
+```
+
+---
+
+## Full example
+
+```yaml
+type: custom:seagull-room-card
+
+# card
+entity: light.living_room
 background_color: "#eeeeee"
 background_opacity: 0.45
 border_radius: 16
@@ -20,20 +48,24 @@ border_color: "#aaaaaa"
 icon: mdi:sofa
 icon_color: "#2233aa44"
 icon_size: 60
+tap_action: more-info
+double_tap_action: more-info
+hold_action: more-info
 
+# reusable variables for all templates
 variables:
   temperature: "{{ states('sensor.second_bedroom_temperature') }}"
   humidity: "{{ states('sensor.second_bedroom_humidity') }}"
 
+# text layer (between card icon and buttons by click priority)
 text:
-  entity: sensor.second_bedroom_temperature  # target entity for text actions (optional)
-  color: "{{ state === 'on' ? '#ffffff' : '#111827' }}"
-  value: |
-    <b>Kitchen</b><br/>
-    <i>{{ states(entity) }}</i>
+  entity: sensor.second_bedroom_temperature
+  value: >-
+    {{ '<h1>Theo</h1>' + round(temperature, 1) + '°C ∙ ' + round(humidity, 0) + '%' }}
+  color: "#111827"
   size: 14
-  halign: left                  # left | center | right
-  valign: top                   # top | center | bottom
+  halign: left            # left | center | right
+  valign: top             # top | center | bottom
   padding: 0
   padding_top: null
   padding_right: null
@@ -43,24 +75,36 @@ text:
   double_tap_action: more-info
   hold_action: more-info
 
+# buttons (main section)
 buttons:
   cols: 3
   rows: 1
   size: 48
   gap: 5
   padding: 10
-  align: right
+  padding_top: null
+  padding_right: null
+  padding_bottom: null
+  padding_left: null
+  align: right            # left | center | right | justified
 
-  # defaults for each button
-  icon: null                      # по умолчанию берётся иконка самой entity
+  # default button style
+  icon: null              # by default uses entity icon
   color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}"      # icon color
-  background: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}" # background color
+  background: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}" # bg color
   border: 0
   border_color: transparent
-  use_light_color: false         # false | color | brightness | both (или true)
-  obsolete: null                 # часы или объект {hours, color, background, border, border_color, icon}
-                                # по умолчанию для obsolete: светло-серая рамка 2px
 
+  # false | color | brightness | both | true(=both)
+  use_light_color: false
+
+  # stale style trigger
+  obsolete:
+    hours: 6
+    border: 2
+    border_color: "#d1d5db"
+
+  # default actions for all buttons
   tap_action: toggle
   double_tap_action: more-info
   hold_action: more-info
@@ -69,40 +113,309 @@ buttons:
     - entity: light.living_main
       width: 1
       icon: mdi:ceiling-light
-      # per-button overrides
-      color:
-        - state: on
-          value: "#ffffff"
-        - state: off
-          value: "#000000"
-        - value: "#ff0000"
-      background: "{%if states(entity) == 'on' %}#f59e0b{%else%}#334155{%endif%}"
 
-    - entity: switch.garage
+    - entity: lock.front_door
+      width: 1
+
+    - entity: media_player.sonos_living
+      width: 2
+
+    # same entity can be added multiple times
+    - entity: light.living_main
+      width: 1
+      background:
+        - state: on
+          value: "#f59e0b"
+        - state: off
+          value: "#334155"
+        - value: "#6b7280"
+
+# legacy alias still supported
+# lights: ...
+```
+
+---
+
+## Parameter reference
+
+## Card-level
+
+- `type` — must be `custom:seagull-room-card`
+- `entity` — optional default entity for card icon actions and templates
+- `background_color` — card background base color
+- `background_opacity` — 0..1 alpha applied to background color
+- `border_radius` — card corner radius (px)
+- `border_width` — card border width (px)
+- `border_color` — card border color
+- `icon` — top-left card icon
+- `icon_color` — top-left icon color
+- `icon_size` — top-left icon size (px)
+- `tap_action`, `double_tap_action`, `hold_action` — actions on card icon
+- `variables` — map of reusable template variables
+- `text` — text layer config
+- `buttons` — buttons layer config
+
+### Card icon actions
+
+Supported action types:
+
+- `toggle`
+- `more-info`
+- `navigate`
+- `perform-action`
+
+Examples:
+
+```yaml
+tap_action: toggle
+```
+
+```yaml
+double_tap_action:
+  action: navigate
+  navigation_path: /lovelace/lights
+```
+
+```yaml
+hold_action:
+  action: perform-action
+  perform_action: light.turn_off
+  target:
+    entity_id: light.living_room
+```
+
+---
+
+## `variables`
+
+Card-level variables available in templates:
+
+- directly by name: `temperature`
+- via object: `vars.temperature`
+
+Example:
+
+```yaml
+variables:
+  temperature: "{{ states('sensor.temp') }}"
+```
+
+---
+
+## `text`
+
+- `entity` — entity for text templates and text actions (fallback to card `entity`)
+- `value` — template/HTML text (supports multiline)
+- `color` — text color (template-capable)
+- `size` — font size (px)
+- `halign` — `left | center | right`
+- `valign` — `top | center | bottom`
+- `padding`, `padding_top`, `padding_right`, `padding_bottom`, `padding_left`
+- `tap_action`, `double_tap_action`, `hold_action` — default `more-info`
+
+### Text rendering notes
+
+- Text is visual background layer relative to buttons.
+- Click priority: **buttons > text > card icon**.
+- HTML formatting allowed (`<b>`, `<i>`, `<br/>`, `<h1>..<h3>`).
+- `h1/h2/h3` are bold, slightly larger, no extra margins.
+
+---
+
+## `buttons`
+
+### Layout
+
+- `cols` / `columns` — columns count
+- `rows` — minimum row count (controls min card height)
+- `size` — button size (px), default `48`
+- `gap` — gap between buttons
+- `padding`, `padding_top`, `padding_right`, `padding_bottom`, `padding_left`
+- `align` — `left | center | right | justified`
+
+### Default button style (inherited by each button)
+
+- `icon`
+- `color` (icon color)
+- `background`
+- `border`
+- `border_color`
+- `use_light_color` — `false | color | brightness | both | true`
+- `obsolete` — stale style trigger: hours (number) or object
+
+### Default button actions
+
+- `tap_action`, `double_tap_action`, `hold_action`
+- default behavior: tap=`toggle`, double=`more-info`, hold=`more-info`
+
+### Buttons collection
+
+Use any of:
+
+- `buttons.entities`
+- `buttons.items`
+- `buttons.button`
+- `buttons.buttons`
+
+Legacy alias `lights` is still accepted.
+
+Array form (allows duplicates):
+
+```yaml
+buttons:
+  entities:
+    - entity: light.a
+    - entity: light.a
+```
+
+Object form:
+
+```yaml
+buttons:
+  entities:
+    light.a: true
+    light.b: false
+    switch.c:
       width: 2
 ```
 
-## Notes
+### Per-button parameters
 
-- `buttons` is the main section name now.
-- Legacy alias `lights` still works.
-- `variables` allows defining reusable template variables on card level.
-- These variables are available in all templates (including `text.value`) as plain names and via `vars.<name>`.
-- `text` supports multiline template value with HTML formatting (`<b>`, `<i>`, `<br/>`, etc.).
-- `text.value` can use the same template formats as buttons.
-- `text.entity` + `text.tap_action/double_tap_action/hold_action` are supported (defaults: all `more-info`).
-- Click priority: buttons > text > card icon.
-- If card-level `entity` is set, it can be referenced in text templates.
-- Button-level fields can override section-level fields.
-- `obsolete` can be set on `buttons` level and overridden per button.
-  - if entity hasn't updated longer than N hours, obsolete style is used.
-- Allowed actions: `toggle`, `more-info`, `perform-action`, `navigate`.
-- `entity` can be from any domain.
-- Active-state defaults: `on` for regular domains, `unlocked` for `lock.*`, `playing` for `media_player.*`.
-- For `unavailable` (any domain): default style is pale gray icon on gray background.
-- Same entity can be added multiple times (array form).
+- `entity` (any domain)
+- `width` — width in columns (default `1`)
+- `icon`, `color`, `background`, `border`, `border_color`
+- `use_light_color`
+- `obsolete`
+- `tap_action`, `double_tap_action`, `hold_action`
+- `hidden` (internal, used by object form with `false`)
 
-Template input supports:
-1. `{{ ... }}` (JS expression)
-2. `{%if ... %}...{%else%}...{%endif%}`
-3. rule arrays with `state`, `state_not`, `state_above`, `state_below`, `state_template`, and fallback rule without condition.
+---
+
+## Domain-specific behavior
+
+### Active state mapping (used by default palettes)
+
+- regular entities: `state == on`
+- `lock.*`: `state == unlocked`
+- `media_player.*`: `state == playing`
+
+### `toggle` action mapping
+
+- regular: `homeassistant.toggle`
+- `lock.*`: `lock.lock` / `lock.unlock`
+- `media_player.*`: `media_player.media_play` / `media_player.media_pause`
+
+### `unavailable`
+
+Default visual fallback for any domain:
+
+- icon color: pale gray
+- background: gray
+
+### Default icons
+
+- By default card tries entity icon first (`attributes.icon`).
+- For `light.*` without icon it falls back to:
+  - `mdi:lightbulb` (on)
+  - `mdi:lightbulb-off` (off)
+
+---
+
+## `obsolete` behavior
+
+If configured and entity is stale longer than N hours (`last_updated` / `last_changed`), obsolete style is applied.
+
+Supported forms:
+
+```yaml
+obsolete: 6
+```
+
+or
+
+```yaml
+obsolete:
+  hours: 6
+  icon: mdi:clock-alert-outline
+  color: "#d1d5db"
+  background: "#6b7280"
+  border: 2
+  border_color: "#d1d5db"
+```
+
+Default obsolete style (when only hours provided):
+
+- `border: 2`
+- `border_color: #d1d5db`
+
+---
+
+## Template syntax
+
+A value can be configured using:
+
+1) JS mustache expression:
+
+```yaml
+"{{ state === 'on' ? '#fff' : '#000' }}"
+```
+
+2) Jinja-like if/else block:
+
+```yaml
+"{%if states(entity) == 'on' %}#fff{%else%}#000{%endif%}"
+```
+
+3) Rule array:
+
+```yaml
+color:
+  - state: on
+    value: "#ffffff"
+  - state_not: unavailable
+    value: "#dddddd"
+  - state_above: 50
+    value: "#00ff00"
+  - state_below: 10
+    value: "#ff0000"
+  - state_template: "{{ states(entity) == 'unknown' }}"
+    value: "#999999"
+  - value: "#ff0000"  # fallback (else)
+```
+
+### Template context
+
+Available helpers/values include:
+
+- `entity`, `state`, `attributes`
+- `states(entity_id)` helper
+- `vars` and top-level names from `variables`
+- `round`, `upper`, `lower`, `trim`, `capitalize`, `title`
+
+Pipe filters supported for mustache output:
+
+- `|round`, `|round(1)`
+- `|upper`, `|lower`, `|trim`, `|capitalize`, `|title`
+
+---
+
+## Auto-deploy notes
+
+Repository includes local auto-deploy hooks:
+
+- `.githooks/post-commit`
+- `scripts/deploy-to-ha.sh`
+
+Enable once:
+
+```bash
+./scripts/setup-hooks.sh
+```
+
+---
+
+## Console announce
+
+When loaded, card writes:
+
+`🐦 SEAGULL-ROOM-CARD v... (...) loaded`
