@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.3.1";
+const SEAGULL_ROOM_CARD_VERSION = "0.4.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -14,6 +14,13 @@ class SeagullRoomCard extends HTMLElement {
       icon: "mdi:sofa",
       icon_color: "#ffffff",
       icon_size: 22,
+      lights: {
+        cols: 4,
+        size: 44,
+        color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}",
+        icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
+        entities: [],
+      },
     };
   }
 
@@ -36,7 +43,7 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   getCardSize() {
-    return 1;
+    return 2;
   }
 
   async _ensureEntityAreaMap() {
@@ -54,18 +61,14 @@ class SeagullRoomCard extends HTMLElement {
       this._areas = areas || [];
 
       const deviceAreaMap = new Map(
-        (devices || [])
-          .filter((d) => !!d.id)
-          .map((d) => [d.id, d.area_id || null])
+        (devices || []).filter((d) => !!d.id).map((d) => [d.id, d.area_id || null])
       );
 
       this._entityAreaMap = new Map(
-        (entities || [])
-          .filter((e) => !!e.entity_id)
-          .map((e) => {
-            const effectiveAreaId = e.area_id || (e.device_id ? deviceAreaMap.get(e.device_id) : null) || null;
-            return [e.entity_id, effectiveAreaId];
-          })
+        (entities || []).filter((e) => !!e.entity_id).map((e) => {
+          const effectiveAreaId = e.area_id || (e.device_id ? deviceAreaMap.get(e.device_id) : null) || null;
+          return [e.entity_id, effectiveAreaId];
+        })
       );
 
       this._render();
@@ -78,7 +81,7 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _render() {
-    if (!this._config) return;
+    if (!this._config || !this._hass) return;
 
     if (!this._card) {
       this._card = document.createElement("ha-card");
@@ -111,10 +114,7 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.position = "relative";
 
     this._inner.style.minHeight = "80px";
-    this._inner.style.display = "flex";
-    this._inner.style.alignItems = "stretch";
-    this._inner.style.justifyContent = "flex-start";
-    this._inner.style.padding = "16px";
+    this._inner.style.padding = "42px 12px 12px";
     this._inner.style.boxSizing = "border-box";
 
     this._icon.setAttribute("icon", icon);
@@ -127,43 +127,104 @@ class SeagullRoomCard extends HTMLElement {
     this._icon.style.height = `${iconSize}px`;
     this._icon.style.display = icon ? "block" : "none";
 
-    this._inner.innerHTML = this._buildDebugHtml();
+    this._inner.innerHTML = this._buildLightsHtml();
+    this._wireLightButtons();
   }
 
-  _buildDebugHtml() {
-    const areaId = this._config?.area_id;
-    if (!areaId) {
-      return `<div style="font-size:12px;opacity:.8;">Set <code>area_id</code> to show light entities for that area.</div>`;
+  _buildLightsHtml() {
+    const areaInput = this._config?.area_id;
+    if (!areaInput) return `<div style="font-size:12px;opacity:.8;">Set <code>area_id</code>.</div>`;
+    if (this._entityAreaMapLoading) return `<div style="font-size:12px;opacity:.8;">Loading lights…</div>`;
+    if (this._entityAreaMapError) return `<div style="font-size:12px;color:#fecaca;">Failed to load registries</div>`;
+
+    const lightsCfg = this._config.lights || {};
+    const cols = Math.max(1, parseInt(lightsCfg.cols ?? lightsCfg.columns ?? 4, 10) || 4);
+    const size = Math.max(20, this._toPx(lightsCfg.size ?? 44, 44));
+
+    const resolvedAreaId = this._resolveAreaId(areaInput);
+    const entities = this._getLightsByArea(resolvedAreaId || areaInput);
+    const perEntity = this._lightOverridesByEntity(lightsCfg);
+
+    if (!entities.length) {
+      return `<div style="font-size:12px;opacity:.8;">No <code>light.*</code> entities for <code>${this._esc(areaInput)}</code>.</div>`;
     }
 
-    if (this._entityAreaMapLoading) {
-      return `<div style="font-size:12px;opacity:.8;">Loading entities for area_id: <code>${this._esc(areaId)}</code>…</div>`;
-    }
+    const buttons = entities.map((entityId) => {
+      const st = this._hass.states[entityId];
+      const state = st?.state || "unknown";
+      const ov = perEntity.get(entityId) || {};
+      const icon = ov.icon || st?.attributes?.icon || "mdi:lightbulb";
 
-    if (this._entityAreaMapError) {
-      return `<div style="font-size:12px;color:#fecaca;">Failed to load entity registry: ${this._esc(String(this._entityAreaMapError))}</div>`;
-    }
+      const bgTemplate = ov.color ?? lightsCfg.color;
+      const iconTemplate = ov.icon_color ?? lightsCfg.icon_color;
 
-    const resolvedAreaId = this._resolveAreaId(areaId);
-    const lights = this._getLightsByArea(resolvedAreaId || areaId);
-    const list = lights.length
-      ? `<ul style="margin:8px 0 0 0;padding-left:18px;font-size:12px;line-height:1.4;">${lights
-          .map((id) => `<li><code>${this._esc(id)}</code></li>`)
-          .join("")}</ul>`
-      : `<div style="margin-top:8px;font-size:12px;opacity:.8;">No <code>light.*</code> entities found for this area.</div>`;
+      const bgColor = this._resolveTemplateColor(bgTemplate, entityId, state) || (state === "on" ? "rgba(245,158,11,0.9)" : "rgba(75,85,99,0.45)");
+      const iColor = this._resolveTemplateColor(iconTemplate, entityId, state) || (state === "on" ? "#111827" : "#e5e7eb");
 
-    const resolvedNote = resolvedAreaId && resolvedAreaId !== areaId
-      ? `<div style="margin-top:4px;font-size:12px;opacity:.8;">resolved area_id: <code>${this._esc(resolvedAreaId)}</code></div>`
-      : "";
+      return `
+        <button class="sg-room-light-btn" data-entity="${this._esc(entityId)}"
+          style="width:${size}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:${this._esc(bgColor)};padding:0;">
+          <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
+        </button>
+      `;
+    }).join("");
 
     return `
-      <div style="width:100%;">
-        <div style="font-weight:600;font-size:13px;">Debug lights for area</div>
-        <div style="margin-top:4px;font-size:12px;"><code>area_id: ${this._esc(areaId)}</code></div>
-        ${resolvedNote}
-        ${list}
+      <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:10px;">
+        ${buttons}
       </div>
     `;
+  }
+
+  _wireLightButtons() {
+    const btns = this._inner.querySelectorAll(".sg-room-light-btn");
+    btns.forEach((btn) => {
+      btn.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        const entityId = btn.getAttribute("data-entity");
+        if (!entityId || !this._hass?.callService) return;
+        this._hass.callService("homeassistant", "toggle", { entity_id: entityId });
+      });
+    });
+  }
+
+  _lightOverridesByEntity(lightsCfg) {
+    const arr = [];
+    if (Array.isArray(lightsCfg.entities)) arr.push(...lightsCfg.entities);
+    if (Array.isArray(lightsCfg.items)) arr.push(...lightsCfg.items);
+    if (Array.isArray(lightsCfg.light)) arr.push(...lightsCfg.light);
+
+    const map = new Map();
+    arr.forEach((item) => {
+      if (item?.entity) map.set(item.entity, item);
+    });
+    return map;
+  }
+
+  _resolveTemplateColor(template, entityId, state) {
+    if (template == null) return null;
+    if (typeof template !== "string") return String(template);
+
+    const s = template.trim();
+    if (!s.startsWith("{{") || !s.endsWith("}}")) return s;
+
+    const expr = s.slice(2, -2).trim();
+    try {
+      const st = this._hass?.states?.[entityId];
+      const fn = new Function("ctx", `with (ctx) { return (${expr}); }`);
+      const out = fn({
+        hass: this._hass,
+        entity: entityId,
+        state,
+        states: this._hass?.states,
+        attributes: st?.attributes || {},
+        is_on: state === "on",
+      });
+      return out == null ? null : String(out);
+    } catch (err) {
+      console.warn("[seagull-room-card] template eval error", err, template);
+      return null;
+    }
   }
 
   _resolveAreaId(areaInput) {
@@ -187,15 +248,12 @@ class SeagullRoomCard extends HTMLElement {
     if (!this._hass?.states) return [];
 
     const ids = Object.keys(this._hass.states).filter((entityId) => entityId.startsWith("light."));
-
     if (!this._entityAreaMap) return ids;
 
     return ids.filter((entityId) => {
       const mapped = this._entityAreaMap.get(entityId);
       if (mapped === areaId) return true;
-
-      const st = this._hass.states[entityId];
-      const attrArea = st?.attributes?.area_id;
+      const attrArea = this._hass.states[entityId]?.attributes?.area_id;
       return attrArea === areaId;
     });
   }
@@ -222,7 +280,6 @@ class SeagullRoomCard extends HTMLElement {
 
   _toRgba(color, opacity) {
     const c = String(color).trim();
-
     const hex = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
     if (hex) {
       let h = hex[1];
@@ -233,7 +290,6 @@ class SeagullRoomCard extends HTMLElement {
       const b = int & 255;
       return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
-
     const rgb = c.match(/^rgba?\(([^)]+)\)$/i);
     if (rgb) {
       const parts = rgb[1].split(",").map((v) => Number(v.trim()));
@@ -242,7 +298,6 @@ class SeagullRoomCard extends HTMLElement {
         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
       }
     }
-
     return c;
   }
 }
@@ -285,5 +340,5 @@ window.customCards.push({
   type: "seagull-room-card",
   name: "Seagull Room Card",
   preview: true,
-  description: `Base room card with configurable background, border and top-left icon (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
+  description: `Room card with area-based light buttons (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
 });

@@ -37,20 +37,30 @@
 
 ```yaml
 type: custom:seagull-room-card
-area_id: living_room              # debug: фильтр света по area_id
-background_color: "#1f2937"      # базовый цвет фона
-background_opacity: 0.45          # 0..1
-border_radius: 16                 # px
-border_width: 1                   # px
+area_id: living_room
+background_color: "#1f2937"
+background_opacity: 0.45
+border_radius: 16
+border_width: 1
 border_color: "rgba(255,255,255,0.25)"
-icon: mdi:sofa                    # иконка в левом верхнем углу
+icon: mdi:sofa
 icon_color: "#ffffff"
-icon_size: 22                     # px
+icon_size: 22
+lights:
+  cols: 4                         # columns/cols — количество колонок
+  size: 44                        # размер кнопки
+  color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}"
+  icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}"
+  entities:
+    - entity: light.living_main
+      icon: mdi:ceiling-light
+      color: "{{ is_on ? '#f59e0b' : '#334155' }}"      # override только для этой лампы
+      icon_color: "{{ is_on ? '#111827' : '#cbd5e1' }}" # override только для этой лампы
 ```
 
 ## Параметры
 
-- `area_id` — area id (или имя зоны) для отладки; карточка выводит список `light.*` сущностей из этой зоны
+- `area_id` — area id (или имя зоны), из которой берутся `light.*`
 - `background_color` — цвет фона (hex или rgb/rgba; для hex/rgb автоматически применяется прозрачность)
 - `background_opacity` — прозрачность фона от `0` до `1`
 - `border_radius` — радиус скругления в пикселях
@@ -59,6 +69,21 @@ icon_size: 22                     # px
 - `icon` — MDI-иконка (например `mdi:sofa`), отображается в левом верхнем углу
 - `icon_color` — цвет иконки
 - `icon_size` — размер иконки в пикселях
+
+### `lights`
+
+- `lights.cols` / `lights.columns` — количество колонок
+- `lights.size` — размер круглой кнопки
+- `lights.color` — шаблон/значение цвета фона кнопки (наследуется)
+- `lights.icon_color` — шаблон/значение цвета иконки (наследуется)
+- `lights.entities` (или `lights.items` / `lights.light`) — override для конкретных источников света:
+  - `entity` — `light.xxx`
+  - `icon` — иконка для этой лампы
+  - `color` — цвет/шаблон только для этой лампы
+  - `icon_color` — цвет иконки/шаблон только для этой лампы
+
+Шаблон — строка вида `{{ ... }}`.
+Доступные переменные в шаблоне: `state`, `is_on`, `entity`, `hass`, `states`, `attributes`.
 
 Если хочешь оставить старый способ, можно использовать прямой ресурс `/local/seagull-room-card.js?v=...`, но тогда версию придётся поднимать вручную.
 
