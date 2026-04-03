@@ -55,10 +55,11 @@ buttons:
   icon: null                      # по умолчанию берётся иконка самой entity
   color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}"      # icon color
   background: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}" # background color
-  border: 1
-  border_color: "#ef4444"
+  border: 0
+  border_color: transparent
   use_light_color: false         # false | color | brightness | both (или true)
   obsolete: null                 # часы или объект {hours, color, background, border, border_color, icon}
+                                # по умолчанию для obsolete: тонкая красная рамка
 
   tap_action: toggle
   double_tap_action: more-info

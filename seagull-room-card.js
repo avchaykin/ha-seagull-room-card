@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.1";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.2";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -50,8 +50,8 @@ class SeagullRoomCard extends HTMLElement {
         icon: null,
         color: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#111827' : '#e5e7eb' }}",
         background: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#f59e0b' : '#4b5563' }}",
-        border: 1,
-        border_color: "#ef4444",
+        border: 0,
+        border_color: "transparent",
         use_light_color: false, // false | color | brightness | both/true
         tap_action: "toggle",
         double_tap_action: "more-info",
@@ -316,8 +316,8 @@ class SeagullRoomCard extends HTMLElement {
         state,
         isUnavailable ? "#d1d5db" : (isActive ? "#111827" : "#e5e7eb")
       );
-      const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 1)) || 0);
-      const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "#ef4444");
+      const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
+      const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
 
       const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
       const safeColSpan = Math.min(cols, colSpan);
@@ -875,11 +875,13 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _resolveObsoleteConfig(raw) {
+    const defaults = { border: 1, border_color: "#ef4444" };
+
     if (raw == null || raw === false) return null;
-    if (typeof raw === "number") return { hours: raw };
+    if (typeof raw === "number") return { hours: raw, ...defaults };
     if (typeof raw === "string") {
       const n = Number(raw);
-      return Number.isFinite(n) ? { hours: n } : null;
+      return Number.isFinite(n) ? { hours: n, ...defaults } : null;
     }
     if (typeof raw === "object") {
       const hours = Number(raw.hours ?? raw.after_hours ?? raw.value ?? 0);
@@ -890,8 +892,8 @@ class SeagullRoomCard extends HTMLElement {
         color: raw.color,
         icon_color: raw.icon_color,
         background: raw.background,
-        border: raw.border,
-        border_color: raw.border_color,
+        border: raw.border ?? defaults.border,
+        border_color: raw.border_color ?? defaults.border_color,
       };
     }
     return null;
