@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.10";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.11";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -39,7 +39,7 @@ class SeagullRoomCard extends HTMLElement {
       buttons: {
         cols: 3,
         rows: 1,
-        size: 40,
+        size: 48,
         gap: 5,
         padding: 10,
         padding_top: null,
@@ -114,7 +114,7 @@ class SeagullRoomCard extends HTMLElement {
     const padBottom = Math.max(0, this._toPx(buttonsCfg.padding_bottom ?? basePadding, basePadding));
     const padLeft = Math.max(0, this._toPx(buttonsCfg.padding_left ?? basePadding, basePadding));
 
-    const size = Math.max(20, this._toPx(buttonsCfg.size ?? 40, 40));
+    const size = Math.max(20, this._toPx(buttonsCfg.size ?? 48, 48));
     const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? 5, 5));
     const minRows = Math.max(0, parseInt(buttonsCfg.rows ?? 0, 10) || 0);
     const minRowsHeight = minRows > 0
@@ -251,7 +251,7 @@ class SeagullRoomCard extends HTMLElement {
   _buildLightsHtmlAndItems() {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
     const cols = Math.max(1, parseInt(buttonsCfg.cols ?? buttonsCfg.columns ?? 3, 10) || 3);
-    const size = Math.max(20, this._toPx(buttonsCfg.size ?? 40, 40));
+    const size = Math.max(20, this._toPx(buttonsCfg.size ?? 48, 48));
     const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? 5, 5));
     const alignRaw = String(buttonsCfg.align ?? "right").toLowerCase();
     const align = ["left", "right", "center", "justified"].includes(alignRaw) ? alignRaw : "justified";

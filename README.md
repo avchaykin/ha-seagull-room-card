@@ -46,7 +46,7 @@ text:
 buttons:
   cols: 3
   rows: 1
-  size: 40
+  size: 48
   gap: 5
   padding: 10
   align: right
