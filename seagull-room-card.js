@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.3";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.4";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -427,7 +427,14 @@ class SeagullRoomCard extends HTMLElement {
 
     if (type === "toggle") {
       if (!entityId) return;
-      hass.callService?.("homeassistant", "toggle", { entity_id: entityId });
+
+      if (entityId.startsWith("lock.")) {
+        const cur = hass?.states?.[entityId]?.state;
+        const svc = cur === "locked" ? "unlock" : "lock";
+        hass.callService?.("lock", svc, { entity_id: entityId });
+      } else {
+        hass.callService?.("homeassistant", "toggle", { entity_id: entityId });
+      }
       return;
     }
 
