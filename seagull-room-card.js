@@ -1,12 +1,12 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.4";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.5";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
   static getStubConfig() {
     return {
       type: "custom:seagull-room-card",
-      background_color: "#1f2937",
-      background_opacity: 0.45,
+      background_color: "#ffffff",
+      background_opacity: 0.6,
       border_radius: 16,
       border_width: 0,
       border_color: "#aaaaaa",
@@ -73,8 +73,8 @@ class SeagullRoomCard extends HTMLElement {
     const cfg = this._config;
     const lightsCfg = cfg.lights || {};
 
-    const bgColor = cfg.background_color ?? "#1f2937";
-    const opacity = this._clampOpacity(cfg.background_opacity ?? 0.45);
+    const bgColor = cfg.background_color ?? "#ffffff";
+    const opacity = this._clampOpacity(cfg.background_opacity ?? 0.6);
     const radius = this._toPx(cfg.border_radius ?? 16, 16);
     const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? 0, 0));
     const borderColor = cfg.border_color ?? "#aaaaaa";

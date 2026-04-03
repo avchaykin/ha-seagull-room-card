@@ -37,8 +37,8 @@
 
 ```yaml
 type: custom:seagull-room-card
-background_color: "#1f2937"
-background_opacity: 0.45
+background_color: "#ffffff"
+background_opacity: 0.6
 border_radius: 16
 border_width: 1
 border_color: "rgba(255,255,255,0.25)"
