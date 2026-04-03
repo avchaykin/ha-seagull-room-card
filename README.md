@@ -64,7 +64,7 @@ lights:
   padding_bottom: 12
   padding_left: 12
   align: justified                # left | center | right | justified
-  color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}"
+  color: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}"
   icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}"
   tap_action: toggle
   double_tap_action: more-info

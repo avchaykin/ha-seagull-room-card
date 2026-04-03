@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.6";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.7";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -27,7 +27,7 @@ class SeagullRoomCard extends HTMLElement {
         padding_bottom: null,
         padding_left: null,
         align: "right",
-        color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}",
+        color: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}",
         icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
         tap_action: "toggle",
         double_tap_action: "more-info",
@@ -108,6 +108,8 @@ class SeagullRoomCard extends HTMLElement {
     this._inner.style.display = "block";
     this._inner.style.padding = `${padTop}px ${padRight}px ${padBottom}px ${padLeft}px`;
     this._inner.style.boxSizing = "border-box";
+    this._inner.style.position = "relative";
+    this._inner.style.zIndex = "2";
 
     this._updateCardIcon(icon, iconColor, iconSize);
 
@@ -142,6 +144,7 @@ class SeagullRoomCard extends HTMLElement {
     this._icon.style.top = "10px";
     this._icon.style.display = icon ? "block" : "none";
     this._icon.style.cursor = "pointer";
+    this._icon.style.zIndex = "1";
   }
 
   _buildLightsHtmlAndItems() {
@@ -168,7 +171,7 @@ class SeagullRoomCard extends HTMLElement {
       const iconTemplate = item.icon_color ?? lightsCfg.icon_color;
 
       const bgColor = this._resolveTemplateColor(bgTemplate, item.entity, state)
-        || (state === "on" ? "rgba(245,158,11,0.9)" : "rgba(75,85,99,0.45)");
+        || (state === "on" ? "#f59e0b" : "#4b5563");
       const iColor = this._resolveTemplateColor(iconTemplate, item.entity, state)
         || (state === "on" ? "#111827" : "#e5e7eb");
 
