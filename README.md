@@ -37,7 +37,6 @@
 
 ```yaml
 type: custom:seagull-room-card
-area_id: living_room
 background_color: "#1f2937"
 background_opacity: 0.45
 border_radius: 16
@@ -70,7 +69,6 @@ lights:
 
 ## Параметры
 
-- `area_id` — area id (или имя зоны), из которой берутся `light.*`
 - `background_color` — цвет фона (hex или rgb/rgba; для hex/rgb автоматически применяется прозрачность)
 - `background_opacity` — прозрачность фона от `0` до `1`
 - `border_radius` — радиус скругления в пикселях
@@ -98,7 +96,7 @@ lights:
   - можно массивом объектов (`- entity: light.xxx ...`)
   - или объектом (`light.xxx: {...}`)
   - если указать `light.xxx: false`, этот свет скрывается (кнопка не рисуется)
-  - если указать `light.xxx: {...}` и такого света нет в `area_id`, он всё равно будет добавлен в карточку
+  - если указать `light.xxx: {...}`, эта лампа будет показана (если entity существует)
   - `entity` — `light.xxx`
   - `icon` — иконка для этой лампы
   - `color` — цвет/шаблон только для этой лампы

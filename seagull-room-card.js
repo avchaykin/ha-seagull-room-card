@@ -1,11 +1,10 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.4.1";
+const SEAGULL_ROOM_CARD_VERSION = "0.5.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
   static getStubConfig() {
     return {
       type: "custom:seagull-room-card",
-      area_id: "living_room",
       background_color: "#1f2937",
       background_opacity: 0.45,
       border_radius: 16,
@@ -21,7 +20,9 @@ class SeagullRoomCard extends HTMLElement {
         align: "justified",
         color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}",
         icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
-        entities: [],
+        entities: [
+          { entity: "light.example_light" }
+        ],
       },
     };
   }
@@ -40,46 +41,11 @@ class SeagullRoomCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
-    this._ensureEntityAreaMap();
     this._render();
   }
 
   getCardSize() {
     return 2;
-  }
-
-  async _ensureEntityAreaMap() {
-    if (!this._hass?.callWS) return;
-    if (this._entityAreaMap || this._entityAreaMapLoading) return;
-
-    this._entityAreaMapLoading = true;
-    try {
-      const [entities, devices, areas] = await Promise.all([
-        this._hass.callWS({ type: "config/entity_registry/list" }),
-        this._hass.callWS({ type: "config/device_registry/list" }),
-        this._hass.callWS({ type: "config/area_registry/list" }),
-      ]);
-
-      this._areas = areas || [];
-
-      const deviceAreaMap = new Map(
-        (devices || []).filter((d) => !!d.id).map((d) => [d.id, d.area_id || null])
-      );
-
-      this._entityAreaMap = new Map(
-        (entities || []).filter((e) => !!e.entity_id).map((e) => {
-          const effectiveAreaId = e.area_id || (e.device_id ? deviceAreaMap.get(e.device_id) : null) || null;
-          return [e.entity_id, effectiveAreaId];
-        })
-      );
-
-      this._render();
-    } catch (err) {
-      this._entityAreaMapError = err;
-      console.warn("[seagull-room-card] failed to load registries", err);
-    } finally {
-      this._entityAreaMapLoading = false;
-    }
   }
 
   _render() {
@@ -134,11 +100,6 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _buildLightsHtml() {
-    const areaInput = this._config?.area_id;
-    if (!areaInput) return `<div style="font-size:12px;opacity:.8;">Set <code>area_id</code>.</div>`;
-    if (this._entityAreaMapLoading) return `<div style="font-size:12px;opacity:.8;">Loading lights…</div>`;
-    if (this._entityAreaMapError) return `<div style="font-size:12px;color:#fecaca;">Failed to load registries</div>`;
-
     const lightsCfg = this._config.lights || {};
     const cols = Math.max(1, parseInt(lightsCfg.cols ?? lightsCfg.columns ?? 4, 10) || 4);
     const size = Math.max(20, this._toPx(lightsCfg.size ?? 44, 44));
@@ -146,25 +107,19 @@ class SeagullRoomCard extends HTMLElement {
     const alignRaw = String(lightsCfg.align ?? "justified").toLowerCase();
     const align = ["left", "right", "center", "justified"].includes(alignRaw) ? alignRaw : "justified";
 
-    const resolvedAreaId = this._resolveAreaId(areaInput);
-    const entities = this._getLightsByArea(resolvedAreaId || areaInput);
     const perEntity = this._lightOverridesByEntity(lightsCfg);
-
-    const merged = [...entities];
-    perEntity.forEach((ov, entityId) => {
-      if (ov?.hidden) return;
-      if (!entityId?.startsWith("light.")) return;
-      if (!this._hass?.states?.[entityId]) return;
-      if (!merged.includes(entityId)) merged.push(entityId);
+    const orderedEntities = Array.from(perEntity.keys()).filter((entityId) => {
+      const ov = perEntity.get(entityId);
+      return entityId.startsWith("light.") && !ov?.hidden;
     });
 
-    const visibleEntities = merged.filter((entityId) => !(perEntity.get(entityId)?.hidden));
+    const entities = orderedEntities.filter((entityId) => !!this._hass?.states?.[entityId]);
 
-    if (!visibleEntities.length) {
-      return `<div style="font-size:12px;opacity:.8;">No <code>light.*</code> entities for <code>${this._esc(areaInput)}</code>.</div>`;
+    if (!entities.length) {
+      return `<div style="font-size:12px;opacity:.8;">Set explicit lights in <code>lights.entities</code>.</div>`;
     }
 
-    const buttons = visibleEntities.map((entityId) => {
+    const buttons = entities.map((entityId) => {
       const st = this._hass.states[entityId];
       const state = st?.state || "unknown";
       const ov = perEntity.get(entityId) || {};
@@ -218,7 +173,11 @@ class SeagullRoomCard extends HTMLElement {
     const ingestArray = (arr) => {
       if (!Array.isArray(arr)) return;
       arr.forEach((item) => {
-        if (item?.entity) map.set(item.entity, item);
+        if (typeof item === "string") {
+          map.set(item, { entity: item });
+        } else if (item?.entity) {
+          map.set(item.entity, item);
+        }
       });
     };
 
@@ -229,6 +188,8 @@ class SeagullRoomCard extends HTMLElement {
           map.set(entityId, { entity: entityId, hidden: true });
         } else if (value && typeof value === "object") {
           map.set(entityId, { entity: entityId, ...value });
+        } else if (value === true) {
+          map.set(entityId, { entity: entityId });
         }
       });
     };
@@ -268,37 +229,6 @@ class SeagullRoomCard extends HTMLElement {
       console.warn("[seagull-room-card] template eval error", err, template);
       return null;
     }
-  }
-
-  _resolveAreaId(areaInput) {
-    if (!areaInput || !Array.isArray(this._areas)) return areaInput;
-
-    const raw = String(areaInput).trim();
-    const norm = raw.toLowerCase();
-    const slug = norm.replace(/\s+/g, "_");
-
-    const found = this._areas.find((a) => {
-      const id = String(a.area_id || "").toLowerCase();
-      const name = String(a.name || "").toLowerCase();
-      const nameSlug = name.replace(/\s+/g, "_");
-      return id === norm || name === norm || nameSlug === norm || id === slug || nameSlug === slug;
-    });
-
-    return found?.area_id || areaInput;
-  }
-
-  _getLightsByArea(areaId) {
-    if (!this._hass?.states) return [];
-
-    const ids = Object.keys(this._hass.states).filter((entityId) => entityId.startsWith("light."));
-    if (!this._entityAreaMap) return ids;
-
-    return ids.filter((entityId) => {
-      const mapped = this._entityAreaMap.get(entityId);
-      if (mapped === areaId) return true;
-      const attrArea = this._hass.states[entityId]?.attributes?.area_id;
-      return attrArea === areaId;
-    });
   }
 
   _esc(s) {
@@ -383,5 +313,5 @@ window.customCards.push({
   type: "seagull-room-card",
   name: "Seagull Room Card",
   preview: true,
-  description: `Room card with area-based light buttons (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
+  description: `Room card with explicit light buttons (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
 });
