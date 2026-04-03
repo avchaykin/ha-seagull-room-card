@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.1";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.2";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -134,31 +134,34 @@ class SeagullRoomCard extends HTMLElement {
 
     if (!items.length) return { html: "", items: [] };
 
-    const buttons = items
-      .map((item, index) => {
-        const st = this._hass.states[item.entity];
-        const state = st?.state || "unknown";
+    const buttonDefs = items.map((item, index) => {
+      const st = this._hass.states[item.entity];
+      const state = st?.state || "unknown";
 
-        const icon = item.icon || st?.attributes?.icon || "mdi:lightbulb";
-        const bgTemplate = item.color ?? lightsCfg.color;
-        const iconTemplate = item.icon_color ?? lightsCfg.icon_color;
+      const icon = item.icon || st?.attributes?.icon || "mdi:lightbulb";
+      const bgTemplate = item.color ?? lightsCfg.color;
+      const iconTemplate = item.icon_color ?? lightsCfg.icon_color;
 
-        const bgColor = this._resolveTemplateColor(bgTemplate, item.entity, state)
-          || (state === "on" ? "rgba(245,158,11,0.9)" : "rgba(75,85,99,0.45)");
-        const iColor = this._resolveTemplateColor(iconTemplate, item.entity, state)
-          || (state === "on" ? "#111827" : "#e5e7eb");
+      const bgColor = this._resolveTemplateColor(bgTemplate, item.entity, state)
+        || (state === "on" ? "rgba(245,158,11,0.9)" : "rgba(75,85,99,0.45)");
+      const iColor = this._resolveTemplateColor(iconTemplate, item.entity, state)
+        || (state === "on" ? "#111827" : "#e5e7eb");
 
-        const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
-        const btnWidth = size * colSpan + gap * (colSpan - 1);
+      const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
+      const safeColSpan = Math.min(cols, colSpan);
+      const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
 
-        return `
-          <button class="sg-room-light-btn" data-index="${index}"
-            style="grid-column:span ${colSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
-            <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
-          </button>
-        `;
-      })
-      .join("");
+      const html = `
+        <button class="sg-room-light-btn" data-index="${index}"
+          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
+          <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
+        </button>
+      `;
+
+      return { html, colSpan: safeColSpan };
+    });
+
+    const buttons = buttonDefs.map((b) => b.html).join("");
 
     if (align === "justified") {
       return {
@@ -171,7 +174,48 @@ class SeagullRoomCard extends HTMLElement {
       };
     }
 
-    const outerJustify = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center";
+    if (align === "right") {
+      const rows = [];
+      let current = [];
+      let used = 0;
+
+      for (const b of buttonDefs) {
+        if (used + b.colSpan > cols) {
+          rows.push({ items: current, used });
+          current = [b];
+          used = b.colSpan;
+        } else {
+          current.push(b);
+          used += b.colSpan;
+        }
+      }
+      if (current.length) rows.push({ items: current, used });
+
+      const rowsHtml = rows.map((row) => {
+        const empty = Math.max(0, cols - row.used);
+        const spacer = empty > 0
+          ? `<div style="grid-column:span ${empty};width:${size * empty + gap * (empty - 1)}px;height:1px;"></div>`
+          : "";
+        const rowButtons = row.items.map((b) => b.html).join("");
+        return `
+          <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;align-items:start;align-content:start;justify-items:start;">
+            ${spacer}
+            ${rowButtons}
+          </div>
+        `;
+      }).join("");
+
+      return {
+        items,
+        html: `
+          <div style="width:100%;display:flex;flex-direction:column;gap:${gap}px;align-items:stretch;">
+            ${rowsHtml}
+          </div>
+        `,
+      };
+    }
+
+    const outerJustify = align === "left" ? "flex-start" : "center";
 
     return {
       items,
