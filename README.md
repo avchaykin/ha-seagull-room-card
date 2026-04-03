@@ -94,6 +94,7 @@ buttons:
 - Button-level fields can override section-level fields.
 - Allowed actions: `toggle`, `more-info`, `perform-action`, `navigate`.
 - `entity` can be from any domain.
+- Active-state defaults: `on` for regular domains, `unlocked` for `lock.*`, `playing` for `media_player.*`.
 - Same entity can be added multiple times (array form).
 
 Template input supports:

@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.9";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.10";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -279,7 +279,7 @@ class SeagullRoomCard extends HTMLElement {
         false
       );
       const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
-      const isActive = item.entity.startsWith("lock.") ? state === "unlocked" : state === "on";
+      const isActive = this._isEntityActive(item.entity, state);
 
       let bgColor = this._resolveDynamicValue(bgTpl, item.entity, state, (isActive ? "#f59e0b" : "#4b5563"));
       if (lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
@@ -446,6 +446,10 @@ class SeagullRoomCard extends HTMLElement {
         const cur = hass?.states?.[entityId]?.state;
         const svc = cur === "locked" ? "unlock" : "lock";
         hass.callService?.("lock", svc, { entity_id: entityId });
+      } else if (entityId.startsWith("media_player.")) {
+        const cur = hass?.states?.[entityId]?.state;
+        const svc = cur === "playing" ? "media_pause" : "media_play";
+        hass.callService?.("media_player", svc, { entity_id: entityId });
       } else {
         hass.callService?.("homeassistant", "toggle", { entity_id: entityId });
       }
@@ -833,6 +837,13 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     return value;
+  }
+
+  _isEntityActive(entityId, state) {
+    const domain = String(entityId || "").split(".")[0];
+    if (domain === "lock") return state === "unlocked";
+    if (domain === "media_player") return state === "playing";
+    return state === "on";
   }
 
   _normalizeLightColorMode(v) {
