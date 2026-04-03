@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.1.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.2.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -8,6 +8,11 @@ class SeagullRoomCard extends HTMLElement {
       background_color: "#1f2937",
       background_opacity: 0.45,
       border_radius: 16,
+      border_width: 1,
+      border_color: "rgba(255,255,255,0.25)",
+      icon: "mdi:sofa",
+      icon_color: "#ffffff",
+      icon_size: 22,
     };
   }
 
@@ -38,24 +43,46 @@ class SeagullRoomCard extends HTMLElement {
       this._card = document.createElement("ha-card");
       this._inner = document.createElement("div");
       this._inner.className = "seagull-room-card-inner";
+
+      this._icon = document.createElement("ha-icon");
+      this._icon.className = "seagull-room-card-icon";
+
       this._card.appendChild(this._inner);
+      this._card.appendChild(this._icon);
       this.appendChild(this._card);
     }
 
     const bgColor = this._config.background_color ?? "#1f2937";
     const opacity = this._clampOpacity(this._config.background_opacity ?? 0.45);
     const radius = this._toPx(this._config.border_radius ?? 16, 16);
+    const borderWidth = Math.max(0, this._toPx(this._config.border_width ?? 1, 1));
+    const borderColor = this._config.border_color ?? "rgba(255,255,255,0.25)";
+
+    const icon = this._config.icon ?? "mdi:sofa";
+    const iconColor = this._config.icon_color ?? "#ffffff";
+    const iconSize = Math.max(8, this._toPx(this._config.icon_size ?? 22, 22));
 
     this._card.style.boxShadow = "none";
     this._card.style.borderRadius = `${radius}px`;
     this._card.style.overflow = "hidden";
     this._card.style.background = this._toRgba(bgColor, opacity);
+    this._card.style.border = `${borderWidth}px solid ${borderColor}`;
+    this._card.style.position = "relative";
 
     this._inner.style.minHeight = "80px";
     this._inner.style.display = "flex";
     this._inner.style.alignItems = "center";
     this._inner.style.justifyContent = "center";
     this._inner.style.padding = "16px";
+
+    this._icon.setAttribute("icon", icon);
+    this._icon.style.position = "absolute";
+    this._icon.style.left = "10px";
+    this._icon.style.top = "10px";
+    this._icon.style.color = iconColor;
+    this._icon.style.width = `${iconSize}px`;
+    this._icon.style.height = `${iconSize}px`;
+    this._icon.style.display = icon ? "block" : "none";
 
     if (!this._inner.textContent) {
       this._inner.textContent = "Seagull Room Card";
@@ -76,7 +103,6 @@ class SeagullRoomCard extends HTMLElement {
   _toRgba(color, opacity) {
     const c = String(color).trim();
 
-    // #RGB or #RRGGBB
     const hex = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
     if (hex) {
       let h = hex[1];
@@ -88,7 +114,6 @@ class SeagullRoomCard extends HTMLElement {
       return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
 
-    // rgb/rgba
     const rgb = c.match(/^rgba?\(([^)]+)\)$/i);
     if (rgb) {
       const parts = rgb[1].split(",").map((v) => Number(v.trim()));
@@ -98,7 +123,6 @@ class SeagullRoomCard extends HTMLElement {
       }
     }
 
-    // fallback for named/css vars
     return c;
   }
 }
@@ -141,5 +165,5 @@ window.customCards.push({
   type: "seagull-room-card",
   name: "Seagull Room Card",
   preview: true,
-  description: `Base room card with configurable translucent background and corner radius (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
+  description: `Base room card with configurable background, border and top-left icon (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
 });

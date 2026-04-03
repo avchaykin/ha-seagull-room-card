@@ -35,9 +35,14 @@
 
 ```yaml
 type: custom:seagull-room-card
-background_color: "#1f2937"     # базовый цвет фона
-background_opacity: 0.45         # 0..1
-border_radius: 16                # px
+background_color: "#1f2937"      # базовый цвет фона
+background_opacity: 0.45          # 0..1
+border_radius: 16                 # px
+border_width: 1                   # px
+border_color: "rgba(255,255,255,0.25)"
+icon: mdi:sofa                    # иконка в левом верхнем углу
+icon_color: "#ffffff"
+icon_size: 22                     # px
 ```
 
 ## Параметры
@@ -45,6 +50,11 @@ border_radius: 16                # px
 - `background_color` — цвет фона (hex или rgb/rgba; для hex/rgb автоматически применяется прозрачность)
 - `background_opacity` — прозрачность фона от `0` до `1`
 - `border_radius` — радиус скругления в пикселях
+- `border_width` — толщина рамки в пикселях
+- `border_color` — цвет рамки
+- `icon` — MDI-иконка (например `mdi:sofa`), отображается в левом верхнем углу
+- `icon_color` — цвет иконки
+- `icon_size` — размер иконки в пикселях
 
 ## Диагностика загрузки
 
