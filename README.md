@@ -144,6 +144,7 @@ variables:
 - `border`
 - `border_color`
 - `use_light_color` — `false | color | brightness | both | true`
+- `invert_state` — `true/false`; inverts active/inactive default state mapping
 - `obsolete` — stale style trigger: hours (number) or object
 
 ### Default button actions
@@ -188,6 +189,7 @@ buttons:
 - `width` — width in columns (default `1`)
 - `icon`, `color`, `background`, `border`, `border_color`
 - `use_light_color`
+- `invert_state`
 - `obsolete`
 - `tap_action`, `double_tap_action`, `hold_action`
 - `hidden` (internal, used by object form with `false`)

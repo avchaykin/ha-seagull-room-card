@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.4";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.5";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -53,6 +53,7 @@ class SeagullRoomCard extends HTMLElement {
         border: 0,
         border_color: "transparent",
         use_light_color: false, // false | color | brightness | both/true
+        invert_state: false,
         tap_action: "toggle",
         double_tap_action: "more-info",
         hold_action: "more-info",
@@ -298,8 +299,10 @@ class SeagullRoomCard extends HTMLElement {
         false
       );
       const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
+      const invertState = !!this._resolveDynamicValue(item.invert_state ?? buttonsCfg.invert_state, item.entity, state, false);
       const isUnavailable = state === "unavailable";
-      const isActive = this._isEntityActive(item.entity, state);
+      const baseActive = this._isEntityActive(item.entity, state);
+      const isActive = invertState ? !baseActive : baseActive;
 
       let bgColor = this._resolveDynamicValue(
         bgTpl,
