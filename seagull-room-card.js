@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.1";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -172,14 +172,12 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     const outerJustify = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center";
-    const direction = align === "right" ? "rtl" : "ltr";
-    const innerJustifyItems = align === "right" ? "end" : "start";
 
     return {
       items,
       html: `
         <div style="width:100%;display:flex;justify-content:${outerJustify};align-items:flex-start;">
-          <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;align-items:start;align-content:start;justify-items:${innerJustifyItems};direction:${direction};">
+          <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;align-items:start;align-content:start;justify-items:start;direction:ltr;">
             ${buttons}
           </div>
         </div>
