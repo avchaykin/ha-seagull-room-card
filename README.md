@@ -232,6 +232,7 @@ If entity domain is not toggle-capable by default, fallback style is:
 - For `light.*` without icon it falls back to:
   - `mdi:lightbulb` (on)
   - `mdi:lightbulb-off` (off)
+- For `binary_sensor.*` without icon, fallback depends on `device_class` (window/door/opening/etc.) and state.
 
 ---
 

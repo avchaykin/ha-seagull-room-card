@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.7";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.8";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -273,11 +273,7 @@ class SeagullRoomCard extends HTMLElement {
       const st = this._hass.states[item.entity];
       const state = st?.state || "unknown";
 
-      const defaultDomainIcon = item.entity.startsWith("light.")
-        ? (state === "on" ? "mdi:lightbulb" : "mdi:lightbulb-off")
-        : item.entity.startsWith("lock.")
-          ? (state === "locked" ? "mdi:lock" : state === "unlocked" ? "mdi:lock-open-variant" : "mdi:lock-reset")
-          : "mdi:help-circle-outline";
+      const defaultDomainIcon = this._defaultEntityIcon(item.entity, state, st?.attributes);
 
       const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
       const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
@@ -890,6 +886,36 @@ class SeagullRoomCard extends HTMLElement {
     if (domain === "lock") return state === "unlocked";
     if (domain === "media_player") return state === "playing";
     return state === "on";
+  }
+
+  _defaultEntityIcon(entityId, state, attrs = {}) {
+    const domain = String(entityId || "").split(".")[0];
+
+    if (domain === "light") {
+      return state === "on" ? "mdi:lightbulb" : "mdi:lightbulb-off";
+    }
+
+    if (domain === "lock") {
+      if (state === "locked") return "mdi:lock";
+      if (state === "unlocked") return "mdi:lock-open-variant";
+      return "mdi:lock-reset";
+    }
+
+    if (domain === "binary_sensor") {
+      const dc = String(attrs?.device_class || "").toLowerCase();
+      const on = state === "on";
+
+      if (dc === "window") return on ? "mdi:window-open-variant" : "mdi:window-closed-variant";
+      if (dc === "door") return on ? "mdi:door-open" : "mdi:door-closed";
+      if (dc === "opening") return on ? "mdi:garage-open" : "mdi:garage";
+      if (dc === "motion") return on ? "mdi:motion-sensor" : "mdi:motion-sensor-off";
+      if (dc === "occupancy") return on ? "mdi:home-account" : "mdi:home-outline";
+      if (dc === "lock") return on ? "mdi:lock-open-variant" : "mdi:lock";
+
+      return on ? "mdi:check-circle" : "mdi:circle-outline";
+    }
+
+    return "mdi:help-circle-outline";
   }
 
   _canToggleEntity(entityId) {
