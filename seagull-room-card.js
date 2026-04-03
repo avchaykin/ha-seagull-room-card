@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.5.1";
+const SEAGULL_ROOM_CARD_VERSION = "0.5.2";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -83,7 +83,7 @@ class SeagullRoomCard extends HTMLElement {
 
     this._inner.style.minHeight = "80px";
     this._inner.style.display = "block";
-    this._inner.style.padding = "42px 12px 12px";
+    this._inner.style.padding = "34px 12px 12px";
     this._inner.style.boxSizing = "border-box";
 
     this._icon.setAttribute("icon", icon);
@@ -142,17 +142,21 @@ class SeagullRoomCard extends HTMLElement {
 
     if (align === "justified") {
       return `
-        <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;align-items:start;align-content:start;justify-items:start;">
+        <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;align-items:start;align-content:start;justify-items:start;direction:ltr;">
           ${buttons}
         </div>
       `;
     }
 
-    const justify = align === "left" ? "start" : align === "right" ? "end" : "center";
+    const outerJustify = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center";
     const direction = align === "right" ? "rtl" : "ltr";
+    const innerJustifyItems = align === "right" ? "end" : "start";
+
     return `
-      <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;justify-content:${justify};align-items:start;align-content:start;direction:${direction};">
-        ${buttons}
+      <div style="width:100%;display:flex;justify-content:${outerJustify};align-items:flex-start;">
+        <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;align-items:start;align-content:start;justify-items:${innerJustifyItems};direction:${direction};">
+          ${buttons}
+        </div>
       </div>
     `;
   }
