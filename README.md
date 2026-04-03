@@ -49,6 +49,7 @@ lights:
   cols: 4                         # columns/cols — количество колонок
   size: 44                        # размер кнопки
   gap: 10                         # расстояние между кнопками
+  padding_top: 12                 # верхний отступ блока кнопок
   align: justified                # left | center | right | justified
   color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}"
   icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}"
@@ -83,6 +84,7 @@ lights:
 - `lights.cols` / `lights.columns` — количество колонок
 - `lights.size` — размер круглой кнопки
 - `lights.gap` — расстояние между кнопками
+- `lights.padding_top` — верхний внутренний отступ блока кнопок (для точной вертикальной подстройки)
 - `lights.align` — выравнивание кнопок:
   - `left` — сетка прижата влево
   - `center` — сетка по центру
