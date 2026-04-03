@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.13";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.14";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -47,7 +47,7 @@ class SeagullRoomCard extends HTMLElement {
         padding_bottom: null,
         padding_left: null,
         align: "right",
-        icon: "{{ attributes.icon || 'mdi:lightbulb' }}",
+        icon: null,
         color: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#111827' : '#e5e7eb' }}",
         background: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#f59e0b' : '#4b5563' }}",
         border: 0,
@@ -267,7 +267,7 @@ class SeagullRoomCard extends HTMLElement {
       const st = this._hass.states[item.entity];
       const state = st?.state || "unknown";
 
-      const icon = this._resolveDynamicValue(item.icon ?? buttonsCfg.icon, item.entity, state, st?.attributes?.icon || "mdi:lightbulb");
+      const icon = this._resolveDynamicValue(item.icon ?? buttonsCfg.icon, item.entity, state, st?.attributes?.icon || "mdi:help-circle-outline");
       const iconColorTpl = item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color;
       const bgTpl = item.background ?? buttonsCfg.background ?? buttonsCfg.bg;
       const borderTpl = item.border ?? buttonsCfg.border;
@@ -279,15 +279,26 @@ class SeagullRoomCard extends HTMLElement {
         false
       );
       const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
+      const isUnavailable = state === "unavailable";
       const isActive = this._isEntityActive(item.entity, state);
 
-      let bgColor = this._resolveDynamicValue(bgTpl, item.entity, state, (isActive ? "#f59e0b" : "#4b5563"));
-      if (lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
+      let bgColor = this._resolveDynamicValue(
+        bgTpl,
+        item.entity,
+        state,
+        isUnavailable ? "#6b7280" : (isActive ? "#f59e0b" : "#4b5563")
+      );
+      if (!isUnavailable && lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
         const resolvedLight = this._resolveLightEntityColor(st?.attributes, lightColorMode);
         if (resolvedLight) bgColor = resolvedLight;
       }
 
-      const iColor = this._resolveDynamicValue(iconColorTpl, item.entity, state, (isActive ? "#111827" : "#e5e7eb"));
+      const iColor = this._resolveDynamicValue(
+        iconColorTpl,
+        item.entity,
+        state,
+        isUnavailable ? "#d1d5db" : (isActive ? "#111827" : "#e5e7eb")
+      );
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
       const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
 
