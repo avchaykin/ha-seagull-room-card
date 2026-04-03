@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.8";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.9";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -307,7 +307,7 @@ class SeagullRoomCard extends HTMLElement {
 
       const defaultBg = isUnavailable
         ? "#6b7280"
-        : (!canToggle ? "#d1d5db" : (isActive ? "#f59e0b" : "#4b5563"));
+        : (!canToggle ? (isActive ? "#3b82f6" : "#d1d5db") : (isActive ? "#f59e0b" : "#4b5563"));
 
       let bgColor = this._resolveDynamicValue(
         bgTpl,
@@ -322,7 +322,7 @@ class SeagullRoomCard extends HTMLElement {
 
       const defaultIconColor = isUnavailable
         ? "#d1d5db"
-        : (!canToggle ? "#111827" : (isActive ? "#111827" : "#e5e7eb"));
+        : (!canToggle ? (isActive ? "#eaf2ff" : "#111827") : (isActive ? "#111827" : "#e5e7eb"));
 
       const iColor = this._resolveDynamicValue(
         iconColorTpl,

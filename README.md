@@ -223,8 +223,8 @@ Default visual fallback for any domain:
 
 If entity domain is not toggle-capable by default, fallback style is:
 
-- icon color: dark
-- background: light gray
+- active (`on`): blue background + light icon
+- inactive: light-gray background + dark icon
 
 ### Default icons
 
