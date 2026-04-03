@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.1";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -50,8 +50,8 @@ class SeagullRoomCard extends HTMLElement {
         icon: null,
         color: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#111827' : '#e5e7eb' }}",
         background: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#f59e0b' : '#4b5563' }}",
-        border: 0,
-        border_color: "transparent",
+        border: 1,
+        border_color: "#ef4444",
         use_light_color: false, // false | color | brightness | both/true
         tap_action: "toggle",
         double_tap_action: "more-info",
@@ -316,8 +316,8 @@ class SeagullRoomCard extends HTMLElement {
         state,
         isUnavailable ? "#d1d5db" : (isActive ? "#111827" : "#e5e7eb")
       );
-      const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
-      const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
+      const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 1)) || 0);
+      const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "#ef4444");
 
       const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
       const safeColSpan = Math.min(cols, colSpan);
