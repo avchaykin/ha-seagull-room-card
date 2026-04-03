@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.9";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.10";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -905,7 +905,7 @@ class SeagullRoomCard extends HTMLElement {
       const dc = String(attrs?.device_class || "").toLowerCase();
       const on = state === "on";
 
-      if (dc === "window") return on ? "mdi:window-open-variant" : "mdi:window-closed-variant";
+      if (dc === "window") return on ? "mdi:window-open" : "mdi:window-closed";
       if (dc === "door") return on ? "mdi:door-open" : "mdi:door-closed";
       if (dc === "opening") return on ? "mdi:garage-open" : "mdi:garage";
       if (dc === "motion") return on ? "mdi:motion-sensor" : "mdi:motion-sensor-off";
