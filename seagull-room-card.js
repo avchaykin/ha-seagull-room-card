@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.5.5";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -25,9 +25,10 @@ class SeagullRoomCard extends HTMLElement {
         align: "justified",
         color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}",
         icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
-        entities: [
-          { entity: "light.example_light" }
-        ],
+        tap_action: "toggle",
+        double_tap_action: "more-info",
+        hold_action: "more-info",
+        entities: [{ entity: "light.example_light", width: 1 }],
       },
     };
   }
@@ -59,25 +60,31 @@ class SeagullRoomCard extends HTMLElement {
     if (!this._card) {
       this._card = document.createElement("ha-card");
       this._inner = document.createElement("div");
-      this._inner.className = "seagull-room-card-inner";
-
       this._icon = document.createElement("ha-icon");
       this._icon.className = "seagull-room-card-icon";
-
       this._card.appendChild(this._inner);
       this._card.appendChild(this._icon);
       this.appendChild(this._card);
     }
 
-    const bgColor = this._config.background_color ?? "#1f2937";
-    const opacity = this._clampOpacity(this._config.background_opacity ?? 0.45);
-    const radius = this._toPx(this._config.border_radius ?? 16, 16);
-    const borderWidth = Math.max(0, this._toPx(this._config.border_width ?? 1, 1));
-    const borderColor = this._config.border_color ?? "rgba(255,255,255,0.25)";
+    const cfg = this._config;
+    const lightsCfg = cfg.lights || {};
 
-    const icon = this._config.icon ?? "mdi:sofa";
-    const iconColor = this._config.icon_color ?? "#ffffff";
-    const iconSize = Math.max(8, this._toPx(this._config.icon_size ?? 22, 22));
+    const bgColor = cfg.background_color ?? "#1f2937";
+    const opacity = this._clampOpacity(cfg.background_opacity ?? 0.45);
+    const radius = this._toPx(cfg.border_radius ?? 16, 16);
+    const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? 1, 1));
+    const borderColor = cfg.border_color ?? "rgba(255,255,255,0.25)";
+
+    const icon = cfg.icon ?? "mdi:sofa";
+    const iconColor = cfg.icon_color ?? "#ffffff";
+    const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? 22, 22));
+
+    const basePadding = Math.max(0, this._toPx(lightsCfg.padding ?? 12, 12));
+    const padTop = Math.max(0, this._toPx(lightsCfg.padding_top ?? basePadding, basePadding));
+    const padRight = Math.max(0, this._toPx(lightsCfg.padding_right ?? basePadding, basePadding));
+    const padBottom = Math.max(0, this._toPx(lightsCfg.padding_bottom ?? basePadding, basePadding));
+    const padLeft = Math.max(0, this._toPx(lightsCfg.padding_left ?? basePadding, basePadding));
 
     this._card.style.boxShadow = "none";
     this._card.style.borderRadius = `${radius}px`;
@@ -85,13 +92,6 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.background = this._toRgba(bgColor, opacity);
     this._card.style.border = `${borderWidth}px solid ${borderColor}`;
     this._card.style.position = "relative";
-
-    const lightsCfg = this._config.lights || {};
-    const basePadding = Math.max(0, this._toPx(lightsCfg.padding ?? 12, 12));
-    const padTop = Math.max(0, this._toPx(lightsCfg.padding_top ?? basePadding, basePadding));
-    const padRight = Math.max(0, this._toPx(lightsCfg.padding_right ?? basePadding, basePadding));
-    const padBottom = Math.max(0, this._toPx(lightsCfg.padding_bottom ?? basePadding, basePadding));
-    const padLeft = Math.max(0, this._toPx(lightsCfg.padding_left ?? basePadding, basePadding));
 
     this._inner.style.minHeight = "80px";
     this._inner.style.display = "block";
@@ -108,11 +108,13 @@ class SeagullRoomCard extends HTMLElement {
     this._icon.style.height = `${iconSize}px`;
     this._icon.style.display = icon ? "block" : "none";
 
-    this._inner.innerHTML = this._buildLightsHtml();
+    const { html, items } = this._buildLightsHtmlAndItems();
+    this._renderedLightItems = items;
+    this._inner.innerHTML = html;
     this._wireLightButtons();
   }
 
-  _buildLightsHtml() {
+  _buildLightsHtmlAndItems() {
     const lightsCfg = this._config.lights || {};
     const cols = Math.max(1, parseInt(lightsCfg.cols ?? lightsCfg.columns ?? 4, 10) || 4);
     const size = Math.max(20, this._toPx(lightsCfg.size ?? 44, 44));
@@ -120,107 +122,212 @@ class SeagullRoomCard extends HTMLElement {
     const alignRaw = String(lightsCfg.align ?? "justified").toLowerCase();
     const align = ["left", "right", "center", "justified"].includes(alignRaw) ? alignRaw : "justified";
 
-    const perEntity = this._lightOverridesByEntity(lightsCfg);
-    const orderedEntities = Array.from(perEntity.keys()).filter((entityId) => {
-      const ov = perEntity.get(entityId);
-      return entityId.startsWith("light.") && !ov?.hidden;
-    });
+    const items = this._collectLightItems(lightsCfg)
+      .filter((it) => !it.hidden)
+      .filter((it) => it.entity?.startsWith("light."))
+      .filter((it) => !!this._hass?.states?.[it.entity]);
 
-    const entities = orderedEntities.filter((entityId) => !!this._hass?.states?.[entityId]);
+    if (!items.length) return { html: "", items: [] };
 
-    if (!entities.length) {
-      return "";
-    }
+    const buttons = items
+      .map((item, index) => {
+        const st = this._hass.states[item.entity];
+        const state = st?.state || "unknown";
 
-    const buttons = entities.map((entityId) => {
-      const st = this._hass.states[entityId];
-      const state = st?.state || "unknown";
-      const ov = perEntity.get(entityId) || {};
-      const icon = ov.icon || st?.attributes?.icon || "mdi:lightbulb";
+        const icon = item.icon || st?.attributes?.icon || "mdi:lightbulb";
+        const bgTemplate = item.color ?? lightsCfg.color;
+        const iconTemplate = item.icon_color ?? lightsCfg.icon_color;
 
-      const bgTemplate = ov.color ?? lightsCfg.color;
-      const iconTemplate = ov.icon_color ?? lightsCfg.icon_color;
+        const bgColor = this._resolveTemplateColor(bgTemplate, item.entity, state)
+          || (state === "on" ? "rgba(245,158,11,0.9)" : "rgba(75,85,99,0.45)");
+        const iColor = this._resolveTemplateColor(iconTemplate, item.entity, state)
+          || (state === "on" ? "#111827" : "#e5e7eb");
 
-      const bgColor = this._resolveTemplateColor(bgTemplate, entityId, state) || (state === "on" ? "rgba(245,158,11,0.9)" : "rgba(75,85,99,0.45)");
-      const iColor = this._resolveTemplateColor(iconTemplate, entityId, state) || (state === "on" ? "#111827" : "#e5e7eb");
+        const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
+        const btnWidth = size * colSpan + gap * (colSpan - 1);
 
-      return `
-        <button class="sg-room-light-btn" data-entity="${this._esc(entityId)}"
-          style="width:${size}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
-          <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
-        </button>
-      `;
-    }).join("");
+        return `
+          <button class="sg-room-light-btn" data-index="${index}"
+            style="grid-column:span ${colSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
+            <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
+          </button>
+        `;
+      })
+      .join("");
 
     if (align === "justified") {
-      return `
-        <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;align-items:start;align-content:start;justify-items:start;direction:ltr;">
-          ${buttons}
-        </div>
-      `;
+      return {
+        items,
+        html: `
+          <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;align-items:start;align-content:start;justify-items:start;direction:ltr;">
+            ${buttons}
+          </div>
+        `,
+      };
     }
 
     const outerJustify = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center";
     const direction = align === "right" ? "rtl" : "ltr";
     const innerJustifyItems = align === "right" ? "end" : "start";
 
-    return `
-      <div style="width:100%;display:flex;justify-content:${outerJustify};align-items:flex-start;">
-        <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;align-items:start;align-content:start;justify-items:${innerJustifyItems};direction:${direction};">
-          ${buttons}
+    return {
+      items,
+      html: `
+        <div style="width:100%;display:flex;justify-content:${outerJustify};align-items:flex-start;">
+          <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;align-items:start;align-content:start;justify-items:${innerJustifyItems};direction:${direction};">
+            ${buttons}
+          </div>
         </div>
-      </div>
-    `;
+      `,
+    };
   }
 
   _wireLightButtons() {
     const btns = this._inner.querySelectorAll(".sg-room-light-btn");
+
     btns.forEach((btn) => {
+      let clickTimer = null;
+      let holdTimer = null;
+      let holdFired = false;
+
+      const index = Number(btn.getAttribute("data-index"));
+      const item = this._renderedLightItems?.[index];
+      if (!item) return;
+
+      btn.addEventListener("pointerdown", () => {
+        holdFired = false;
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => {
+          holdFired = true;
+          this._runAction(item, "hold_action");
+        }, 420);
+      });
+
+      const clearHold = () => {
+        clearTimeout(holdTimer);
+      };
+
+      btn.addEventListener("pointerup", clearHold);
+      btn.addEventListener("pointerleave", clearHold);
+
       btn.addEventListener("click", (ev) => {
         ev.preventDefault();
-        const entityId = btn.getAttribute("data-entity");
-        if (!entityId || !this._hass?.callService) return;
-        this._hass.callService("homeassistant", "toggle", { entity_id: entityId });
+        if (holdFired) return;
+
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => {
+          this._runAction(item, "tap_action");
+        }, 210);
+      });
+
+      btn.addEventListener("dblclick", (ev) => {
+        ev.preventDefault();
+        clearTimeout(clickTimer);
+        clearTimeout(holdTimer);
+        this._runAction(item, "double_tap_action");
       });
     });
   }
 
-  _lightOverridesByEntity(lightsCfg) {
-    const map = new Map();
+  _runAction(item, key) {
+    const act = this._resolveAction(item, key);
+    if (!act) return;
 
-    const ingestArray = (arr) => {
+    const entityId = item.entity;
+    const hass = this._hass;
+    const type = act.action;
+
+    if (type === "toggle") {
+      hass.callService?.("homeassistant", "toggle", { entity_id: entityId });
+      return;
+    }
+
+    if (type === "more-info") {
+      this.dispatchEvent(
+        new CustomEvent("hass-more-info", {
+          bubbles: true,
+          composed: true,
+          detail: { entityId },
+        })
+      );
+      return;
+    }
+
+    if (type === "navigate") {
+      const path = act.navigation_path ?? act.url_path ?? act.path ?? "/";
+      if (window?.history?.pushState) {
+        window.history.pushState(null, "", path);
+        window.dispatchEvent(new Event("location-changed"));
+      } else {
+        window.location.assign(path);
+      }
+      return;
+    }
+
+    if (type === "perform-action") {
+      const perf = act.perform_action ?? act.service;
+      if (!perf || typeof perf !== "string") return;
+      const [domain, service] = perf.includes(".") ? perf.split(".") : ["homeassistant", perf];
+      const data = act.data ?? act.service_data ?? {};
+      const target = act.target ?? {};
+      hass.callService?.(domain, service, { ...data, ...target });
+    }
+  }
+
+  _resolveAction(item, key) {
+    const lightsCfg = this._config.lights || {};
+    const raw = item?.[key] ?? lightsCfg?.[key] ?? (key === "tap_action" ? "toggle" : null);
+    if (!raw) return null;
+
+    if (typeof raw === "string") {
+      return { action: raw };
+    }
+
+    if (typeof raw === "object") {
+      const action = raw.action ?? raw.type;
+      if (!action) return null;
+      return { ...raw, action };
+    }
+
+    return null;
+  }
+
+  _collectLightItems(lightsCfg) {
+    const out = [];
+
+    const fromArray = (arr) => {
       if (!Array.isArray(arr)) return;
       arr.forEach((item) => {
         if (typeof item === "string") {
-          map.set(item, { entity: item });
+          out.push({ entity: item, width: 1 });
         } else if (item?.entity) {
-          map.set(item.entity, item);
+          out.push({ width: 1, ...item });
         }
       });
     };
 
-    const ingestObject = (obj) => {
+    const fromObject = (obj) => {
       if (!obj || Array.isArray(obj) || typeof obj !== "object") return;
       Object.entries(obj).forEach(([entityId, value]) => {
         if (value === false) {
-          map.set(entityId, { entity: entityId, hidden: true });
-        } else if (value && typeof value === "object") {
-          map.set(entityId, { entity: entityId, ...value });
+          out.push({ entity: entityId, hidden: true, width: 1 });
         } else if (value === true) {
-          map.set(entityId, { entity: entityId });
+          out.push({ entity: entityId, width: 1 });
+        } else if (value && typeof value === "object") {
+          out.push({ entity: entityId, width: 1, ...value });
         }
       });
     };
 
-    ingestArray(lightsCfg.entities);
-    ingestArray(lightsCfg.items);
-    ingestArray(lightsCfg.light);
+    fromArray(lightsCfg.entities);
+    fromArray(lightsCfg.items);
+    fromArray(lightsCfg.light);
 
-    ingestObject(lightsCfg.entities);
-    ingestObject(lightsCfg.items);
-    ingestObject(lightsCfg.light);
+    fromObject(lightsCfg.entities);
+    fromObject(lightsCfg.items);
+    fromObject(lightsCfg.light);
 
-    return map;
+    return out;
   }
 
   _resolveTemplateColor(template, entityId, state) {
@@ -331,5 +438,5 @@ window.customCards.push({
   type: "seagull-room-card",
   name: "Seagull Room Card",
   preview: true,
-  description: `Room card with explicit light buttons (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
+  description: `Room card with explicit light buttons and per-item actions (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
 });

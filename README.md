@@ -57,11 +57,28 @@ lights:
   align: justified                # left | center | right | justified
   color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}"
   icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}"
+  tap_action: toggle
+  double_tap_action: more-info
+  hold_action:
+    action: perform-action
+    perform_action: light.turn_off
+    data:
+      transition: 1
   entities:
     - entity: light.living_main
+      width: 1
       icon: mdi:ceiling-light
-      color: "{{ is_on ? '#f59e0b' : '#334155' }}"      # override только для этой лампы
-      icon_color: "{{ is_on ? '#111827' : '#cbd5e1' }}" # override только для этой лампы
+      color: "{{ is_on ? '#f59e0b' : '#334155' }}"
+      icon_color: "{{ is_on ? '#111827' : '#cbd5e1' }}"
+      tap_action: more-info
+
+    # один и тот же entity можно добавить несколько раз
+    - entity: light.living_main
+      width: 2
+      icon: mdi:lightbulb-group
+      tap_action:
+        action: navigate
+        navigation_path: /lovelace/lights
 
 # или объектной формой (можно скрыть отдельный свет)
 # lights:
@@ -99,15 +116,20 @@ lights:
   - кнопки выравниваются по верхнему краю (vertical top)
 - `lights.color` — шаблон/значение цвета фона кнопки (наследуется)
 - `lights.icon_color` — шаблон/значение цвета иконки (наследуется)
+- `lights.tap_action` / `lights.double_tap_action` / `lights.hold_action` — действия по умолчанию для кнопок света
+  - поддерживаются: `toggle`, `more-info`, `perform-action`, `navigate`
 - `lights.entities` (или `lights.items` / `lights.light`) — override для конкретных источников света:
   - можно массивом объектов (`- entity: light.xxx ...`)
   - или объектом (`light.xxx: {...}`)
   - если указать `light.xxx: false`, этот свет скрывается (кнопка не рисуется)
   - если указать `light.xxx: {...}`, эта лампа будет показана (если entity существует)
   - `entity` — `light.xxx`
+  - `width` — ширина кнопки в колонках (по умолчанию `1`)
   - `icon` — иконка для этой лампы
   - `color` — цвет/шаблон только для этой лампы
   - `icon_color` — цвет иконки/шаблон только для этой лампы
+  - `tap_action` / `double_tap_action` / `hold_action` — переопределение действий для конкретной кнопки
+  - один и тот же `entity` можно добавить несколько раз (в массивной форме)
 
 Шаблон — строка вида `{{ ... }}`.
 Доступные переменные в шаблоне: `state`, `is_on`, `entity`, `hass`, `states`, `attributes`.
@@ -118,6 +140,6 @@ lights:
 
 При успешной загрузке модуля в браузерной консоли будет строка:
 
-`🕊️ SEAGULL-ROOM-CARD v... (...) loaded`
+`🐦 SEAGULL-ROOM-CARD v... (...) loaded`
 
 Это сделано по аналогии с `ha-seagull-badge-card` и помогает быстро понять, что ресурс действительно подхватился.
