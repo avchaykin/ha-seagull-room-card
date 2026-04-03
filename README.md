@@ -219,6 +219,13 @@ Default visual fallback for any domain:
 - icon color: pale gray
 - background: gray
 
+### Non-toggle entities fallback
+
+If entity domain is not toggle-capable by default, fallback style is:
+
+- icon color: dark
+- background: light gray
+
 ### Default icons
 
 - By default card tries entity icon first (`attributes.icon`).

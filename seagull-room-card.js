@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.6";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.7";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -305,25 +305,34 @@ class SeagullRoomCard extends HTMLElement {
       const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
       const invertState = !!this._resolveDynamicValue(item.invert_state ?? buttonsCfg.invert_state, item.entity, state, false);
       const isUnavailable = state === "unavailable";
+      const canToggle = this._canToggleEntity(item.entity);
       const baseActive = this._isEntityActive(item.entity, state);
       const isActive = invertState ? !baseActive : baseActive;
+
+      const defaultBg = isUnavailable
+        ? "#6b7280"
+        : (!canToggle ? "#d1d5db" : (isActive ? "#f59e0b" : "#4b5563"));
 
       let bgColor = this._resolveDynamicValue(
         bgTpl,
         item.entity,
         state,
-        isUnavailable ? "#6b7280" : (isActive ? "#f59e0b" : "#4b5563")
+        defaultBg
       );
       if (!isUnavailable && lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
         const resolvedLight = this._resolveLightEntityColor(st?.attributes, lightColorMode);
         if (resolvedLight) bgColor = resolvedLight;
       }
 
+      const defaultIconColor = isUnavailable
+        ? "#d1d5db"
+        : (!canToggle ? "#111827" : (isActive ? "#111827" : "#e5e7eb"));
+
       const iColor = this._resolveDynamicValue(
         iconColorTpl,
         item.entity,
         state,
-        isUnavailable ? "#d1d5db" : (isActive ? "#111827" : "#e5e7eb")
+        defaultIconColor
       );
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
       const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
@@ -881,6 +890,21 @@ class SeagullRoomCard extends HTMLElement {
     if (domain === "lock") return state === "unlocked";
     if (domain === "media_player") return state === "playing";
     return state === "on";
+  }
+
+  _canToggleEntity(entityId) {
+    const domain = String(entityId || "").split(".")[0];
+    const supported = new Set([
+      "light",
+      "switch",
+      "input_boolean",
+      "fan",
+      "humidifier",
+      "cover",
+      "lock",
+      "media_player",
+    ]);
+    return supported.has(domain);
   }
 
   _resolveObsoleteConfig(raw) {
