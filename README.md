@@ -2,6 +2,10 @@
 
 Home Assistant custom card: `seagull-room-card`.
 
+## Screenshot
+
+![Seagull Room Card screenshot](assets/screenshot.jpg)
+
 ---
 
 ## Installation
