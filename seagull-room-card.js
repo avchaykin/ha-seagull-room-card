@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.4";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.5";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -48,8 +48,8 @@ class SeagullRoomCard extends HTMLElement {
         padding_left: null,
         align: "right",
         icon: "{{ attributes.icon || 'mdi:lightbulb' }}",
-        color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
-        background: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}",
+        color: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#111827' : '#e5e7eb' }}",
+        background: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#f59e0b' : '#4b5563' }}",
         border: 0,
         border_color: "transparent",
         tap_action: "toggle",
@@ -271,9 +271,10 @@ class SeagullRoomCard extends HTMLElement {
       const bgTpl = item.background ?? buttonsCfg.background ?? buttonsCfg.bg;
       const borderTpl = item.border ?? buttonsCfg.border;
       const borderColorTpl = item.border_color ?? buttonsCfg.border_color;
+      const isActive = item.entity.startsWith("lock.") ? state === "unlocked" : state === "on";
 
-      const bgColor = this._resolveDynamicValue(bgTpl, item.entity, state, (state === "on" ? "#f59e0b" : "#4b5563"));
-      const iColor = this._resolveDynamicValue(iconColorTpl, item.entity, state, (state === "on" ? "#111827" : "#e5e7eb"));
+      const bgColor = this._resolveDynamicValue(bgTpl, item.entity, state, (isActive ? "#f59e0b" : "#4b5563"));
+      const iColor = this._resolveDynamicValue(iconColorTpl, item.entity, state, (isActive ? "#111827" : "#e5e7eb"));
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
       const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
 
