@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.1";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.2";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -223,10 +223,10 @@ class SeagullRoomCard extends HTMLElement {
     const padBottom = Math.max(0, this._toPx(textCfg.padding_bottom ?? basePadding, basePadding));
     const padLeft = Math.max(0, this._toPx(textCfg.padding_left ?? basePadding, basePadding));
 
-    const justify = valign === "top" ? "flex-start" : valign === "bottom" ? "flex-end" : "center";
+    const alignY = valign === "top" ? "flex-start" : valign === "bottom" ? "flex-end" : "center";
 
     return `
-      <div class="sg-room-text-layer" style="position:absolute;inset:0;z-index:2;pointer-events:auto;display:flex;justify-content:${justify};padding:${padTop}px ${padRight}px ${padBottom}px ${padLeft}px;box-sizing:border-box;overflow:hidden;cursor:pointer;">
+      <div class="sg-room-text-layer" style="position:absolute;inset:0;z-index:2;pointer-events:auto;display:flex;align-items:${alignY};padding:${padTop}px ${padRight}px ${padBottom}px ${padLeft}px;box-sizing:border-box;overflow:hidden;cursor:pointer;">
         <style>
           .sg-room-text-layer h1,
           .sg-room-text-layer h2,
