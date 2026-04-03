@@ -13,6 +13,9 @@ class SeagullRoomCard extends HTMLElement {
       icon: "mdi:sofa",
       icon_color: "#ffffff",
       icon_size: 22,
+      tap_action: "more-info",
+      double_tap_action: "more-info",
+      hold_action: "more-info",
       lights: {
         cols: 4,
         size: 44,
@@ -107,11 +110,13 @@ class SeagullRoomCard extends HTMLElement {
     this._icon.style.width = `${iconSize}px`;
     this._icon.style.height = `${iconSize}px`;
     this._icon.style.display = icon ? "block" : "none";
+    this._icon.style.cursor = "pointer";
 
     const { html, items } = this._buildLightsHtmlAndItems();
     this._renderedLightItems = items;
     this._inner.innerHTML = html;
     this._wireLightButtons();
+    this._wireCardIconActions();
   }
 
   _buildLightsHtmlAndItems() {
@@ -232,17 +237,22 @@ class SeagullRoomCard extends HTMLElement {
   _runAction(item, key) {
     const act = this._resolveAction(item, key);
     if (!act) return;
+    this._runGenericAction(act, item.entity);
+  }
 
-    const entityId = item.entity;
+  _runGenericAction(act, entityId) {
+    if (!act) return;
     const hass = this._hass;
     const type = act.action;
 
     if (type === "toggle") {
+      if (!entityId) return;
       hass.callService?.("homeassistant", "toggle", { entity_id: entityId });
       return;
     }
 
     if (type === "more-info") {
+      if (!entityId) return;
       this.dispatchEvent(
         new CustomEvent("hass-more-info", {
           bubbles: true,
@@ -291,6 +301,61 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     return null;
+  }
+
+  _resolveCardAction(key) {
+    const fallback = "more-info";
+    const raw = this._config?.[key] ?? fallback;
+    if (!raw) return null;
+
+    if (typeof raw === "string") return { action: raw };
+    if (typeof raw === "object") {
+      const action = raw.action ?? raw.type;
+      if (!action) return null;
+      return { ...raw, action };
+    }
+    return null;
+  }
+
+  _wireCardIconActions() {
+    const el = this._icon;
+    if (!el) return;
+
+    let clickTimer = null;
+    let holdTimer = null;
+    let holdFired = false;
+
+    el.onpointerdown = () => {
+      holdFired = false;
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => {
+        holdFired = true;
+        const act = this._resolveCardAction("hold_action");
+        this._runGenericAction(act, this._config?.entity);
+      }, 420);
+    };
+
+    const clearHold = () => clearTimeout(holdTimer);
+    el.onpointerup = clearHold;
+    el.onpointerleave = clearHold;
+
+    el.onclick = (ev) => {
+      ev.preventDefault();
+      if (holdFired) return;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        const act = this._resolveCardAction("tap_action");
+        this._runGenericAction(act, this._config?.entity);
+      }, 210);
+    };
+
+    el.ondblclick = (ev) => {
+      ev.preventDefault();
+      clearTimeout(clickTimer);
+      clearTimeout(holdTimer);
+      const act = this._resolveCardAction("double_tap_action");
+      this._runGenericAction(act, this._config?.entity);
+    };
   }
 
   _collectLightItems(lightsCfg) {

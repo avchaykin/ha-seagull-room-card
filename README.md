@@ -45,6 +45,14 @@ border_color: "rgba(255,255,255,0.25)"
 icon: mdi:sofa
 icon_color: "#ffffff"
 icon_size: 22
+entity: light.living_main           # target для card icon actions (опционально)
+tap_action: more-info               # клик по иконке карточки
+double_tap_action: navigate
+hold_action:
+  action: perform-action
+  perform_action: light.turn_off
+  target:
+    entity_id: light.living_main
 lights:
   cols: 4                         # columns/cols — количество колонок
   size: 44                        # размер кнопки
@@ -99,6 +107,9 @@ lights:
 - `icon` — MDI-иконка (например `mdi:sofa`), отображается в левом верхнем углу
 - `icon_color` — цвет иконки
 - `icon_size` — размер иконки в пикселях
+- `entity` — целевая entity для card-level actions (`more-info`/`toggle`)
+- `tap_action` / `double_tap_action` / `hold_action` — действия по иконке карточки (card level)
+  - поддерживаются: `toggle`, `more-info`, `perform-action`, `navigate`
 
 ### `lights`
 
