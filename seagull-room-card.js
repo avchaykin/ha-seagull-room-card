@@ -144,7 +144,16 @@ class SeagullRoomCard extends HTMLElement {
     const resolvedAreaId = this._resolveAreaId(areaInput);
     const entities = this._getLightsByArea(resolvedAreaId || areaInput);
     const perEntity = this._lightOverridesByEntity(lightsCfg);
-    const visibleEntities = entities.filter((entityId) => !(perEntity.get(entityId)?.hidden));
+
+    const merged = [...entities];
+    perEntity.forEach((ov, entityId) => {
+      if (ov?.hidden) return;
+      if (!entityId?.startsWith("light.")) return;
+      if (!this._hass?.states?.[entityId]) return;
+      if (!merged.includes(entityId)) merged.push(entityId);
+    });
+
+    const visibleEntities = merged.filter((entityId) => !(perEntity.get(entityId)?.hidden));
 
     if (!visibleEntities.length) {
       return `<div style="font-size:12px;opacity:.8;">No <code>light.*</code> entities for <code>${this._esc(areaInput)}</code>.</div>`;
