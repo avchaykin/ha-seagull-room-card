@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.15";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -56,6 +56,7 @@ class SeagullRoomCard extends HTMLElement {
         tap_action: "toggle",
         double_tap_action: "more-info",
         hold_action: "more-info",
+        obsolete: null, // hours or { hours, color, background, border, border_color, icon }
         entities: [{ entity: "light.example_light", width: 1 }],
       },
     };
@@ -270,11 +271,24 @@ class SeagullRoomCard extends HTMLElement {
       const defaultDomainIcon = item.entity.startsWith("light.")
         ? (state === "on" ? "mdi:lightbulb" : "mdi:lightbulb-off")
         : "mdi:help-circle-outline";
-      const icon = this._resolveDynamicValue(item.icon ?? buttonsCfg.icon, item.entity, state, st?.attributes?.icon || defaultDomainIcon);
-      const iconColorTpl = item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color;
-      const bgTpl = item.background ?? buttonsCfg.background ?? buttonsCfg.bg;
-      const borderTpl = item.border ?? buttonsCfg.border;
-      const borderColorTpl = item.border_color ?? buttonsCfg.border_color;
+
+      const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
+      const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
+
+      const baseIconTpl = isObsolete ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon) : (item.icon ?? buttonsCfg.icon);
+      const icon = this._resolveDynamicValue(baseIconTpl, item.entity, state, st?.attributes?.icon || defaultDomainIcon);
+
+      const iconColorTpl = isObsolete
+        ? (obsoleteCfg.color ?? obsoleteCfg.icon_color ?? item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color)
+        : (item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color);
+      const bgTpl = isObsolete
+        ? (obsoleteCfg.background ?? item.background ?? buttonsCfg.background ?? buttonsCfg.bg)
+        : (item.background ?? buttonsCfg.background ?? buttonsCfg.bg);
+      const borderTpl = isObsolete ? (obsoleteCfg.border ?? item.border ?? buttonsCfg.border) : (item.border ?? buttonsCfg.border);
+      const borderColorTpl = isObsolete
+        ? (obsoleteCfg.border_color ?? item.border_color ?? buttonsCfg.border_color)
+        : (item.border_color ?? buttonsCfg.border_color);
+
       const lightColorModeRaw = this._resolveDynamicValue(
         item.use_light_color ?? item.light_color ?? buttonsCfg.use_light_color ?? buttonsCfg.light_color,
         item.entity,
@@ -858,6 +872,43 @@ class SeagullRoomCard extends HTMLElement {
     if (domain === "lock") return state === "unlocked";
     if (domain === "media_player") return state === "playing";
     return state === "on";
+  }
+
+  _resolveObsoleteConfig(raw) {
+    if (raw == null || raw === false) return null;
+    if (typeof raw === "number") return { hours: raw };
+    if (typeof raw === "string") {
+      const n = Number(raw);
+      return Number.isFinite(n) ? { hours: n } : null;
+    }
+    if (typeof raw === "object") {
+      const hours = Number(raw.hours ?? raw.after_hours ?? raw.value ?? 0);
+      if (!Number.isFinite(hours) || hours <= 0) return null;
+      return {
+        hours,
+        icon: raw.icon,
+        color: raw.color,
+        icon_color: raw.icon_color,
+        background: raw.background,
+        border: raw.border,
+        border_color: raw.border_color,
+      };
+    }
+    return null;
+  }
+
+  _isEntityObsolete(st, hours) {
+    const h = Number(hours);
+    if (!st || !Number.isFinite(h) || h <= 0) return false;
+
+    const ts = st.last_updated || st.last_changed;
+    if (!ts) return false;
+
+    const t = Date.parse(ts);
+    if (!Number.isFinite(t)) return false;
+
+    const ageMs = Date.now() - t;
+    return ageMs > h * 3600 * 1000;
   }
 
   _normalizeLightColorMode(v) {

@@ -58,6 +58,7 @@ buttons:
   border: 0
   border_color: transparent
   use_light_color: false         # false | color | brightness | both (или true)
+  obsolete: null                 # часы или объект {hours, color, background, border, border_color, icon}
 
   tap_action: toggle
   double_tap_action: more-info
@@ -92,6 +93,8 @@ buttons:
 - Click priority: buttons > text > card icon.
 - If card-level `entity` is set, it can be referenced in text templates.
 - Button-level fields can override section-level fields.
+- `obsolete` can be set on `buttons` level and overridden per button.
+  - if entity hasn't updated longer than N hours, obsolete style is used.
 - Allowed actions: `toggle`, `more-info`, `perform-action`, `navigate`.
 - `entity` can be from any domain.
 - Active-state defaults: `on` for regular domains, `unlocked` for `lock.*`, `playing` for `media_player.*`.
