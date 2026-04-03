@@ -13,7 +13,7 @@ Resource (recommended):
 ```yaml
 type: custom:seagull-room-card
 background_color: "#eeeeee"
-background_opacity: 0.6
+background_opacity: 0.45
 border_radius: 16
 border_width: 0
 border_color: "#aaaaaa"
