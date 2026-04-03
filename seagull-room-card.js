@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.5.3";
+const SEAGULL_ROOM_CARD_VERSION = "0.5.4";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -17,7 +17,7 @@ class SeagullRoomCard extends HTMLElement {
         cols: 4,
         size: 44,
         gap: 10,
-        padding_top: 12,
+        padding: 12,
         align: "justified",
         color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}",
         icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
@@ -83,11 +83,11 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.position = "relative";
 
     const lightsCfg = this._config.lights || {};
-    const contentPaddingTop = Math.max(0, this._toPx(lightsCfg.padding_top ?? 12, 12));
+    const contentPadding = Math.max(0, this._toPx(lightsCfg.padding ?? lightsCfg.padding_top ?? 12, 12));
 
     this._inner.style.minHeight = "80px";
     this._inner.style.display = "block";
-    this._inner.style.padding = `${contentPaddingTop}px 12px 12px`;
+    this._inner.style.padding = `${contentPadding}px`;
     this._inner.style.boxSizing = "border-box";
 
     this._icon.setAttribute("icon", icon);
