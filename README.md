@@ -6,9 +6,11 @@
 
 1. Скопируй `seagull-room-card.js` в HA:
    - `/config/www/seagull-room-card.js`
-2. Добавь ресурс Lovelace:
-   - URL: `/local/seagull-room-card.js?v=1`
+2. Добавь ресурс Lovelace (рекомендуется loader без ручного bump версии):
+   - URL: `/local/seagull-room-card-loader.js`
    - Type: **JavaScript Module**
+
+> Loader на каждом обновлении страницы подтягивает `/local/seagull-room-card.js?t=<timestamp>`, поэтому менять версию в Resource Manager больше не нужно.
 
 ## Автодеплой при коммите (как в ha-seagull-badge-card)
 
@@ -55,6 +57,8 @@ icon_size: 22                     # px
 - `icon` — MDI-иконка (например `mdi:sofa`), отображается в левом верхнем углу
 - `icon_color` — цвет иконки
 - `icon_size` — размер иконки в пикселях
+
+Если хочешь оставить старый способ, можно использовать прямой ресурс `/local/seagull-room-card.js?v=...`, но тогда версию придётся поднимать вручную.
 
 ## Диагностика загрузки
 

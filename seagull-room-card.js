@@ -80,6 +80,7 @@ class SeagullRoomCard extends HTMLElement {
     this._icon.style.left = "10px";
     this._icon.style.top = "10px";
     this._icon.style.color = iconColor;
+    this._icon.style.setProperty("--mdc-icon-size", `${iconSize}px`);
     this._icon.style.width = `${iconSize}px`;
     this._icon.style.height = `${iconSize}px`;
     this._icon.style.display = icon ? "block" : "none";

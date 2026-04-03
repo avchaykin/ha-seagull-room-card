@@ -2,38 +2,47 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SRC_FILE="$ROOT_DIR/seagull-room-card.js"
 
 HA_HOST="${HA_HOST:-192.168.1.184}"
 HA_USER="${HA_USER:-avc}"
 HA_KEY="${HA_KEY:-$HOME/.ssh/id_ed25519_openclaw_ha}"
-HA_TARGET_FILE="${HA_TARGET_FILE:-/config/www/seagull-room-card.js}"
+HA_TARGET_DIR="${HA_TARGET_DIR:-/config/www}"
 
-if [[ ! -f "$SRC_FILE" ]]; then
-  echo "[deploy-to-ha] source file not found: $SRC_FILE" >&2
-  exit 1
-fi
+FILES=(
+  "seagull-room-card.js"
+  "seagull-room-card-loader.js"
+)
 
 if [[ ! -f "$HA_KEY" ]]; then
   echo "[deploy-to-ha] ssh key not found: $HA_KEY" >&2
   exit 1
 fi
 
-echo "[deploy-to-ha] Deploying $SRC_FILE -> ${HA_USER}@${HA_HOST}:$HA_TARGET_FILE"
+for file in "${FILES[@]}"; do
+  SRC_FILE="$ROOT_DIR/$file"
+  TARGET_FILE="$HA_TARGET_DIR/$file"
 
-cat "$SRC_FILE" | ssh \
-  -o BatchMode=yes \
-  -o StrictHostKeyChecking=accept-new \
-  -i "$HA_KEY" \
-  "${HA_USER}@${HA_HOST}" \
-  "sudo tee '$HA_TARGET_FILE' >/dev/null && sudo wc -c '$HA_TARGET_FILE'"
+  if [[ ! -f "$SRC_FILE" ]]; then
+    echo "[deploy-to-ha] source file not found: $SRC_FILE" >&2
+    exit 1
+  fi
 
-LOCAL_SHA="$(shasum -a 256 "$SRC_FILE" | awk '{print $1}')"
-REMOTE_SHA="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -i "$HA_KEY" "${HA_USER}@${HA_HOST}" "sha256sum '$HA_TARGET_FILE' | awk '{print \$1}'")"
+  echo "[deploy-to-ha] Deploying $SRC_FILE -> ${HA_USER}@${HA_HOST}:$TARGET_FILE"
 
-if [[ "$LOCAL_SHA" != "$REMOTE_SHA" ]]; then
-  echo "[deploy-to-ha] checksum mismatch! local=$LOCAL_SHA remote=$REMOTE_SHA" >&2
-  exit 1
-fi
+  cat "$SRC_FILE" | ssh \
+    -o BatchMode=yes \
+    -o StrictHostKeyChecking=accept-new \
+    -i "$HA_KEY" \
+    "${HA_USER}@${HA_HOST}" \
+    "sudo tee '$TARGET_FILE' >/dev/null && sudo wc -c '$TARGET_FILE'"
 
-echo "[deploy-to-ha] OK sha256=$LOCAL_SHA"
+  LOCAL_SHA="$(shasum -a 256 "$SRC_FILE" | awk '{print $1}')"
+  REMOTE_SHA="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -i "$HA_KEY" "${HA_USER}@${HA_HOST}" "sha256sum '$TARGET_FILE' | awk '{print \$1}'")"
+
+  if [[ "$LOCAL_SHA" != "$REMOTE_SHA" ]]; then
+    echo "[deploy-to-ha] checksum mismatch for $file! local=$LOCAL_SHA remote=$REMOTE_SHA" >&2
+    exit 1
+  fi
+
+  echo "[deploy-to-ha] OK $file sha256=$LOCAL_SHA"
+done
