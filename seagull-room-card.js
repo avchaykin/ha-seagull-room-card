@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.5";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.6";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -18,6 +18,7 @@ class SeagullRoomCard extends HTMLElement {
       hold_action: "more-info",
       lights: {
         cols: 3,
+        rows: 1,
         size: 40,
         gap: 5,
         padding: 10,
@@ -89,6 +90,13 @@ class SeagullRoomCard extends HTMLElement {
     const padBottom = Math.max(0, this._toPx(lightsCfg.padding_bottom ?? basePadding, basePadding));
     const padLeft = Math.max(0, this._toPx(lightsCfg.padding_left ?? basePadding, basePadding));
 
+    const size = Math.max(20, this._toPx(lightsCfg.size ?? 40, 40));
+    const gap = Math.max(0, this._toPx(lightsCfg.gap ?? 5, 5));
+    const minRows = Math.max(0, parseInt(lightsCfg.rows ?? 0, 10) || 0);
+    const minRowsHeight = minRows > 0
+      ? Math.round(padTop + padBottom + minRows * size + Math.max(0, minRows - 1) * gap)
+      : 0;
+
     this._card.style.boxShadow = "none";
     this._card.style.borderRadius = `${radius}px`;
     this._card.style.overflow = "hidden";
@@ -96,7 +104,7 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.border = `${borderWidth}px solid ${borderColor}`;
     this._card.style.position = "relative";
 
-    this._inner.style.minHeight = "80px";
+    this._inner.style.minHeight = `${Math.max(80, minRowsHeight)}px`;
     this._inner.style.display = "block";
     this._inner.style.padding = `${padTop}px ${padRight}px ${padBottom}px ${padLeft}px`;
     this._inner.style.boxSizing = "border-box";
