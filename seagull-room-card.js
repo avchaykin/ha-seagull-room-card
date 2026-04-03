@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.5";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.6";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -52,6 +52,7 @@ class SeagullRoomCard extends HTMLElement {
         background: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#f59e0b' : '#4b5563' }}",
         border: 0,
         border_color: "transparent",
+        light_color: false,
         tap_action: "toggle",
         double_tap_action: "more-info",
         hold_action: "more-info",
@@ -271,9 +272,15 @@ class SeagullRoomCard extends HTMLElement {
       const bgTpl = item.background ?? buttonsCfg.background ?? buttonsCfg.bg;
       const borderTpl = item.border ?? buttonsCfg.border;
       const borderColorTpl = item.border_color ?? buttonsCfg.border_color;
+      const lightColorEnabled = !!this._resolveDynamicValue(item.light_color ?? buttonsCfg.light_color, item.entity, state, false);
       const isActive = item.entity.startsWith("lock.") ? state === "unlocked" : state === "on";
 
-      const bgColor = this._resolveDynamicValue(bgTpl, item.entity, state, (isActive ? "#f59e0b" : "#4b5563"));
+      let bgColor = this._resolveDynamicValue(bgTpl, item.entity, state, (isActive ? "#f59e0b" : "#4b5563"));
+      if (lightColorEnabled && item.entity.startsWith("light.") && state === "on") {
+        const resolvedLight = this._resolveLightEntityColor(st?.attributes);
+        if (resolvedLight) bgColor = resolvedLight;
+      }
+
       const iColor = this._resolveDynamicValue(iconColorTpl, item.entity, state, (isActive ? "#111827" : "#e5e7eb"));
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
       const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
@@ -820,6 +827,34 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     return value;
+  }
+
+  _resolveLightEntityColor(attrs) {
+    if (!attrs || typeof attrs !== "object") return null;
+
+    if (Array.isArray(attrs.rgb_color) && attrs.rgb_color.length >= 3) {
+      const [r, g, b] = attrs.rgb_color.map((x) => Math.max(0, Math.min(255, Number(x) || 0)));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    if (Array.isArray(attrs.hs_color) && attrs.hs_color.length >= 2) {
+      const h = Number(attrs.hs_color[0]);
+      const s = Number(attrs.hs_color[1]);
+      if (Number.isFinite(h) && Number.isFinite(s)) {
+        return `hsl(${h}, ${s}%, 50%)`;
+      }
+    }
+
+    if (attrs.color_temp_kelvin) {
+      const k = Number(attrs.color_temp_kelvin);
+      if (Number.isFinite(k)) {
+        if (k <= 3000) return "#f59e0b";
+        if (k <= 4500) return "#f3f4f6";
+        return "#bfdbfe";
+      }
+    }
+
+    return null;
   }
 
   _esc(s) {
