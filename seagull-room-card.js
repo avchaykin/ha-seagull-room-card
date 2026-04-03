@@ -152,8 +152,8 @@ customElements.define("seagull-room-card", SeagullRoomCard);
 if (!window.__SEAGULL_ROOM_CARD_ANNOUNCED__) {
   window.__SEAGULL_ROOM_CARD_ANNOUNCED__ = true;
   console.info(
-    `%c🕊️ SEAGULL-ROOM-CARD%c v${SEAGULL_ROOM_CARD_VERSION} (%c${SEAGULL_ROOM_CARD_COMMIT}%c) loaded`,
-    "color:#fff;background:#0f766e;padding:2px 6px;border-radius:4px;font-weight:700;",
+    `%c🐦 SEAGULL-ROOM-CARD%c v${SEAGULL_ROOM_CARD_VERSION} (%c${SEAGULL_ROOM_CARD_COMMIT}%c) loaded`,
+    "color:#fff;background:#f97316;padding:2px 6px;border-radius:4px;font-weight:700;",
     "color:inherit;",
     "color:#f59e0b;font-weight:700;",
     "color:inherit;"
