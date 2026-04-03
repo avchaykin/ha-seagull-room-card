@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.8";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.9";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -52,7 +52,7 @@ class SeagullRoomCard extends HTMLElement {
         background: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#f59e0b' : '#4b5563' }}",
         border: 0,
         border_color: "transparent",
-        light_color: false, // false | color | brightness | both/true
+        use_light_color: false, // false | color | brightness | both/true
         tap_action: "toggle",
         double_tap_action: "more-info",
         hold_action: "more-info",
@@ -272,7 +272,12 @@ class SeagullRoomCard extends HTMLElement {
       const bgTpl = item.background ?? buttonsCfg.background ?? buttonsCfg.bg;
       const borderTpl = item.border ?? buttonsCfg.border;
       const borderColorTpl = item.border_color ?? buttonsCfg.border_color;
-      const lightColorModeRaw = this._resolveDynamicValue(item.light_color ?? buttonsCfg.light_color, item.entity, state, false);
+      const lightColorModeRaw = this._resolveDynamicValue(
+        item.use_light_color ?? item.light_color ?? buttonsCfg.use_light_color ?? buttonsCfg.light_color,
+        item.entity,
+        state,
+        false
+      );
       const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
       const isActive = item.entity.startsWith("lock.") ? state === "unlocked" : state === "on";
 
