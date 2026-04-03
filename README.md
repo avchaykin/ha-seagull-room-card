@@ -26,6 +26,7 @@ variables:
   humidity: "{{ states('sensor.second_bedroom_humidity') }}"
 
 text:
+  entity: sensor.second_bedroom_temperature  # target entity for text actions (optional)
   value: |
     <b>Kitchen</b><br/>
     <i>{{ states(entity) }}</i>
@@ -37,6 +38,9 @@ text:
   padding_right: null
   padding_bottom: null
   padding_left: null
+  tap_action: more-info
+  double_tap_action: more-info
+  hold_action: more-info
 
 buttons:
   cols: 3
@@ -82,6 +86,8 @@ buttons:
 - These variables are available in all templates (including `text.value`) as plain names and via `vars.<name>`.
 - `text` supports multiline template value with HTML formatting (`<b>`, `<i>`, `<br/>`, etc.).
 - `text.value` can use the same template formats as buttons.
+- `text.entity` + `text.tap_action/double_tap_action/hold_action` are supported (defaults: all `more-info`).
+- Click priority: buttons > text > card icon.
 - If card-level `entity` is set, it can be referenced in text templates.
 - Button-level fields can override section-level fields.
 - Allowed actions: `toggle`, `more-info`, `perform-action`, `navigate`.

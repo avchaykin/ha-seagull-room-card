@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.1";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -21,6 +21,7 @@ class SeagullRoomCard extends HTMLElement {
         humidity: "{{ states('sensor.second_bedroom_humidity') }}",
       },
       text: {
+        entity: null,
         value: "",
         size: 14,
         halign: "left",
@@ -30,6 +31,9 @@ class SeagullRoomCard extends HTMLElement {
         padding_right: null,
         padding_bottom: null,
         padding_left: null,
+        tap_action: "more-info",
+        double_tap_action: "more-info",
+        hold_action: "more-info",
       },
       buttons: {
         cols: 3,
@@ -146,7 +150,7 @@ class SeagullRoomCard extends HTMLElement {
 
     const combinedHtml = `
       ${textHtml}
-      <div class="sg-room-buttons-layer" style="position:relative;z-index:1;">${html}</div>
+      <div class="sg-room-buttons-layer" style="position:relative;z-index:3;">${html}</div>
     `;
     if (this._lastLightsHtml !== combinedHtml) {
       this._inner.innerHTML = combinedHtml;
@@ -154,6 +158,7 @@ class SeagullRoomCard extends HTMLElement {
       this._wireLightButtons();
     }
 
+    this._wireTextActions();
     this._wireCardIconActions();
   }
 
@@ -221,7 +226,7 @@ class SeagullRoomCard extends HTMLElement {
     const justify = valign === "top" ? "flex-start" : valign === "bottom" ? "flex-end" : "center";
 
     return `
-      <div class="sg-room-text-layer" style="position:absolute;inset:0;z-index:0;pointer-events:none;display:flex;justify-content:${justify};padding:${padTop}px ${padRight}px ${padBottom}px ${padLeft}px;box-sizing:border-box;overflow:hidden;">
+      <div class="sg-room-text-layer" style="position:absolute;inset:0;z-index:2;pointer-events:auto;display:flex;justify-content:${justify};padding:${padTop}px ${padRight}px ${padBottom}px ${padLeft}px;box-sizing:border-box;overflow:hidden;cursor:pointer;">
         <style>
           .sg-room-text-layer h1,
           .sg-room-text-layer h2,
@@ -488,6 +493,64 @@ class SeagullRoomCard extends HTMLElement {
       return { ...raw, action };
     }
     return null;
+  }
+
+  _resolveTextAction(key) {
+    const textCfg = this._config?.text || {};
+    const fallback = "more-info";
+    const raw = textCfg?.[key] ?? fallback;
+
+    if (!raw) return null;
+    if (typeof raw === "string") return { action: raw };
+    if (typeof raw === "object") {
+      const action = raw.action ?? raw.type;
+      if (!action) return null;
+      return { ...raw, action };
+    }
+    return null;
+  }
+
+  _wireTextActions() {
+    const el = this._inner?.querySelector?.('.sg-room-text-layer');
+    if (!el) return;
+
+    let clickTimer = null;
+    let holdTimer = null;
+    let holdFired = false;
+
+    const targetEntity = this._config?.text?.entity ?? this._config?.entity;
+
+    el.onpointerdown = () => {
+      holdFired = false;
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => {
+        holdFired = true;
+        const act = this._resolveTextAction("hold_action");
+        this._runGenericAction(act, targetEntity);
+      }, 420);
+    };
+
+    const clearHold = () => clearTimeout(holdTimer);
+    el.onpointerup = clearHold;
+    el.onpointerleave = clearHold;
+
+    el.onclick = (ev) => {
+      ev.preventDefault();
+      if (holdFired) return;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        const act = this._resolveTextAction("tap_action");
+        this._runGenericAction(act, targetEntity);
+      }, 210);
+    };
+
+    el.ondblclick = (ev) => {
+      ev.preventDefault();
+      clearTimeout(clickTimer);
+      clearTimeout(holdTimer);
+      const act = this._resolveTextAction("double_tap_action");
+      this._runGenericAction(act, targetEntity);
+    };
   }
 
   _wireCardIconActions() {
