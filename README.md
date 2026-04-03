@@ -110,6 +110,8 @@ variables:
 - `entity` — entity for text templates and text actions (fallback to card `entity`)
 - `value` — template/HTML text (supports multiline)
 - `color` — text color (template-capable)
+- `background_color` — background color for text block (template-capable)
+- `border_radius` — text background corner radius (px)
 - `size` — font size (px)
 - `halign` — `left | center | right`
 - `valign` — `top | center | bottom`
