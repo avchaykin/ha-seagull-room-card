@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.2";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.3";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -198,7 +198,7 @@ class SeagullRoomCard extends HTMLElement {
           : "";
         const rowButtons = row.items.map((b) => b.html).join("");
         return `
-          <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;align-items:start;align-content:start;justify-items:start;">
+          <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;align-items:start;align-content:start;justify-items:start;width:fit-content;">
             ${spacer}
             ${rowButtons}
           </div>
@@ -208,7 +208,7 @@ class SeagullRoomCard extends HTMLElement {
       return {
         items,
         html: `
-          <div style="width:100%;display:flex;flex-direction:column;gap:${gap}px;align-items:stretch;">
+          <div style="width:100%;display:flex;flex-direction:column;gap:${gap}px;align-items:flex-end;">
             ${rowsHtml}
           </div>
         `,
