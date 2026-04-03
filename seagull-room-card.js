@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.8.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.8.1";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -139,7 +139,10 @@ class SeagullRoomCard extends HTMLElement {
     const { html, items } = this._buildLightsHtmlAndItems();
     this._renderedLightItems = items;
 
-    const combinedHtml = `${textHtml}${html}`;
+    const combinedHtml = `
+      ${textHtml}
+      <div class="sg-room-buttons-layer" style="position:relative;z-index:1;">${html}</div>
+    `;
     if (this._lastLightsHtml !== combinedHtml) {
       this._inner.innerHTML = combinedHtml;
       this._lastLightsHtml = combinedHtml;
@@ -201,7 +204,20 @@ class SeagullRoomCard extends HTMLElement {
     const justify = valign === "top" ? "flex-start" : valign === "bottom" ? "flex-end" : "center";
 
     return `
-      <div style="display:flex;justify-content:${justify};padding:${padTop}px ${padRight}px ${padBottom}px ${padLeft}px;">
+      <div class="sg-room-text-layer" style="position:absolute;inset:0;z-index:0;pointer-events:none;display:flex;justify-content:${justify};padding:${padTop}px ${padRight}px ${padBottom}px ${padLeft}px;box-sizing:border-box;overflow:hidden;">
+        <style>
+          .sg-room-text-layer h1,
+          .sg-room-text-layer h2,
+          .sg-room-text-layer h3 {
+            margin: 0;
+            padding: 0;
+            font-weight: 700;
+            line-height: 1.2;
+          }
+          .sg-room-text-layer h1 { font-size: 1.35em; }
+          .sg-room-text-layer h2 { font-size: 1.2em; }
+          .sg-room-text-layer h3 { font-size: 1.1em; }
+        </style>
         <div style="width:100%;text-align:${halign};font-size:${size}px;line-height:1.35;">${value}</div>
       </div>
     `;
