@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.5";
+const SEAGULL_ROOM_CARD_VERSION = "0.11.0-frosted";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -323,6 +323,7 @@ class SeagullRoomCard extends HTMLElement {
       );
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
       const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
+      const glassBg = this._toGlassBg(bgColor);
 
       const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
       const safeColSpan = Math.min(cols, colSpan);
@@ -330,7 +331,7 @@ class SeagullRoomCard extends HTMLElement {
 
       const html = `
         <button class="sg-room-light-btn" data-index="${index}"
-          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
+          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(glassBg)};backdrop-filter:blur(8px) saturate(130%);-webkit-backdrop-filter:blur(8px) saturate(130%);box-shadow:inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(0,0,0,.10);padding:0;direction:ltr;">
           <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
         </button>
       `;
@@ -925,6 +926,32 @@ class SeagullRoomCard extends HTMLElement {
     if (s === "true" || s === "both") return "both";
     if (s === "color" || s === "brightness" || s === "false") return s;
     return "false";
+  }
+
+  _toGlassBg(color) {
+    const c = String(color || "").trim();
+
+    const hex = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+    if (hex) {
+      let h = hex[1];
+      if (h.length === 3) h = h.split("").map((x) => x + x).join("");
+      const int = parseInt(h, 16);
+      const r = (int >> 16) & 255;
+      const g = (int >> 8) & 255;
+      const b = int & 255;
+      return `rgba(${r}, ${g}, ${b}, 0.42)`;
+    }
+
+    const rgb = c.match(/^rgba?\(([^)]+)\)$/i);
+    if (rgb) {
+      const parts = rgb[1].split(",").map((v) => Number(v.trim()));
+      if (parts.length >= 3 && parts.slice(0, 3).every(Number.isFinite)) {
+        const [r, g, b] = parts;
+        return `rgba(${r}, ${g}, ${b}, 0.42)`;
+      }
+    }
+
+    return `color-mix(in srgb, ${c || "#4b5563"} 42%, transparent)`;
   }
 
   _resolveLightEntityColor(attrs, mode = "both") {
