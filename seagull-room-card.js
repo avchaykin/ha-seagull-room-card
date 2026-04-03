@@ -1,10 +1,11 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.2.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.3.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
   static getStubConfig() {
     return {
       type: "custom:seagull-room-card",
+      area_id: "living_room",
       background_color: "#1f2937",
       background_opacity: 0.45,
       border_radius: 16,
@@ -30,10 +31,33 @@ class SeagullRoomCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    this._ensureEntityAreaMap();
+    this._render();
   }
 
   getCardSize() {
     return 1;
+  }
+
+  async _ensureEntityAreaMap() {
+    if (!this._hass?.callWS) return;
+    if (this._entityAreaMap || this._entityAreaMapLoading) return;
+
+    this._entityAreaMapLoading = true;
+    try {
+      const entities = await this._hass.callWS({ type: "config/entity_registry/list" });
+      this._entityAreaMap = new Map(
+        entities
+          .filter((e) => !!e.entity_id)
+          .map((e) => [e.entity_id, e.area_id || null])
+      );
+      this._render();
+    } catch (err) {
+      this._entityAreaMapError = err;
+      console.warn("[seagull-room-card] failed to load entity registry", err);
+    } finally {
+      this._entityAreaMapLoading = false;
+    }
   }
 
   _render() {
@@ -71,9 +95,10 @@ class SeagullRoomCard extends HTMLElement {
 
     this._inner.style.minHeight = "80px";
     this._inner.style.display = "flex";
-    this._inner.style.alignItems = "center";
-    this._inner.style.justifyContent = "center";
+    this._inner.style.alignItems = "stretch";
+    this._inner.style.justifyContent = "flex-start";
     this._inner.style.padding = "16px";
+    this._inner.style.boxSizing = "border-box";
 
     this._icon.setAttribute("icon", icon);
     this._icon.style.position = "absolute";
@@ -85,9 +110,56 @@ class SeagullRoomCard extends HTMLElement {
     this._icon.style.height = `${iconSize}px`;
     this._icon.style.display = icon ? "block" : "none";
 
-    if (!this._inner.textContent) {
-      this._inner.textContent = "Seagull Room Card";
+    this._inner.innerHTML = this._buildDebugHtml();
+  }
+
+  _buildDebugHtml() {
+    const areaId = this._config?.area_id;
+    if (!areaId) {
+      return `<div style="font-size:12px;opacity:.8;">Set <code>area_id</code> to show light entities for that area.</div>`;
     }
+
+    if (this._entityAreaMapLoading) {
+      return `<div style="font-size:12px;opacity:.8;">Loading entities for area_id: <code>${this._esc(areaId)}</code>…</div>`;
+    }
+
+    if (this._entityAreaMapError) {
+      return `<div style="font-size:12px;color:#fecaca;">Failed to load entity registry: ${this._esc(String(this._entityAreaMapError))}</div>`;
+    }
+
+    const lights = this._getLightsByArea(areaId);
+    const list = lights.length
+      ? `<ul style="margin:8px 0 0 0;padding-left:18px;font-size:12px;line-height:1.4;">${lights
+          .map((id) => `<li><code>${this._esc(id)}</code></li>`)
+          .join("")}</ul>`
+      : `<div style="margin-top:8px;font-size:12px;opacity:.8;">No <code>light.*</code> entities found for this area.</div>`;
+
+    return `
+      <div style="width:100%;">
+        <div style="font-weight:600;font-size:13px;">Debug lights for area</div>
+        <div style="margin-top:4px;font-size:12px;"><code>area_id: ${this._esc(areaId)}</code></div>
+        ${list}
+      </div>
+    `;
+  }
+
+  _getLightsByArea(areaId) {
+    if (!this._hass?.states) return [];
+
+    const ids = Object.keys(this._hass.states).filter((entityId) => entityId.startsWith("light."));
+
+    if (!this._entityAreaMap) return ids;
+
+    return ids.filter((entityId) => this._entityAreaMap.get(entityId) === areaId);
+  }
+
+  _esc(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
   }
 
   _toPx(value, fallback) {
