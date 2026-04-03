@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.3.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.3.1";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -45,16 +45,33 @@ class SeagullRoomCard extends HTMLElement {
 
     this._entityAreaMapLoading = true;
     try {
-      const entities = await this._hass.callWS({ type: "config/entity_registry/list" });
-      this._entityAreaMap = new Map(
-        entities
-          .filter((e) => !!e.entity_id)
-          .map((e) => [e.entity_id, e.area_id || null])
+      const [entities, devices, areas] = await Promise.all([
+        this._hass.callWS({ type: "config/entity_registry/list" }),
+        this._hass.callWS({ type: "config/device_registry/list" }),
+        this._hass.callWS({ type: "config/area_registry/list" }),
+      ]);
+
+      this._areas = areas || [];
+
+      const deviceAreaMap = new Map(
+        (devices || [])
+          .filter((d) => !!d.id)
+          .map((d) => [d.id, d.area_id || null])
       );
+
+      this._entityAreaMap = new Map(
+        (entities || [])
+          .filter((e) => !!e.entity_id)
+          .map((e) => {
+            const effectiveAreaId = e.area_id || (e.device_id ? deviceAreaMap.get(e.device_id) : null) || null;
+            return [e.entity_id, effectiveAreaId];
+          })
+      );
+
       this._render();
     } catch (err) {
       this._entityAreaMapError = err;
-      console.warn("[seagull-room-card] failed to load entity registry", err);
+      console.warn("[seagull-room-card] failed to load registries", err);
     } finally {
       this._entityAreaMapLoading = false;
     }
@@ -127,20 +144,43 @@ class SeagullRoomCard extends HTMLElement {
       return `<div style="font-size:12px;color:#fecaca;">Failed to load entity registry: ${this._esc(String(this._entityAreaMapError))}</div>`;
     }
 
-    const lights = this._getLightsByArea(areaId);
+    const resolvedAreaId = this._resolveAreaId(areaId);
+    const lights = this._getLightsByArea(resolvedAreaId || areaId);
     const list = lights.length
       ? `<ul style="margin:8px 0 0 0;padding-left:18px;font-size:12px;line-height:1.4;">${lights
           .map((id) => `<li><code>${this._esc(id)}</code></li>`)
           .join("")}</ul>`
       : `<div style="margin-top:8px;font-size:12px;opacity:.8;">No <code>light.*</code> entities found for this area.</div>`;
 
+    const resolvedNote = resolvedAreaId && resolvedAreaId !== areaId
+      ? `<div style="margin-top:4px;font-size:12px;opacity:.8;">resolved area_id: <code>${this._esc(resolvedAreaId)}</code></div>`
+      : "";
+
     return `
       <div style="width:100%;">
         <div style="font-weight:600;font-size:13px;">Debug lights for area</div>
         <div style="margin-top:4px;font-size:12px;"><code>area_id: ${this._esc(areaId)}</code></div>
+        ${resolvedNote}
         ${list}
       </div>
     `;
+  }
+
+  _resolveAreaId(areaInput) {
+    if (!areaInput || !Array.isArray(this._areas)) return areaInput;
+
+    const raw = String(areaInput).trim();
+    const norm = raw.toLowerCase();
+    const slug = norm.replace(/\s+/g, "_");
+
+    const found = this._areas.find((a) => {
+      const id = String(a.area_id || "").toLowerCase();
+      const name = String(a.name || "").toLowerCase();
+      const nameSlug = name.replace(/\s+/g, "_");
+      return id === norm || name === norm || nameSlug === norm || id === slug || nameSlug === slug;
+    });
+
+    return found?.area_id || areaInput;
   }
 
   _getLightsByArea(areaId) {
@@ -150,7 +190,14 @@ class SeagullRoomCard extends HTMLElement {
 
     if (!this._entityAreaMap) return ids;
 
-    return ids.filter((entityId) => this._entityAreaMap.get(entityId) === areaId);
+    return ids.filter((entityId) => {
+      const mapped = this._entityAreaMap.get(entityId);
+      if (mapped === areaId) return true;
+
+      const st = this._hass.states[entityId];
+      const attrArea = st?.attributes?.area_id;
+      return attrArea === areaId;
+    });
   }
 
   _esc(s) {
