@@ -276,7 +276,8 @@ class SeagullRoomCard extends HTMLElement {
 
   _resolveAction(item, key) {
     const lightsCfg = this._config.lights || {};
-    const raw = item?.[key] ?? lightsCfg?.[key] ?? (key === "tap_action" ? "toggle" : null);
+    const fallback = key === "tap_action" ? "toggle" : "more-info";
+    const raw = item?.[key] ?? lightsCfg?.[key] ?? fallback;
     if (!raw) return null;
 
     if (typeof raw === "string") {
