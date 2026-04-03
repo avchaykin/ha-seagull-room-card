@@ -178,7 +178,7 @@ class SeagullRoomCard extends HTMLElement {
 
       return `
         <button class="sg-room-light-btn" data-entity="${this._esc(entityId)}"
-          style="width:${size}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:${this._esc(bgColor)};padding:0;">
+          style="width:${size}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;">
           <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
         </button>
       `;
@@ -186,15 +186,15 @@ class SeagullRoomCard extends HTMLElement {
 
     if (align === "justified") {
       return `
-        <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;">
+        <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;align-items:start;align-content:start;">
           ${buttons}
         </div>
       `;
     }
 
-    const justify = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center";
+    const justify = align === "left" ? "start" : align === "right" ? "end" : "center";
     return `
-      <div style="display:flex;flex-wrap:wrap;justify-content:${justify};gap:${gap}px;">
+      <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;justify-content:${justify};align-items:start;align-content:start;">
         ${buttons}
       </div>
     `;
