@@ -1,3 +1,6 @@
+const SEAGULL_ROOM_CARD_VERSION = "0.1.0";
+const SEAGULL_ROOM_CARD_COMMIT = "dev";
+
 class SeagullRoomCard extends HTMLElement {
   static getStubConfig() {
     return {
@@ -6,6 +9,10 @@ class SeagullRoomCard extends HTMLElement {
       background_opacity: 0.45,
       border_radius: 16,
     };
+  }
+
+  static async getConfigElement() {
+    return document.createElement("seagull-room-card-editor");
   }
 
   setConfig(config) {
@@ -91,16 +98,48 @@ class SeagullRoomCard extends HTMLElement {
       }
     }
 
-    // fallback for named/css vars: keep input color if unsupported
+    // fallback for named/css vars
     return c;
   }
 }
 
+class SeagullRoomCardEditor extends HTMLElement {
+  setConfig(_config) {
+    this._render();
+  }
+
+  _render() {
+    this.innerHTML = `
+      <div style="padding:12px 0; opacity:.85; font-size:13px; line-height:1.4;">
+        <div><b>Seagull Room Card</b></div>
+        <div style="margin-top:6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">
+          Version: v${SEAGULL_ROOM_CARD_VERSION}<br>
+          Commit: ${SEAGULL_ROOM_CARD_COMMIT}
+        </div>
+        <div style="margin-top:8px; opacity:.75;">Use the YAML tab to edit card configuration.</div>
+      </div>
+    `;
+  }
+}
+
+customElements.define("seagull-room-card-editor", SeagullRoomCardEditor);
 customElements.define("seagull-room-card", SeagullRoomCard);
+
+if (!window.__SEAGULL_ROOM_CARD_ANNOUNCED__) {
+  window.__SEAGULL_ROOM_CARD_ANNOUNCED__ = true;
+  console.info(
+    `%c🕊️ SEAGULL-ROOM-CARD%c v${SEAGULL_ROOM_CARD_VERSION} (%c${SEAGULL_ROOM_CARD_COMMIT}%c) loaded`,
+    "color:#fff;background:#0f766e;padding:2px 6px;border-radius:4px;font-weight:700;",
+    "color:inherit;",
+    "color:#f59e0b;font-weight:700;",
+    "color:inherit;"
+  );
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "seagull-room-card",
   name: "Seagull Room Card",
-  description: "Base room card with configurable translucent background and corner radius",
+  preview: true,
+  description: `Base room card with configurable translucent background and corner radius (v${SEAGULL_ROOM_CARD_VERSION}, ${SEAGULL_ROOM_CARD_COMMIT})`,
 });

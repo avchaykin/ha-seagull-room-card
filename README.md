@@ -19,8 +19,10 @@
 Включить hooks path один раз:
 
 ```bash
-git config core.hooksPath .githooks
+./scripts/setup-hooks.sh
 ```
+
+(эквивалентно `git config core.hooksPath .githooks`)
 
 Можно переопределить переменные окружения:
 
@@ -43,3 +45,11 @@ border_radius: 16                # px
 - `background_color` — цвет фона (hex или rgb/rgba; для hex/rgb автоматически применяется прозрачность)
 - `background_opacity` — прозрачность фона от `0` до `1`
 - `border_radius` — радиус скругления в пикселях
+
+## Диагностика загрузки
+
+При успешной загрузке модуля в браузерной консоли будет строка:
+
+`🕊️ SEAGULL-ROOM-CARD v... (...) loaded`
+
+Это сделано по аналогии с `ha-seagull-badge-card` и помогает быстро понять, что ресурс действительно подхватился.
