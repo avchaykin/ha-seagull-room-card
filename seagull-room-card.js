@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.7.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.8.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -16,6 +16,17 @@ class SeagullRoomCard extends HTMLElement {
       tap_action: "more-info",
       double_tap_action: "more-info",
       hold_action: "more-info",
+      text: {
+        value: "",
+        size: 14,
+        halign: "left",
+        valign: "top",
+        padding: 0,
+        padding_top: null,
+        padding_right: null,
+        padding_bottom: null,
+        padding_left: null,
+      },
       buttons: {
         cols: 3,
         rows: 1,
@@ -124,12 +135,14 @@ class SeagullRoomCard extends HTMLElement {
 
     this._updateCardIcon(icon, iconColor, iconSize);
 
+    const textHtml = this._buildTextHtml();
     const { html, items } = this._buildLightsHtmlAndItems();
     this._renderedLightItems = items;
 
-    if (this._lastLightsHtml !== html) {
-      this._inner.innerHTML = html;
-      this._lastLightsHtml = html;
+    const combinedHtml = `${textHtml}${html}`;
+    if (this._lastLightsHtml !== combinedHtml) {
+      this._inner.innerHTML = combinedHtml;
+      this._lastLightsHtml = combinedHtml;
       this._wireLightButtons();
     }
 
@@ -156,6 +169,42 @@ class SeagullRoomCard extends HTMLElement {
     this._icon.style.display = icon ? "block" : "none";
     this._icon.style.cursor = "pointer";
     this._icon.style.zIndex = "1";
+  }
+
+  _buildTextHtml() {
+    const textCfg = this._config?.text;
+    if (!textCfg) return "";
+
+    const entityId = this._config?.entity;
+    const state = entityId && this._hass?.states?.[entityId]
+      ? this._hass.states[entityId].state
+      : undefined;
+
+    const raw = this._resolveDynamicValue(textCfg.value, entityId, state, "");
+    const value = raw == null ? "" : String(raw);
+    if (!value.trim()) return "";
+
+    const size = Math.max(8, this._toPx(textCfg.size ?? 14, 14));
+    const halign = ["left", "center", "right"].includes(String(textCfg.halign ?? "left").toLowerCase())
+      ? String(textCfg.halign ?? "left").toLowerCase()
+      : "left";
+    const valign = ["top", "center", "bottom"].includes(String(textCfg.valign ?? "top").toLowerCase())
+      ? String(textCfg.valign ?? "top").toLowerCase()
+      : "top";
+
+    const basePadding = Math.max(0, this._toPx(textCfg.padding ?? 0, 0));
+    const padTop = Math.max(0, this._toPx(textCfg.padding_top ?? basePadding, basePadding));
+    const padRight = Math.max(0, this._toPx(textCfg.padding_right ?? basePadding, basePadding));
+    const padBottom = Math.max(0, this._toPx(textCfg.padding_bottom ?? basePadding, basePadding));
+    const padLeft = Math.max(0, this._toPx(textCfg.padding_left ?? basePadding, basePadding));
+
+    const justify = valign === "top" ? "flex-start" : valign === "bottom" ? "flex-end" : "center";
+
+    return `
+      <div style="display:flex;justify-content:${justify};padding:${padTop}px ${padRight}px ${padBottom}px ${padLeft}px;">
+        <div style="width:100%;text-align:${halign};font-size:${size}px;line-height:1.35;">${value}</div>
+      </div>
+    `;
   }
 
   _buildLightsHtmlAndItems() {

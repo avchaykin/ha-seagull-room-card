@@ -21,6 +21,19 @@ icon: mdi:sofa
 icon_color: "#2233aa44"
 icon_size: 60
 
+text:
+  value: |
+    <b>Kitchen</b><br/>
+    <i>{{ states(entity) }}</i>
+  size: 14
+  halign: left                  # left | center | right
+  valign: top                   # top | center | bottom
+  padding: 0
+  padding_top: null
+  padding_right: null
+  padding_bottom: null
+  padding_left: null
+
 buttons:
   cols: 3
   rows: 1
@@ -61,6 +74,9 @@ buttons:
 
 - `buttons` is the main section name now.
 - Legacy alias `lights` still works.
+- `text` supports multiline template value with HTML formatting (`<b>`, `<i>`, `<br/>`, etc.).
+- `text.value` can use the same template formats as buttons.
+- If card-level `entity` is set, it can be referenced in text templates.
 - Button-level fields can override section-level fields.
 - Allowed actions: `toggle`, `more-info`, `perform-action`, `navigate`.
 - `entity` can be from any domain.
