@@ -56,6 +56,14 @@ lights:
       icon: mdi:ceiling-light
       color: "{{ is_on ? '#f59e0b' : '#334155' }}"      # override только для этой лампы
       icon_color: "{{ is_on ? '#111827' : '#cbd5e1' }}" # override только для этой лампы
+
+# или объектной формой (можно скрыть отдельный свет)
+# lights:
+#   entities:
+#     light.driveway_status_led: false
+#     light.living_main:
+#       icon: mdi:ceiling-light
+#       color: "{{ is_on ? '#f59e0b' : '#334155' }}"
 ```
 
 ## Параметры
@@ -77,6 +85,9 @@ lights:
 - `lights.color` — шаблон/значение цвета фона кнопки (наследуется)
 - `lights.icon_color` — шаблон/значение цвета иконки (наследуется)
 - `lights.entities` (или `lights.items` / `lights.light`) — override для конкретных источников света:
+  - можно массивом объектов (`- entity: light.xxx ...`)
+  - или объектом (`light.xxx: {...}`)
+  - если указать `light.xxx: false`, этот свет скрывается (кнопка не рисуется)
   - `entity` — `light.xxx`
   - `icon` — иконка для этой лампы
   - `color` — цвет/шаблон только для этой лампы

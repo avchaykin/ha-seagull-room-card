@@ -144,12 +144,13 @@ class SeagullRoomCard extends HTMLElement {
     const resolvedAreaId = this._resolveAreaId(areaInput);
     const entities = this._getLightsByArea(resolvedAreaId || areaInput);
     const perEntity = this._lightOverridesByEntity(lightsCfg);
+    const visibleEntities = entities.filter((entityId) => !(perEntity.get(entityId)?.hidden));
 
-    if (!entities.length) {
+    if (!visibleEntities.length) {
       return `<div style="font-size:12px;opacity:.8;">No <code>light.*</code> entities for <code>${this._esc(areaInput)}</code>.</div>`;
     }
 
-    const buttons = entities.map((entityId) => {
+    const buttons = visibleEntities.map((entityId) => {
       const st = this._hass.states[entityId];
       const state = st?.state || "unknown";
       const ov = perEntity.get(entityId) || {};
@@ -189,15 +190,34 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _lightOverridesByEntity(lightsCfg) {
-    const arr = [];
-    if (Array.isArray(lightsCfg.entities)) arr.push(...lightsCfg.entities);
-    if (Array.isArray(lightsCfg.items)) arr.push(...lightsCfg.items);
-    if (Array.isArray(lightsCfg.light)) arr.push(...lightsCfg.light);
-
     const map = new Map();
-    arr.forEach((item) => {
-      if (item?.entity) map.set(item.entity, item);
-    });
+
+    const ingestArray = (arr) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((item) => {
+        if (item?.entity) map.set(item.entity, item);
+      });
+    };
+
+    const ingestObject = (obj) => {
+      if (!obj || Array.isArray(obj) || typeof obj !== "object") return;
+      Object.entries(obj).forEach(([entityId, value]) => {
+        if (value === false) {
+          map.set(entityId, { entity: entityId, hidden: true });
+        } else if (value && typeof value === "object") {
+          map.set(entityId, { entity: entityId, ...value });
+        }
+      });
+    };
+
+    ingestArray(lightsCfg.entities);
+    ingestArray(lightsCfg.items);
+    ingestArray(lightsCfg.light);
+
+    ingestObject(lightsCfg.entities);
+    ingestObject(lightsCfg.items);
+    ingestObject(lightsCfg.light);
+
     return map;
   }
 
