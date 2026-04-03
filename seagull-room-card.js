@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.7";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.8";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -52,7 +52,7 @@ class SeagullRoomCard extends HTMLElement {
         background: "{{ ((entity || '').startsWith('lock.') ? state === 'unlocked' : state === 'on') ? '#f59e0b' : '#4b5563' }}",
         border: 0,
         border_color: "transparent",
-        light_color: false,
+        light_color: false, // false | color | brightness | both/true
         tap_action: "toggle",
         double_tap_action: "more-info",
         hold_action: "more-info",
@@ -272,12 +272,13 @@ class SeagullRoomCard extends HTMLElement {
       const bgTpl = item.background ?? buttonsCfg.background ?? buttonsCfg.bg;
       const borderTpl = item.border ?? buttonsCfg.border;
       const borderColorTpl = item.border_color ?? buttonsCfg.border_color;
-      const lightColorEnabled = !!this._resolveDynamicValue(item.light_color ?? buttonsCfg.light_color, item.entity, state, false);
+      const lightColorModeRaw = this._resolveDynamicValue(item.light_color ?? buttonsCfg.light_color, item.entity, state, false);
+      const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
       const isActive = item.entity.startsWith("lock.") ? state === "unlocked" : state === "on";
 
       let bgColor = this._resolveDynamicValue(bgTpl, item.entity, state, (isActive ? "#f59e0b" : "#4b5563"));
-      if (lightColorEnabled && item.entity.startsWith("light.") && state === "on") {
-        const resolvedLight = this._resolveLightEntityColor(st?.attributes);
+      if (lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
+        const resolvedLight = this._resolveLightEntityColor(st?.attributes, lightColorMode);
         if (resolvedLight) bgColor = resolvedLight;
       }
 
@@ -829,12 +830,28 @@ class SeagullRoomCard extends HTMLElement {
     return value;
   }
 
-  _resolveLightEntityColor(attrs) {
+  _normalizeLightColorMode(v) {
+    if (v === true) return "both";
+    if (v === false || v == null) return "false";
+    const s = String(v).toLowerCase().trim();
+    if (s === "true" || s === "both") return "both";
+    if (s === "color" || s === "brightness" || s === "false") return s;
+    return "false";
+  }
+
+  _resolveLightEntityColor(attrs, mode = "both") {
     if (!attrs || typeof attrs !== "object") return null;
 
     const briRaw = Number(attrs.brightness);
     const bri = Number.isFinite(briRaw) ? Math.max(0, Math.min(255, briRaw)) : 255;
-    const mul = 0.25 + 0.75 * (bri / 255); // keep visible even on low brightness
+    const mul = mode === "brightness" || mode === "both"
+      ? (0.25 + 0.75 * (bri / 255))
+      : 1;
+
+    if (mode === "brightness") {
+      const v = Math.round(245 * mul);
+      return `rgb(${v}, ${v}, ${v})`;
+    }
 
     if (Array.isArray(attrs.rgb_color) && attrs.rgb_color.length >= 3) {
       const [r0, g0, b0] = attrs.rgb_color.map((x) => Math.max(0, Math.min(255, Number(x) || 0)));
@@ -848,8 +865,8 @@ class SeagullRoomCard extends HTMLElement {
       const h = Number(attrs.hs_color[0]);
       const s = Number(attrs.hs_color[1]);
       if (Number.isFinite(h) && Number.isFinite(s)) {
-        const l = Math.round(20 + 45 * (bri / 255));
-        return `hsl(${h}, ${s}%, ${l}%)`;
+        const lBase = mode === "both" ? Math.round(20 + 45 * (bri / 255)) : 50;
+        return `hsl(${h}, ${s}%, ${lBase}%)`;
       }
     }
 
@@ -865,6 +882,7 @@ class SeagullRoomCard extends HTMLElement {
       }
     }
 
+    // if only color requested but no color attrs, keep default fallback in caller
     return null;
   }
 

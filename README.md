@@ -57,7 +57,7 @@ buttons:
   background: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}" # background color
   border: 0
   border_color: transparent
-  light_color: false             # для light.* брать реальный цвет света при state=on
+  light_color: false             # false | color | brightness | both (или true)
 
   tap_action: toggle
   double_tap_action: more-info
