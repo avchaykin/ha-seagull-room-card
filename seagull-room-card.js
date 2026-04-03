@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.8.1";
+const SEAGULL_ROOM_CARD_VERSION = "0.8.2";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -654,21 +654,65 @@ class SeagullRoomCard extends HTMLElement {
     try {
       const st = this._hass?.states?.[entityId];
       const statesFn = (eid) => this._hass?.states?.[eid]?.state;
-      const fn = new Function("ctx", `with (ctx) { return (${expr}); }`);
-      const out = fn({
-        hass: this._hass,
-        entity: entityId,
-        state,
-        states: statesFn,
-        all_states: this._hass?.states,
-        attributes: st?.attributes || {},
-        is_on: state === "on",
-      });
+      const evalInCtx = (code) => {
+        const fn = new Function("ctx", `with (ctx) { return (${code}); }`);
+        return fn({
+          hass: this._hass,
+          entity: entityId,
+          state,
+          states: statesFn,
+          all_states: this._hass?.states,
+          attributes: st?.attributes || {},
+          is_on: state === "on",
+        });
+      };
+
+      const parts = String(expr).split("|").map((x) => x.trim()).filter(Boolean);
+      let out = evalInCtx(parts[0] || expr);
+
+      if (parts.length > 1) {
+        for (let i = 1; i < parts.length; i += 1) {
+          out = this._applyTemplateFilter(out, parts[i]);
+        }
+      }
+
       return out == null ? fallback : out;
     } catch (err) {
       console.warn("[seagull-room-card] template eval error", err, expr);
       return fallback;
     }
+  }
+
+  _applyTemplateFilter(value, filterSpec) {
+    const m = String(filterSpec).match(/^(\w+)\s*(?:\((.*)\))?$/);
+    if (!m) return value;
+
+    const name = m[1].toLowerCase();
+    const argRaw = (m[2] ?? "").trim();
+
+    if (name === "round") {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return value;
+      const digits = argRaw ? Number(argRaw) : 0;
+      const p = Number.isFinite(digits) ? Math.max(0, digits) : 0;
+      return Number(n.toFixed(p));
+    }
+
+    if (name === "upper") return String(value).toUpperCase();
+    if (name === "lower") return String(value).toLowerCase();
+    if (name === "trim") return String(value).trim();
+    if (name === "capitalize") {
+      const s = String(value);
+      return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+    }
+    if (name === "title") {
+      return String(value)
+        .split(/\s+/)
+        .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w))
+        .join(" ");
+    }
+
+    return value;
   }
 
   _esc(s) {
