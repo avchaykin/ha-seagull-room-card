@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.3";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.4";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -270,7 +270,9 @@ class SeagullRoomCard extends HTMLElement {
 
       const defaultDomainIcon = item.entity.startsWith("light.")
         ? (state === "on" ? "mdi:lightbulb" : "mdi:lightbulb-off")
-        : "mdi:help-circle-outline";
+        : item.entity.startsWith("lock.")
+          ? (state === "locked" ? "mdi:lock" : state === "unlocked" ? "mdi:lock-open-variant" : "mdi:lock-reset")
+          : "mdi:help-circle-outline";
 
       const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
       const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
