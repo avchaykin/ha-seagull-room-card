@@ -49,6 +49,8 @@ icon_size: 22
 lights:
   cols: 4                         # columns/cols — количество колонок
   size: 44                        # размер кнопки
+  gap: 10                         # расстояние между кнопками
+  align: justified                # left | center | right | justified
   color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}"
   icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}"
   entities:
@@ -82,6 +84,12 @@ lights:
 
 - `lights.cols` / `lights.columns` — количество колонок
 - `lights.size` — размер круглой кнопки
+- `lights.gap` — расстояние между кнопками
+- `lights.align` — выравнивание кнопок:
+  - `left` — слева
+  - `center` — по центру (рядом друг с другом, с `gap`)
+  - `right` — справа
+  - `justified` — равномерно по ширине карточки (с учётом `cols`)
 - `lights.color` — шаблон/значение цвета фона кнопки (наследуется)
 - `lights.icon_color` — шаблон/значение цвета иконки (наследуется)
 - `lights.entities` (или `lights.items` / `lights.light`) — override для конкретных источников света:

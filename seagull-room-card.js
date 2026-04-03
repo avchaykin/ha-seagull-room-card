@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.4.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.4.1";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -17,6 +17,8 @@ class SeagullRoomCard extends HTMLElement {
       lights: {
         cols: 4,
         size: 44,
+        gap: 10,
+        align: "justified",
         color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}",
         icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
         entities: [],
@@ -140,6 +142,9 @@ class SeagullRoomCard extends HTMLElement {
     const lightsCfg = this._config.lights || {};
     const cols = Math.max(1, parseInt(lightsCfg.cols ?? lightsCfg.columns ?? 4, 10) || 4);
     const size = Math.max(20, this._toPx(lightsCfg.size ?? 44, 44));
+    const gap = Math.max(0, this._toPx(lightsCfg.gap ?? 10, 10));
+    const alignRaw = String(lightsCfg.align ?? "justified").toLowerCase();
+    const align = ["left", "right", "center", "justified"].includes(alignRaw) ? alignRaw : "justified";
 
     const resolvedAreaId = this._resolveAreaId(areaInput);
     const entities = this._getLightsByArea(resolvedAreaId || areaInput);
@@ -179,8 +184,17 @@ class SeagullRoomCard extends HTMLElement {
       `;
     }).join("");
 
+    if (align === "justified") {
+      return `
+        <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;">
+          ${buttons}
+        </div>
+      `;
+    }
+
+    const justify = align === "left" ? "flex-start" : align === "right" ? "flex-end" : "center";
     return `
-      <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:10px;">
+      <div style="display:flex;flex-wrap:wrap;justify-content:${justify};gap:${gap}px;">
         ${buttons}
       </div>
     `;
