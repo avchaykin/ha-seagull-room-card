@@ -129,16 +129,16 @@ lights:
 - `lights.icon_color` — шаблон/значение цвета иконки (наследуется)
 - `lights.tap_action` / `lights.double_tap_action` / `lights.hold_action` — действия по умолчанию для кнопок света
   - поддерживаются: `toggle`, `more-info`, `perform-action`, `navigate`
-- `lights.entities` (или `lights.items` / `lights.light`) — override для конкретных источников света:
-  - можно массивом объектов (`- entity: light.xxx ...`)
-  - или объектом (`light.xxx: {...}`)
-  - если указать `light.xxx: false`, этот свет скрывается (кнопка не рисуется)
-  - если указать `light.xxx: {...}`, эта лампа будет показана (если entity существует)
-  - `entity` — `light.xxx`
+- `lights.entities` (или `lights.items` / `lights.light`) — override для конкретных сущностей:
+  - можно массивом объектов (`- entity: switch.xxx ...`)
+  - или объектом (`sensor.xxx: {...}`)
+  - если указать `entity_id: false`, эта сущность скрывается (кнопка не рисуется)
+  - если указать `entity_id: {...}`, сущность будет показана (если она существует)
+  - `entity` — любой entity_id (`light.*`, `switch.*`, `input_boolean.*`, ...)
   - `width` — ширина кнопки в колонках (по умолчанию `1`)
-  - `icon` — иконка для этой лампы
-  - `color` — цвет/шаблон только для этой лампы
-  - `icon_color` — цвет иконки/шаблон только для этой лампы
+  - `icon` — иконка для этой кнопки
+  - `color` — цвет/шаблон фона только для этой кнопки
+  - `icon_color` — цвет иконки/шаблон только для этой кнопки
   - `tap_action` / `double_tap_action` / `hold_action` — переопределение действий для конкретной кнопки
   - один и тот же `entity` можно добавить несколько раз (в массивной форме)
 

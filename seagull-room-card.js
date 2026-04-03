@@ -146,7 +146,7 @@ class SeagullRoomCard extends HTMLElement {
 
     const items = this._collectLightItems(lightsCfg)
       .filter((it) => !it.hidden)
-      .filter((it) => it.entity?.startsWith("light."))
+      .filter((it) => !!it.entity)
       .filter((it) => !!this._hass?.states?.[it.entity]);
 
     if (!items.length) return { html: "", items: [] };
