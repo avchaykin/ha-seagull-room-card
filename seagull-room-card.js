@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.14";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.15";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -267,7 +267,10 @@ class SeagullRoomCard extends HTMLElement {
       const st = this._hass.states[item.entity];
       const state = st?.state || "unknown";
 
-      const icon = this._resolveDynamicValue(item.icon ?? buttonsCfg.icon, item.entity, state, st?.attributes?.icon || "mdi:help-circle-outline");
+      const defaultDomainIcon = item.entity.startsWith("light.")
+        ? (state === "on" ? "mdi:lightbulb" : "mdi:lightbulb-off")
+        : "mdi:help-circle-outline";
+      const icon = this._resolveDynamicValue(item.icon ?? buttonsCfg.icon, item.entity, state, st?.attributes?.icon || defaultDomainIcon);
       const iconColorTpl = item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color;
       const bgTpl = item.background ?? buttonsCfg.background ?? buttonsCfg.bg;
       const borderTpl = item.border ?? buttonsCfg.border;
