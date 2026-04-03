@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.5.0";
+const SEAGULL_ROOM_CARD_VERSION = "0.5.1";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -82,6 +82,7 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.position = "relative";
 
     this._inner.style.minHeight = "80px";
+    this._inner.style.display = "block";
     this._inner.style.padding = "42px 12px 12px";
     this._inner.style.boxSizing = "border-box";
 
@@ -116,7 +117,7 @@ class SeagullRoomCard extends HTMLElement {
     const entities = orderedEntities.filter((entityId) => !!this._hass?.states?.[entityId]);
 
     if (!entities.length) {
-      return `<div style="font-size:12px;opacity:.8;">Set explicit lights in <code>lights.entities</code>.</div>`;
+      return "";
     }
 
     const buttons = entities.map((entityId) => {
@@ -133,7 +134,7 @@ class SeagullRoomCard extends HTMLElement {
 
       return `
         <button class="sg-room-light-btn" data-entity="${this._esc(entityId)}"
-          style="width:${size}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;">
+          style="width:${size}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
           <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
         </button>
       `;
@@ -141,15 +142,16 @@ class SeagullRoomCard extends HTMLElement {
 
     if (align === "justified") {
       return `
-        <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;align-items:start;align-content:start;">
+        <div style="display:grid;grid-template-columns:repeat(${cols}, minmax(0,1fr));gap:${gap}px;align-items:start;align-content:start;justify-items:start;">
           ${buttons}
         </div>
       `;
     }
 
     const justify = align === "left" ? "start" : align === "right" ? "end" : "center";
+    const direction = align === "right" ? "rtl" : "ltr";
     return `
-      <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;justify-content:${justify};align-items:start;align-content:start;">
+      <div style="display:grid;grid-template-columns:repeat(${cols}, ${size}px);gap:${gap}px;justify-content:${justify};align-items:start;align-content:start;direction:${direction};">
         ${buttons}
       </div>
     `;
