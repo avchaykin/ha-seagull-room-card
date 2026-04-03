@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.5.4";
+const SEAGULL_ROOM_CARD_VERSION = "0.5.5";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -18,6 +18,10 @@ class SeagullRoomCard extends HTMLElement {
         size: 44,
         gap: 10,
         padding: 12,
+        padding_top: null,
+        padding_right: null,
+        padding_bottom: null,
+        padding_left: null,
         align: "justified",
         color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}",
         icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
@@ -83,11 +87,15 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.position = "relative";
 
     const lightsCfg = this._config.lights || {};
-    const contentPadding = Math.max(0, this._toPx(lightsCfg.padding ?? lightsCfg.padding_top ?? 12, 12));
+    const basePadding = Math.max(0, this._toPx(lightsCfg.padding ?? 12, 12));
+    const padTop = Math.max(0, this._toPx(lightsCfg.padding_top ?? basePadding, basePadding));
+    const padRight = Math.max(0, this._toPx(lightsCfg.padding_right ?? basePadding, basePadding));
+    const padBottom = Math.max(0, this._toPx(lightsCfg.padding_bottom ?? basePadding, basePadding));
+    const padLeft = Math.max(0, this._toPx(lightsCfg.padding_left ?? basePadding, basePadding));
 
     this._inner.style.minHeight = "80px";
     this._inner.style.display = "block";
-    this._inner.style.padding = `${contentPadding}px`;
+    this._inner.style.padding = `${padTop}px ${padRight}px ${padBottom}px ${padLeft}px`;
     this._inner.style.boxSizing = "border-box";
 
     this._icon.setAttribute("icon", icon);
