@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.2";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.3";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -23,6 +23,7 @@ class SeagullRoomCard extends HTMLElement {
       text: {
         entity: null,
         value: "",
+        color: "inherit",
         size: 14,
         halign: "left",
         valign: "top",
@@ -210,6 +211,7 @@ class SeagullRoomCard extends HTMLElement {
     if (!value.trim()) return "";
 
     const size = Math.max(8, this._toPx(textCfg.size ?? 14, 14));
+    const textColor = this._resolveDynamicValue(textCfg.color, entityId, state, "inherit");
     const halign = ["left", "center", "right"].includes(String(textCfg.halign ?? "left").toLowerCase())
       ? String(textCfg.halign ?? "left").toLowerCase()
       : "left";
@@ -240,7 +242,7 @@ class SeagullRoomCard extends HTMLElement {
           .sg-room-text-layer h2 { font-size: 1.2em; }
           .sg-room-text-layer h3 { font-size: 1.1em; }
         </style>
-        <div style="width:100%;text-align:${halign};font-size:${size}px;line-height:1.35;">${value}</div>
+        <div style="width:100%;text-align:${halign};font-size:${size}px;line-height:1.35;color:${this._esc(textColor)};">${value}</div>
       </div>
     `;
   }

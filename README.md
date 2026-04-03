@@ -27,6 +27,7 @@ variables:
 
 text:
   entity: sensor.second_bedroom_temperature  # target entity for text actions (optional)
+  color: "{{ state === 'on' ? '#ffffff' : '#111827' }}"
   value: |
     <b>Kitchen</b><br/>
     <i>{{ states(entity) }}</i>
