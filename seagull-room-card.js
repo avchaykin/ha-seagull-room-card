@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.2";
+const SEAGULL_ROOM_CARD_VERSION = "0.10.3";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -875,7 +875,7 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _resolveObsoleteConfig(raw) {
-    const defaults = { border: 1, border_color: "#ef4444" };
+    const defaults = { border: 2, border_color: "#d1d5db" };
 
     if (raw == null || raw === false) return null;
     if (typeof raw === "number") return { hours: raw, ...defaults };

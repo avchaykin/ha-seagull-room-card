@@ -59,7 +59,7 @@ buttons:
   border_color: transparent
   use_light_color: false         # false | color | brightness | both (или true)
   obsolete: null                 # часы или объект {hours, color, background, border, border_color, icon}
-                                # по умолчанию для obsolete: тонкая красная рамка
+                                # по умолчанию для obsolete: светло-серая рамка 2px
 
   tap_action: toggle
   double_tap_action: more-info
