@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.9.6";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.7";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -832,8 +832,15 @@ class SeagullRoomCard extends HTMLElement {
   _resolveLightEntityColor(attrs) {
     if (!attrs || typeof attrs !== "object") return null;
 
+    const briRaw = Number(attrs.brightness);
+    const bri = Number.isFinite(briRaw) ? Math.max(0, Math.min(255, briRaw)) : 255;
+    const mul = 0.25 + 0.75 * (bri / 255); // keep visible even on low brightness
+
     if (Array.isArray(attrs.rgb_color) && attrs.rgb_color.length >= 3) {
-      const [r, g, b] = attrs.rgb_color.map((x) => Math.max(0, Math.min(255, Number(x) || 0)));
+      const [r0, g0, b0] = attrs.rgb_color.map((x) => Math.max(0, Math.min(255, Number(x) || 0)));
+      const r = Math.round(r0 * mul);
+      const g = Math.round(g0 * mul);
+      const b = Math.round(b0 * mul);
       return `rgb(${r}, ${g}, ${b})`;
     }
 
@@ -841,16 +848,20 @@ class SeagullRoomCard extends HTMLElement {
       const h = Number(attrs.hs_color[0]);
       const s = Number(attrs.hs_color[1]);
       if (Number.isFinite(h) && Number.isFinite(s)) {
-        return `hsl(${h}, ${s}%, 50%)`;
+        const l = Math.round(20 + 45 * (bri / 255));
+        return `hsl(${h}, ${s}%, ${l}%)`;
       }
     }
 
     if (attrs.color_temp_kelvin) {
       const k = Number(attrs.color_temp_kelvin);
       if (Number.isFinite(k)) {
-        if (k <= 3000) return "#f59e0b";
-        if (k <= 4500) return "#f3f4f6";
-        return "#bfdbfe";
+        let base = [245, 158, 11];
+        if (k <= 3000) base = [245, 158, 11];
+        else if (k <= 4500) base = [243, 244, 246];
+        else base = [191, 219, 254];
+        const [r, g, b] = base.map((v) => Math.round(v * mul));
+        return `rgb(${r}, ${g}, ${b})`;
       }
     }
 
