@@ -8,24 +8,24 @@ class SeagullRoomCard extends HTMLElement {
       background_color: "#1f2937",
       background_opacity: 0.45,
       border_radius: 16,
-      border_width: 1,
-      border_color: "rgba(255,255,255,0.25)",
+      border_width: 0,
+      border_color: "#aaaaaa",
       icon: "mdi:sofa",
-      icon_color: "#ffffff",
-      icon_size: 22,
+      icon_color: "#2233aa44",
+      icon_size: 60,
       tap_action: "more-info",
       double_tap_action: "more-info",
       hold_action: "more-info",
       lights: {
-        cols: 4,
-        size: 44,
-        gap: 10,
-        padding: 12,
+        cols: 3,
+        size: 40,
+        gap: 5,
+        padding: 10,
         padding_top: null,
         padding_right: null,
         padding_bottom: null,
         padding_left: null,
-        align: "justified",
+        align: "right",
         color: "{{ state === 'on' ? 'rgba(245,158,11,0.9)' : 'rgba(75,85,99,0.45)' }}",
         icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
         tap_action: "toggle",
@@ -76,14 +76,14 @@ class SeagullRoomCard extends HTMLElement {
     const bgColor = cfg.background_color ?? "#1f2937";
     const opacity = this._clampOpacity(cfg.background_opacity ?? 0.45);
     const radius = this._toPx(cfg.border_radius ?? 16, 16);
-    const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? 1, 1));
-    const borderColor = cfg.border_color ?? "rgba(255,255,255,0.25)";
+    const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? 0, 0));
+    const borderColor = cfg.border_color ?? "#aaaaaa";
 
     const icon = cfg.icon ?? "mdi:sofa";
-    const iconColor = cfg.icon_color ?? "#ffffff";
-    const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? 22, 22));
+    const iconColor = cfg.icon_color ?? "#2233aa44";
+    const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? 60, 60));
 
-    const basePadding = Math.max(0, this._toPx(lightsCfg.padding ?? 12, 12));
+    const basePadding = Math.max(0, this._toPx(lightsCfg.padding ?? 10, 10));
     const padTop = Math.max(0, this._toPx(lightsCfg.padding_top ?? basePadding, basePadding));
     const padRight = Math.max(0, this._toPx(lightsCfg.padding_right ?? basePadding, basePadding));
     const padBottom = Math.max(0, this._toPx(lightsCfg.padding_bottom ?? basePadding, basePadding));
@@ -138,10 +138,10 @@ class SeagullRoomCard extends HTMLElement {
 
   _buildLightsHtmlAndItems() {
     const lightsCfg = this._config.lights || {};
-    const cols = Math.max(1, parseInt(lightsCfg.cols ?? lightsCfg.columns ?? 4, 10) || 4);
-    const size = Math.max(20, this._toPx(lightsCfg.size ?? 44, 44));
-    const gap = Math.max(0, this._toPx(lightsCfg.gap ?? 10, 10));
-    const alignRaw = String(lightsCfg.align ?? "justified").toLowerCase();
+    const cols = Math.max(1, parseInt(lightsCfg.cols ?? lightsCfg.columns ?? 3, 10) || 3);
+    const size = Math.max(20, this._toPx(lightsCfg.size ?? 40, 40));
+    const gap = Math.max(0, this._toPx(lightsCfg.gap ?? 5, 5));
+    const alignRaw = String(lightsCfg.align ?? "right").toLowerCase();
     const align = ["left", "right", "center", "justified"].includes(alignRaw) ? alignRaw : "justified";
 
     const items = this._collectLightItems(lightsCfg)
