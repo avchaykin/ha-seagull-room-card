@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.8";
+const SEAGULL_ROOM_CARD_VERSION = "0.7.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -16,7 +16,7 @@ class SeagullRoomCard extends HTMLElement {
       tap_action: "more-info",
       double_tap_action: "more-info",
       hold_action: "more-info",
-      lights: {
+      buttons: {
         cols: 3,
         rows: 1,
         size: 40,
@@ -27,8 +27,11 @@ class SeagullRoomCard extends HTMLElement {
         padding_bottom: null,
         padding_left: null,
         align: "right",
-        color: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}",
-        icon_color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
+        icon: "{{ attributes.icon || 'mdi:lightbulb' }}",
+        color: "{{ state === 'on' ? '#111827' : '#e5e7eb' }}",
+        background: "{{ state === 'on' ? '#f59e0b' : '#4b5563' }}",
+        border: 0,
+        border_color: "transparent",
         tap_action: "toggle",
         double_tap_action: "more-info",
         hold_action: "more-info",
@@ -72,7 +75,7 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     const cfg = this._config;
-    const lightsCfg = cfg.lights || {};
+    const buttonsCfg = cfg.buttons || cfg.lights || {};
 
     const bgColor = cfg.background_color ?? "#eeeeeebb";
     const opacity = this._clampOpacity(cfg.background_opacity ?? 0.6);
@@ -84,15 +87,15 @@ class SeagullRoomCard extends HTMLElement {
     const iconColor = cfg.icon_color ?? "#2233aa44";
     const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? 60, 60));
 
-    const basePadding = Math.max(0, this._toPx(lightsCfg.padding ?? 10, 10));
-    const padTop = Math.max(0, this._toPx(lightsCfg.padding_top ?? basePadding, basePadding));
-    const padRight = Math.max(0, this._toPx(lightsCfg.padding_right ?? basePadding, basePadding));
-    const padBottom = Math.max(0, this._toPx(lightsCfg.padding_bottom ?? basePadding, basePadding));
-    const padLeft = Math.max(0, this._toPx(lightsCfg.padding_left ?? basePadding, basePadding));
+    const basePadding = Math.max(0, this._toPx(buttonsCfg.padding ?? 10, 10));
+    const padTop = Math.max(0, this._toPx(buttonsCfg.padding_top ?? basePadding, basePadding));
+    const padRight = Math.max(0, this._toPx(buttonsCfg.padding_right ?? basePadding, basePadding));
+    const padBottom = Math.max(0, this._toPx(buttonsCfg.padding_bottom ?? basePadding, basePadding));
+    const padLeft = Math.max(0, this._toPx(buttonsCfg.padding_left ?? basePadding, basePadding));
 
-    const size = Math.max(20, this._toPx(lightsCfg.size ?? 40, 40));
-    const gap = Math.max(0, this._toPx(lightsCfg.gap ?? 5, 5));
-    const minRows = Math.max(0, parseInt(lightsCfg.rows ?? 0, 10) || 0);
+    const size = Math.max(20, this._toPx(buttonsCfg.size ?? 40, 40));
+    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? 5, 5));
+    const minRows = Math.max(0, parseInt(buttonsCfg.rows ?? 0, 10) || 0);
     const minRowsHeight = minRows > 0
       ? Math.round(padTop + padBottom + minRows * size + Math.max(0, minRows - 1) * gap)
       : 0;
@@ -156,14 +159,14 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _buildLightsHtmlAndItems() {
-    const lightsCfg = this._config.lights || {};
-    const cols = Math.max(1, parseInt(lightsCfg.cols ?? lightsCfg.columns ?? 3, 10) || 3);
-    const size = Math.max(20, this._toPx(lightsCfg.size ?? 40, 40));
-    const gap = Math.max(0, this._toPx(lightsCfg.gap ?? 5, 5));
-    const alignRaw = String(lightsCfg.align ?? "right").toLowerCase();
+    const buttonsCfg = this._config.buttons || this._config.lights || {};
+    const cols = Math.max(1, parseInt(buttonsCfg.cols ?? buttonsCfg.columns ?? 3, 10) || 3);
+    const size = Math.max(20, this._toPx(buttonsCfg.size ?? 40, 40));
+    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? 5, 5));
+    const alignRaw = String(buttonsCfg.align ?? "right").toLowerCase();
     const align = ["left", "right", "center", "justified"].includes(alignRaw) ? alignRaw : "justified";
 
-    const items = this._collectLightItems(lightsCfg)
+    const items = this._collectButtonItems(buttonsCfg)
       .filter((it) => !it.hidden)
       .filter((it) => !!it.entity)
       .filter((it) => !!this._hass?.states?.[it.entity]);
@@ -174,14 +177,16 @@ class SeagullRoomCard extends HTMLElement {
       const st = this._hass.states[item.entity];
       const state = st?.state || "unknown";
 
-      const icon = item.icon || st?.attributes?.icon || "mdi:lightbulb";
-      const bgTemplate = item.color ?? lightsCfg.color;
-      const iconTemplate = item.icon_color ?? lightsCfg.icon_color;
+      const icon = this._resolveDynamicValue(item.icon ?? buttonsCfg.icon, item.entity, state, st?.attributes?.icon || "mdi:lightbulb");
+      const iconColorTpl = item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color;
+      const bgTpl = item.background ?? buttonsCfg.background ?? buttonsCfg.bg;
+      const borderTpl = item.border ?? buttonsCfg.border;
+      const borderColorTpl = item.border_color ?? buttonsCfg.border_color;
 
-      const bgColor = this._resolveTemplateColor(bgTemplate, item.entity, state)
-        || (state === "on" ? "#f59e0b" : "#4b5563");
-      const iColor = this._resolveTemplateColor(iconTemplate, item.entity, state)
-        || (state === "on" ? "#111827" : "#e5e7eb");
+      const bgColor = this._resolveDynamicValue(bgTpl, item.entity, state, (state === "on" ? "#f59e0b" : "#4b5563"));
+      const iColor = this._resolveDynamicValue(iconColorTpl, item.entity, state, (state === "on" ? "#111827" : "#e5e7eb"));
+      const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
+      const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
 
       const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
       const safeColSpan = Math.min(cols, colSpan);
@@ -189,7 +194,7 @@ class SeagullRoomCard extends HTMLElement {
 
       const html = `
         <button class="sg-room-light-btn" data-index="${index}"
-          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
+          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
           <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
         </button>
       `;
@@ -371,9 +376,9 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _resolveAction(item, key) {
-    const lightsCfg = this._config.lights || {};
+    const buttonsCfg = this._config.buttons || this._config.lights || {};
     const fallback = key === "tap_action" ? "toggle" : "more-info";
-    const raw = item?.[key] ?? lightsCfg?.[key] ?? fallback;
+    const raw = item?.[key] ?? buttonsCfg?.[key] ?? fallback;
     if (!raw) return null;
 
     if (typeof raw === "string") {
@@ -444,7 +449,7 @@ class SeagullRoomCard extends HTMLElement {
     };
   }
 
-  _collectLightItems(lightsCfg) {
+  _collectButtonItems(buttonsCfg) {
     const out = [];
 
     const fromArray = (arr) => {
@@ -471,40 +476,133 @@ class SeagullRoomCard extends HTMLElement {
       });
     };
 
-    fromArray(lightsCfg.entities);
-    fromArray(lightsCfg.items);
-    fromArray(lightsCfg.light);
+    fromArray(buttonsCfg.entities);
+    fromArray(buttonsCfg.items);
+    fromArray(buttonsCfg.button);
+    fromArray(buttonsCfg.buttons);
+    fromArray(buttonsCfg.light);
 
-    fromObject(lightsCfg.entities);
-    fromObject(lightsCfg.items);
-    fromObject(lightsCfg.light);
+    fromObject(buttonsCfg.entities);
+    fromObject(buttonsCfg.items);
+    fromObject(buttonsCfg.button);
+    fromObject(buttonsCfg.buttons);
+    fromObject(buttonsCfg.light);
 
     return out;
   }
 
-  _resolveTemplateColor(template, entityId, state) {
-    if (template == null) return null;
-    if (typeof template !== "string") return String(template);
+  _resolveDynamicValue(input, entityId, state, fallback = null) {
+    if (input == null) return fallback;
 
-    const s = template.trim();
+    if (Array.isArray(input)) {
+      const byRules = this._resolveByRules(input, entityId, state);
+      return byRules == null ? fallback : byRules;
+    }
+
+    if (typeof input === "number" || typeof input === "boolean") return input;
+    if (typeof input !== "string") return String(input);
+
+    const s = input.trim();
+    if (!s) return fallback;
+
+    if (s.includes("{%") && s.includes("%}")) {
+      const jinja = this._evalJinjaIfElseTemplate(s, entityId, state);
+      return jinja == null ? fallback : jinja;
+    }
+
     if (!s.startsWith("{{") || !s.endsWith("}}")) return s;
 
     const expr = s.slice(2, -2).trim();
+    return this._evalJsTemplateExpr(expr, entityId, state, fallback);
+  }
+
+  _resolveByRules(rules, entityId, state) {
+    let fallback;
+
+    for (const rule of rules) {
+      if (!rule || typeof rule !== "object") continue;
+      const { value } = rule;
+
+      const hasCond = ["state", "state_not", "state_above", "state_below", "state_template"].some((k) => rule[k] != null);
+      if (!hasCond) {
+        fallback = value;
+        continue;
+      }
+
+      let ok = true;
+      if (rule.state != null) ok = ok && String(state) === String(rule.state);
+      if (rule.state_not != null) ok = ok && String(state) !== String(rule.state_not);
+      if (rule.state_above != null) ok = ok && Number(state) > Number(rule.state_above);
+      if (rule.state_below != null) ok = ok && Number(state) < Number(rule.state_below);
+      if (rule.state_template != null) ok = ok && !!this._resolveDynamicValue(String(rule.state_template), entityId, state, false);
+
+      if (ok) return value;
+    }
+
+    return fallback;
+  }
+
+  _evalJinjaIfElseTemplate(tpl, entityId, state) {
+    const m = tpl.match(/{%\s*if\s+([\s\S]*?)\s*%}([\s\S]*?)(?:{%\s*else\s*%}([\s\S]*?))?{%\s*endif\s*%}/i);
+    if (!m) return null;
+
+    const cond = m[1]?.trim();
+    const thenVal = (m[2] ?? "").trim();
+    const elseVal = (m[3] ?? "").trim();
+    const yes = this._evalSimpleCondition(cond, entityId, state);
+    return yes ? thenVal : elseVal;
+  }
+
+  _evalSimpleCondition(cond, entityId, state) {
+    const m = String(cond).match(/^(.*?)\s*(==|!=|>=|<=|>|<)\s*(.*?)$/);
+    if (!m) return false;
+
+    const left = this._resolveCondToken(m[1], entityId, state);
+    const op = m[2];
+    const right = this._resolveCondToken(m[3], entityId, state);
+
+    if (op === "==") return String(left) === String(right);
+    if (op === "!=") return String(left) !== String(right);
+
+    const l = Number(left);
+    const r = Number(right);
+    if (!Number.isFinite(l) || !Number.isFinite(r)) return false;
+    if (op === ">") return l > r;
+    if (op === "<") return l < r;
+    if (op === ">=") return l >= r;
+    if (op === "<=") return l <= r;
+    return false;
+  }
+
+  _resolveCondToken(token, entityId, state) {
+    const t = String(token).trim();
+    if (t === "state") return state;
+    if (/^states\(entity\)$/i.test(t)) return this._hass?.states?.[entityId]?.state;
+    const q = t.match(/^['\"]([\s\S]*)['\"]$/);
+    if (q) return q[1];
+    const n = Number(t);
+    if (Number.isFinite(n)) return n;
+    return t;
+  }
+
+  _evalJsTemplateExpr(expr, entityId, state, fallback) {
     try {
       const st = this._hass?.states?.[entityId];
+      const statesFn = (eid) => this._hass?.states?.[eid]?.state;
       const fn = new Function("ctx", `with (ctx) { return (${expr}); }`);
       const out = fn({
         hass: this._hass,
         entity: entityId,
         state,
-        states: this._hass?.states,
+        states: statesFn,
+        all_states: this._hass?.states,
         attributes: st?.attributes || {},
         is_on: state === "on",
       });
-      return out == null ? null : String(out);
+      return out == null ? fallback : out;
     } catch (err) {
-      console.warn("[seagull-room-card] template eval error", err, template);
-      return null;
+      console.warn("[seagull-room-card] template eval error", err, expr);
+      return fallback;
     }
   }
 
