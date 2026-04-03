@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.3";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.4";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -101,22 +101,39 @@ class SeagullRoomCard extends HTMLElement {
     this._inner.style.padding = `${padTop}px ${padRight}px ${padBottom}px ${padLeft}px`;
     this._inner.style.boxSizing = "border-box";
 
-    this._icon.setAttribute("icon", icon);
-    this._icon.style.position = "absolute";
-    this._icon.style.left = "10px";
-    this._icon.style.top = "10px";
-    this._icon.style.color = iconColor;
-    this._icon.style.setProperty("--mdc-icon-size", `${iconSize}px`);
-    this._icon.style.width = `${iconSize}px`;
-    this._icon.style.height = `${iconSize}px`;
-    this._icon.style.display = icon ? "block" : "none";
-    this._icon.style.cursor = "pointer";
+    this._updateCardIcon(icon, iconColor, iconSize);
 
     const { html, items } = this._buildLightsHtmlAndItems();
     this._renderedLightItems = items;
-    this._inner.innerHTML = html;
-    this._wireLightButtons();
+
+    if (this._lastLightsHtml !== html) {
+      this._inner.innerHTML = html;
+      this._lastLightsHtml = html;
+      this._wireLightButtons();
+    }
+
     this._wireCardIconActions();
+  }
+
+  _updateCardIcon(icon, iconColor, iconSize) {
+    if (!this._icon) return;
+
+    const sig = `${icon}|${iconColor}|${iconSize}`;
+    if (this._iconSig !== sig) {
+      const prevIcon = this._icon.getAttribute("icon");
+      if (prevIcon !== icon) this._icon.setAttribute("icon", icon);
+      this._icon.style.color = iconColor;
+      this._icon.style.setProperty("--mdc-icon-size", `${iconSize}px`);
+      this._icon.style.width = `${iconSize}px`;
+      this._icon.style.height = `${iconSize}px`;
+      this._iconSig = sig;
+    }
+
+    this._icon.style.position = "absolute";
+    this._icon.style.left = "10px";
+    this._icon.style.top = "10px";
+    this._icon.style.display = icon ? "block" : "none";
+    this._icon.style.cursor = "pointer";
   }
 
   _buildLightsHtmlAndItems() {
