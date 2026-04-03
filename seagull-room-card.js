@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.6.7";
+const SEAGULL_ROOM_CARD_VERSION = "0.6.8";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -103,6 +103,14 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.background = this._toRgba(bgColor, opacity);
     this._card.style.border = `${borderWidth}px solid ${borderColor}`;
     this._card.style.position = "relative";
+    this._card.style.transition = "filter 120ms ease";
+
+    this._card.onmouseenter = () => {
+      this._card.style.filter = "brightness(1.03)";
+    };
+    this._card.onmouseleave = () => {
+      this._card.style.filter = "brightness(1)";
+    };
 
     this._inner.style.minHeight = `${Math.max(80, minRowsHeight)}px`;
     this._inner.style.display = "block";
@@ -268,6 +276,14 @@ class SeagullRoomCard extends HTMLElement {
       const index = Number(btn.getAttribute("data-index"));
       const item = this._renderedLightItems?.[index];
       if (!item) return;
+
+      btn.style.transition = "filter 100ms ease";
+      btn.addEventListener("mouseenter", () => {
+        btn.style.filter = "brightness(1.08)";
+      });
+      btn.addEventListener("mouseleave", () => {
+        btn.style.filter = "brightness(1)";
+      });
 
       btn.addEventListener("pointerdown", () => {
         holdFired = false;
