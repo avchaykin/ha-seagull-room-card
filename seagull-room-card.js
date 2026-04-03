@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.8.2";
+const SEAGULL_ROOM_CARD_VERSION = "0.9.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 class SeagullRoomCard extends HTMLElement {
@@ -16,6 +16,10 @@ class SeagullRoomCard extends HTMLElement {
       tap_action: "more-info",
       double_tap_action: "more-info",
       hold_action: "more-info",
+      variables: {
+        temperature: "{{ states('sensor.second_bedroom_temperature') }}",
+        humidity: "{{ states('sensor.second_bedroom_humidity') }}",
+      },
       text: {
         value: "",
         size: 14,
@@ -134,6 +138,7 @@ class SeagullRoomCard extends HTMLElement {
     this._inner.style.zIndex = "2";
 
     this._updateCardIcon(icon, iconColor, iconSize);
+    this._variablesContext = this._buildVariablesContext();
 
     const textHtml = this._buildTextHtml();
     const { html, items } = this._buildLightsHtmlAndItems();
@@ -172,6 +177,18 @@ class SeagullRoomCard extends HTMLElement {
     this._icon.style.display = icon ? "block" : "none";
     this._icon.style.cursor = "pointer";
     this._icon.style.zIndex = "1";
+  }
+
+  _buildVariablesContext() {
+    const out = {};
+    const vars = this._config?.variables;
+    if (!vars || typeof vars !== "object" || Array.isArray(vars)) return out;
+
+    for (const [k, v] of Object.entries(vars)) {
+      out[k] = this._resolveDynamicValue(v, this._config?.entity, this._hass?.states?.[this._config?.entity]?.state, null, out);
+    }
+
+    return out;
   }
 
   _buildTextHtml() {
@@ -556,11 +573,11 @@ class SeagullRoomCard extends HTMLElement {
     return out;
   }
 
-  _resolveDynamicValue(input, entityId, state, fallback = null) {
+  _resolveDynamicValue(input, entityId, state, fallback = null, varsCtx = null) {
     if (input == null) return fallback;
 
     if (Array.isArray(input)) {
-      const byRules = this._resolveByRules(input, entityId, state);
+      const byRules = this._resolveByRules(input, entityId, state, varsCtx);
       return byRules == null ? fallback : byRules;
     }
 
@@ -571,17 +588,17 @@ class SeagullRoomCard extends HTMLElement {
     if (!s) return fallback;
 
     if (s.includes("{%") && s.includes("%}")) {
-      const jinja = this._evalJinjaIfElseTemplate(s, entityId, state);
+      const jinja = this._evalJinjaIfElseTemplate(s, entityId, state, varsCtx);
       return jinja == null ? fallback : jinja;
     }
 
     if (!s.startsWith("{{") || !s.endsWith("}}")) return s;
 
     const expr = s.slice(2, -2).trim();
-    return this._evalJsTemplateExpr(expr, entityId, state, fallback);
+    return this._evalJsTemplateExpr(expr, entityId, state, fallback, varsCtx);
   }
 
-  _resolveByRules(rules, entityId, state) {
+  _resolveByRules(rules, entityId, state, varsCtx = null) {
     let fallback;
 
     for (const rule of rules) {
@@ -599,7 +616,7 @@ class SeagullRoomCard extends HTMLElement {
       if (rule.state_not != null) ok = ok && String(state) !== String(rule.state_not);
       if (rule.state_above != null) ok = ok && Number(state) > Number(rule.state_above);
       if (rule.state_below != null) ok = ok && Number(state) < Number(rule.state_below);
-      if (rule.state_template != null) ok = ok && !!this._resolveDynamicValue(String(rule.state_template), entityId, state, false);
+      if (rule.state_template != null) ok = ok && !!this._resolveDynamicValue(String(rule.state_template), entityId, state, false, varsCtx);
 
       if (ok) return value;
     }
@@ -607,24 +624,24 @@ class SeagullRoomCard extends HTMLElement {
     return fallback;
   }
 
-  _evalJinjaIfElseTemplate(tpl, entityId, state) {
+  _evalJinjaIfElseTemplate(tpl, entityId, state, varsCtx = null) {
     const m = tpl.match(/{%\s*if\s+([\s\S]*?)\s*%}([\s\S]*?)(?:{%\s*else\s*%}([\s\S]*?))?{%\s*endif\s*%}/i);
     if (!m) return null;
 
     const cond = m[1]?.trim();
     const thenVal = (m[2] ?? "").trim();
     const elseVal = (m[3] ?? "").trim();
-    const yes = this._evalSimpleCondition(cond, entityId, state);
+    const yes = this._evalSimpleCondition(cond, entityId, state, varsCtx);
     return yes ? thenVal : elseVal;
   }
 
-  _evalSimpleCondition(cond, entityId, state) {
+  _evalSimpleCondition(cond, entityId, state, varsCtx = null) {
     const m = String(cond).match(/^(.*?)\s*(==|!=|>=|<=|>|<)\s*(.*?)$/);
     if (!m) return false;
 
-    const left = this._resolveCondToken(m[1], entityId, state);
+    const left = this._resolveCondToken(m[1], entityId, state, varsCtx);
     const op = m[2];
-    const right = this._resolveCondToken(m[3], entityId, state);
+    const right = this._resolveCondToken(m[3], entityId, state, varsCtx);
 
     if (op === "==") return String(left) === String(right);
     if (op === "!=") return String(left) !== String(right);
@@ -639,10 +656,11 @@ class SeagullRoomCard extends HTMLElement {
     return false;
   }
 
-  _resolveCondToken(token, entityId, state) {
+  _resolveCondToken(token, entityId, state, varsCtx = null) {
     const t = String(token).trim();
     if (t === "state") return state;
     if (/^states\(entity\)$/i.test(t)) return this._hass?.states?.[entityId]?.state;
+    if (varsCtx && Object.prototype.hasOwnProperty.call(varsCtx, t)) return varsCtx[t];
     const q = t.match(/^['\"]([\s\S]*)['\"]$/);
     if (q) return q[1];
     const n = Number(t);
@@ -650,7 +668,7 @@ class SeagullRoomCard extends HTMLElement {
     return t;
   }
 
-  _evalJsTemplateExpr(expr, entityId, state, fallback) {
+  _evalJsTemplateExpr(expr, entityId, state, fallback, varsCtx = null) {
     try {
       const st = this._hass?.states?.[entityId];
       const statesFn = (eid) => this._hass?.states?.[eid]?.state;
@@ -664,6 +682,22 @@ class SeagullRoomCard extends HTMLElement {
           all_states: this._hass?.states,
           attributes: st?.attributes || {},
           is_on: state === "on",
+          vars: varsCtx || this._variablesContext || {},
+          ...(varsCtx || this._variablesContext || {}),
+          round: (v, d = 0) => {
+            const n = Number(v);
+            if (!Number.isFinite(n)) return v;
+            const p = Number.isFinite(Number(d)) ? Math.max(0, Number(d)) : 0;
+            return Number(n.toFixed(p));
+          },
+          upper: (v) => String(v).toUpperCase(),
+          lower: (v) => String(v).toLowerCase(),
+          trim: (v) => String(v).trim(),
+          capitalize: (v) => {
+            const s = String(v);
+            return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+          },
+          title: (v) => String(v).split(/\s+/).map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w)).join(" "),
         });
       };
 

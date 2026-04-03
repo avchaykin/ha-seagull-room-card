@@ -21,6 +21,10 @@ icon: mdi:sofa
 icon_color: "#2233aa44"
 icon_size: 60
 
+variables:
+  temperature: "{{ states('sensor.second_bedroom_temperature') }}"
+  humidity: "{{ states('sensor.second_bedroom_humidity') }}"
+
 text:
   value: |
     <b>Kitchen</b><br/>
@@ -74,6 +78,8 @@ buttons:
 
 - `buttons` is the main section name now.
 - Legacy alias `lights` still works.
+- `variables` allows defining reusable template variables on card level.
+- These variables are available in all templates (including `text.value`) as plain names and via `vars.<name>`.
 - `text` supports multiline template value with HTML formatting (`<b>`, `<i>`, `<br/>`, etc.).
 - `text.value` can use the same template formats as buttons.
 - If card-level `entity` is set, it can be referenced in text templates.
