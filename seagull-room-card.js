@@ -1,6 +1,59 @@
 const SEAGULL_ROOM_CARD_VERSION = "0.10.10";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
+const SEAGULL_ROOM_THEME_DEFAULT = {
+  card: {
+    border_radius: 16,
+    border_width: 0,
+    border_color: "#aaaaaa",
+    background_color: "#eeeeee",
+    background_opacity: 0.45,
+    icon: "mdi:sofa",
+    icon_color: "#2233aa44",
+    icon_size: 60,
+  },
+  text: {
+    color: "inherit",
+    background: "transparent",
+    border_radius: 10,
+    border_width: 0,
+    border_color: "transparent",
+    size: 14,
+    halign: "left",
+    valign: "top",
+    padding: 0,
+    padding_top: null,
+    padding_right: null,
+    padding_bottom: null,
+    padding_left: null,
+  },
+  button: {
+    align: "right",
+    size: 48,
+    gap: 5,
+    padding: 10,
+    padding_top: null,
+    padding_right: null,
+    padding_bottom: null,
+    padding_left: null,
+    default: {
+      border_size: 0,
+      border_color: "transparent",
+      active: { color: "#111827", background: "#f59e0b" },
+      inactive: { color: "#e5e7eb", background: "#4b5563" },
+      unavailable: { color: "#d1d5db", background: "#6b7280" },
+      obsolete: { border_size: 2, border_color: "#d1d5db" },
+    },
+    automation: {
+      active: { color: "#eaf2ff", background: "#3b82f6" },
+      inactive: { color: "#111827", background: "#d1d5db" },
+    },
+    empty: {
+      inactive: { color: "#9ca3af", background: "#e5e7eb" },
+    },
+  },
+};
+
 class SeagullRoomCard extends HTMLElement {
   static getStubConfig() {
     return {
@@ -105,25 +158,27 @@ class SeagullRoomCard extends HTMLElement {
     const buttonsCfg = cfg.buttons || cfg.lights || {};
 
     const themeCard = this._theme?.card || {};
-    const bgColor = cfg.background_color ?? themeCard.background_color ?? "#eeeeee";
-    const opacity = this._clampOpacity(cfg.background_opacity ?? 0.45);
-    const radius = this._toPx(cfg.border_radius ?? themeCard.border_radius ?? 16, 16);
-    const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? themeCard.border_width ?? 0, 0));
-    const borderColor = cfg.border_color ?? themeCard.border_color ?? "#aaaaaa";
+    const cardDef = SEAGULL_ROOM_THEME_DEFAULT.card;
+    const bgColor = cfg.background_color ?? themeCard.background_color ?? cardDef.background_color;
+    const opacity = this._clampOpacity(cfg.background_opacity ?? themeCard.background_opacity ?? cardDef.background_opacity);
+    const radius = this._toPx(cfg.border_radius ?? themeCard.border_radius ?? cardDef.border_radius, cardDef.border_radius);
+    const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? themeCard.border_width ?? cardDef.border_width, cardDef.border_width));
+    const borderColor = cfg.border_color ?? themeCard.border_color ?? cardDef.border_color;
 
-    const icon = cfg.icon ?? themeCard.icon ?? "mdi:sofa";
-    const iconColor = cfg.icon_color ?? themeCard.icon_color ?? "#2233aa44";
-    const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? themeCard.icon_size ?? 60, 60));
+    const icon = cfg.icon ?? themeCard.icon ?? cardDef.icon;
+    const iconColor = cfg.icon_color ?? themeCard.icon_color ?? cardDef.icon_color;
+    const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? themeCard.icon_size ?? cardDef.icon_size, cardDef.icon_size));
 
     const themeBtn = this._theme?.button || {};
-    const basePadding = Math.max(0, this._toPx(buttonsCfg.padding ?? themeBtn.padding ?? 10, 10));
+    const btnDef = SEAGULL_ROOM_THEME_DEFAULT.button;
+    const basePadding = Math.max(0, this._toPx(buttonsCfg.padding ?? themeBtn.padding ?? btnDef.padding, btnDef.padding));
     const padTop = Math.max(0, this._toPx(buttonsCfg.padding_top ?? themeBtn.padding_top ?? basePadding, basePadding));
     const padRight = Math.max(0, this._toPx(buttonsCfg.padding_right ?? themeBtn.padding_right ?? basePadding, basePadding));
     const padBottom = Math.max(0, this._toPx(buttonsCfg.padding_bottom ?? themeBtn.padding_bottom ?? basePadding, basePadding));
     const padLeft = Math.max(0, this._toPx(buttonsCfg.padding_left ?? themeBtn.padding_left ?? basePadding, basePadding));
 
-    const size = Math.max(20, this._toPx(buttonsCfg.size ?? themeBtn.size ?? 48, 48));
-    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? themeBtn.gap ?? 5, 5));
+    const size = Math.max(20, this._toPx(buttonsCfg.size ?? themeBtn.size ?? btnDef.size, btnDef.size));
+    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? themeBtn.gap ?? btnDef.gap, btnDef.gap));
     const minRows = Math.max(0, parseInt(buttonsCfg.rows ?? 0, 10) || 0);
     const minRowsHeight = minRows > 0
       ? Math.round(padTop + padBottom + minRows * size + Math.max(0, minRows - 1) * gap)
@@ -223,20 +278,21 @@ class SeagullRoomCard extends HTMLElement {
     if (!value.trim()) return "";
 
     const themeText = this._theme?.text || {};
-    const size = Math.max(8, this._toPx(textCfg.size ?? themeText.size ?? 14, 14));
-    const textColor = this._resolveDynamicValue(textCfg.color, entityId, state, themeText.color ?? "inherit");
-    const textBg = this._resolveDynamicValue(textCfg.background_color ?? textCfg.background, entityId, state, themeText.background ?? themeText.background_color ?? "transparent");
-    const textRadius = Math.max(0, this._toPx(textCfg.border_radius ?? themeText.border_radius ?? 10, 10));
-    const textBorderW = Math.max(0, this._toPx(textCfg.border_width ?? themeText.border_width ?? 0, 0));
-    const textBorderColor = this._resolveDynamicValue(textCfg.border_color, entityId, state, themeText.border_color ?? "transparent");
-    const halign = ["left", "center", "right"].includes(String(textCfg.halign ?? themeText.halign ?? "left").toLowerCase())
-      ? String(textCfg.halign ?? themeText.halign ?? "left").toLowerCase()
-      : "left";
-    const valign = ["top", "center", "bottom"].includes(String(textCfg.valign ?? themeText.valign ?? "top").toLowerCase())
-      ? String(textCfg.valign ?? themeText.valign ?? "top").toLowerCase()
-      : "top";
+    const txtDef = SEAGULL_ROOM_THEME_DEFAULT.text;
+    const size = Math.max(8, this._toPx(textCfg.size ?? themeText.size ?? txtDef.size, txtDef.size));
+    const textColor = this._resolveDynamicValue(textCfg.color, entityId, state, themeText.color ?? txtDef.color);
+    const textBg = this._resolveDynamicValue(textCfg.background_color ?? textCfg.background, entityId, state, themeText.background ?? themeText.background_color ?? txtDef.background);
+    const textRadius = Math.max(0, this._toPx(textCfg.border_radius ?? themeText.border_radius ?? txtDef.border_radius, txtDef.border_radius));
+    const textBorderW = Math.max(0, this._toPx(textCfg.border_width ?? themeText.border_width ?? txtDef.border_width, txtDef.border_width));
+    const textBorderColor = this._resolveDynamicValue(textCfg.border_color, entityId, state, themeText.border_color ?? txtDef.border_color);
+    const halign = ["left", "center", "right"].includes(String(textCfg.halign ?? themeText.halign ?? txtDef.halign).toLowerCase())
+      ? String(textCfg.halign ?? themeText.halign ?? txtDef.halign).toLowerCase()
+      : txtDef.halign;
+    const valign = ["top", "center", "bottom"].includes(String(textCfg.valign ?? themeText.valign ?? txtDef.valign).toLowerCase())
+      ? String(textCfg.valign ?? themeText.valign ?? txtDef.valign).toLowerCase()
+      : txtDef.valign;
 
-    const basePadding = Math.max(0, this._toPx(textCfg.padding ?? themeText.padding ?? 0, 0));
+    const basePadding = Math.max(0, this._toPx(textCfg.padding ?? themeText.padding ?? txtDef.padding, txtDef.padding));
     const padTop = Math.max(0, this._toPx(textCfg.padding_top ?? themeText.padding_top ?? basePadding, basePadding));
     const padRight = Math.max(0, this._toPx(textCfg.padding_right ?? themeText.padding_right ?? basePadding, basePadding));
     const padBottom = Math.max(0, this._toPx(textCfg.padding_bottom ?? themeText.padding_bottom ?? basePadding, basePadding));
@@ -267,10 +323,11 @@ class SeagullRoomCard extends HTMLElement {
   _buildLightsHtmlAndItems() {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
     const themeBtn = this._theme?.button || {};
+    const btnDef = SEAGULL_ROOM_THEME_DEFAULT.button;
     const cols = Math.max(1, parseInt(buttonsCfg.cols ?? buttonsCfg.columns ?? 3, 10) || 3);
-    const size = Math.max(20, this._toPx(buttonsCfg.size ?? themeBtn.size ?? 48, 48));
-    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? themeBtn.gap ?? 5, 5));
-    const alignRaw = String(buttonsCfg.align ?? themeBtn.align ?? "right").toLowerCase();
+    const size = Math.max(20, this._toPx(buttonsCfg.size ?? themeBtn.size ?? btnDef.size, btnDef.size));
+    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? themeBtn.gap ?? btnDef.gap, btnDef.gap));
+    const alignRaw = String(buttonsCfg.align ?? themeBtn.align ?? btnDef.align).toLowerCase();
     const align = ["left", "right", "center", "justified"].includes(alignRaw) ? alignRaw : "justified";
 
     const items = this._collectButtonItems(buttonsCfg)
@@ -332,14 +389,17 @@ class SeagullRoomCard extends HTMLElement {
       const baseActive = this._isEntityActive(item.entity, state);
       const isActive = invertState ? !baseActive : baseActive;
 
-      const isAutomation = domain === "automation";
+      const bDef = SEAGULL_ROOM_THEME_DEFAULT.button;
+      const dDef = bDef.default || {};
+      const emptyDef = bDef.empty || {};
+      const autoDef = bDef.automation || {};
       const defaultBg = !hasEntity
-        ? "#e5e7eb"
+        ? (emptyDef?.inactive?.background ?? "#e5e7eb")
         : (isUnavailable
-          ? "#6b7280"
-          : (isAutomation
-            ? (isActive ? "#3b82f6" : "#d1d5db")
-            : (isActive ? "#f59e0b" : "#4b5563")));
+          ? (dDef?.unavailable?.background ?? "#6b7280")
+          : ((domain === "automation")
+            ? (isActive ? (autoDef?.active?.background ?? "#3b82f6") : (autoDef?.inactive?.background ?? "#d1d5db"))
+            : (isActive ? (dDef?.active?.background ?? "#f59e0b") : (dDef?.inactive?.background ?? "#4b5563"))));
       let bgColor = this._resolveDynamicValue(
         bgTpl,
         item.entity,
@@ -352,12 +412,12 @@ class SeagullRoomCard extends HTMLElement {
       }
 
       const defaultIconColor = !hasEntity
-        ? "#9ca3af"
+        ? (emptyDef?.inactive?.color ?? "#9ca3af")
         : (isUnavailable
-          ? "#d1d5db"
-          : (isAutomation
-            ? (isActive ? "#eaf2ff" : "#111827")
-            : (isActive ? "#111827" : "#e5e7eb")));
+          ? (dDef?.unavailable?.color ?? "#d1d5db")
+          : ((domain === "automation")
+            ? (isActive ? (autoDef?.active?.color ?? "#eaf2ff") : (autoDef?.inactive?.color ?? "#111827"))
+            : (isActive ? (dDef?.active?.color ?? "#111827") : (dDef?.inactive?.color ?? "#e5e7eb"))));
 
       const iColor = this._resolveDynamicValue(
         iconColorTpl,
@@ -1050,7 +1110,8 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _resolveObsoleteConfig(raw) {
-    const defaults = { border: 2, border_color: "#d1d5db" };
+    const obs = SEAGULL_ROOM_THEME_DEFAULT.button?.default?.obsolete || {};
+    const defaults = { border: Number(obs.border_size ?? 2), border_color: String(obs.border_color ?? "#d1d5db") };
 
     if (raw == null || raw === false) return null;
     if (typeof raw === "number") return { hours: raw, ...defaults };
@@ -1145,8 +1206,25 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _normalizeTheme(theme) {
-    if (!theme || typeof theme !== "object" || Array.isArray(theme)) return null;
-    return theme;
+    if (!theme || typeof theme !== "object" || Array.isArray(theme)) {
+      return JSON.parse(JSON.stringify(SEAGULL_ROOM_THEME_DEFAULT));
+    }
+    return this._deepMerge(SEAGULL_ROOM_THEME_DEFAULT, theme);
+  }
+
+  _deepMerge(base, patch) {
+    if (!patch || typeof patch !== "object" || Array.isArray(patch)) {
+      return JSON.parse(JSON.stringify(base));
+    }
+    const out = Array.isArray(base) ? [...base] : { ...(base || {}) };
+    for (const [k, v] of Object.entries(patch)) {
+      if (v && typeof v === "object" && !Array.isArray(v) && out[k] && typeof out[k] === "object" && !Array.isArray(out[k])) {
+        out[k] = this._deepMerge(out[k], v);
+      } else {
+        out[k] = v;
+      }
+    }
+    return out;
   }
 
   _resolveThemeButtonStyle(item, buttonsCfg, st, state, isObsolete = false) {
