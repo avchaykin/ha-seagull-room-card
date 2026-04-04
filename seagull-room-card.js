@@ -316,7 +316,7 @@ class SeagullRoomCard extends HTMLElement {
       const isActive = invertState ? !baseActive : baseActive;
 
       const defaultBg = !hasEntity
-        ? "#e5e7eb"
+        ? "#d1d5db"
         : (isUnavailable
           ? "#6b7280"
           : (!canToggle ? (isActive ? "#3b82f6" : "#d1d5db") : (isActive ? "#f59e0b" : "#4b5563")));
@@ -333,7 +333,7 @@ class SeagullRoomCard extends HTMLElement {
       }
 
       const defaultIconColor = !hasEntity
-        ? "#9ca3af"
+        ? "#111827"
         : (isUnavailable
           ? "#d1d5db"
           : (!canToggle ? (isActive ? "#eaf2ff" : "#111827") : (isActive ? "#111827" : "#e5e7eb")));
