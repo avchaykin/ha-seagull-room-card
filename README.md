@@ -147,6 +147,20 @@ For button theme buckets, attribute-based conditions are supported:
 - `attribute_below`
 - `attribute` (template bool) + `attribute_style`
 
+Also supported as a separate hierarchy level inside domain mapping:
+- `theme.button.<domain>.device_class.<device_class_name>`
+
+Example:
+```yaml
+theme:
+  button:
+    binary_sensor:
+      device_class:
+        window:
+          inactive:
+            color: blue
+```
+
 ## `buttons`
 
 ### Layout

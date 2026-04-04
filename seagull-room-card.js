@@ -1183,6 +1183,13 @@ class SeagullRoomCard extends HTMLElement {
     let style = {};
     style = merge(style, this._pickThemeBucket(themeButton, item.entity, state, attrs, isActive, isUnavailable, isObsolete));
     style = merge(style, this._pickThemeBucket(domainCfg, item.entity, state, attrs, isActive, isUnavailable, isObsolete));
+
+    const dc = String(attrs?.device_class ?? "").trim();
+    if (dc && domainCfg?.device_class && typeof domainCfg.device_class === "object") {
+      const dcCfg = domainCfg.device_class[dc];
+      style = merge(style, this._pickThemeBucket(dcCfg, item.entity, state, attrs, isActive, isUnavailable, isObsolete));
+    }
+
     return {
       icon: style.icon,
       color: style.color ?? style.icon_color,
