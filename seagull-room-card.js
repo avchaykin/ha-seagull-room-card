@@ -36,6 +36,30 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     padding_right: null,
     padding_bottom: null,
     padding_left: null,
+    icons: {
+      default: "mdi:help-circle-outline",
+      light: {
+        on: "mdi:lightbulb",
+        off: "mdi:lightbulb-off",
+      },
+      lock: {
+        locked: "mdi:lock",
+        unlocked: "mdi:lock-open-variant",
+        default: "mdi:lock-reset",
+      },
+      binary_sensor: {
+        default_on: "mdi:check-circle",
+        default_off: "mdi:circle-outline",
+        device_class: {
+          window: { on: "mdi:window-open", off: "mdi:window-closed" },
+          door: { on: "mdi:door-open", off: "mdi:door-closed" },
+          opening: { on: "mdi:garage-open", off: "mdi:garage" },
+          motion: { on: "mdi:motion-sensor", off: "mdi:motion-sensor-off" },
+          occupancy: { on: "mdi:home-account", off: "mdi:home-outline" },
+          lock: { on: "mdi:lock-open-variant", off: "mdi:lock" },
+        },
+      },
+    },
     default: {
       border_size: 0,
       border_color: "transparent",
@@ -1081,32 +1105,41 @@ class SeagullRoomCard extends HTMLElement {
 
   _defaultEntityIcon(entityId, state, attrs = {}) {
     const domain = String(entityId || "").split(".")[0];
+    const icons = this._theme?.button?.icons || SEAGULL_ROOM_THEME_DEFAULT?.button?.icons || {};
 
     if (domain === "light") {
-      return state === "on" ? "mdi:lightbulb" : "mdi:lightbulb-off";
+      const lightCfg = icons.light || {};
+      return state === "on"
+        ? (lightCfg.on || "mdi:lightbulb")
+        : (lightCfg.off || "mdi:lightbulb-off");
     }
 
     if (domain === "lock") {
-      if (state === "locked") return "mdi:lock";
-      if (state === "unlocked") return "mdi:lock-open-variant";
-      return "mdi:lock-reset";
+      const lockCfg = icons.lock || {};
+      if (state === "locked") return lockCfg.locked || "mdi:lock";
+      if (state === "unlocked") return lockCfg.unlocked || "mdi:lock-open-variant";
+      return lockCfg.default || "mdi:lock-reset";
     }
 
     if (domain === "binary_sensor") {
+      const bsCfg = icons.binary_sensor || {};
+      const dcMap = bsCfg.device_class || {};
       const dc = String(attrs?.device_class || "").toLowerCase();
       const on = state === "on";
 
-      if (dc === "window") return on ? "mdi:window-open" : "mdi:window-closed";
-      if (dc === "door") return on ? "mdi:door-open" : "mdi:door-closed";
-      if (dc === "opening") return on ? "mdi:garage-open" : "mdi:garage";
-      if (dc === "motion") return on ? "mdi:motion-sensor" : "mdi:motion-sensor-off";
-      if (dc === "occupancy") return on ? "mdi:home-account" : "mdi:home-outline";
-      if (dc === "lock") return on ? "mdi:lock-open-variant" : "mdi:lock";
+      const dcCfg = dcMap?.[dc] || null;
+      if (dcCfg) {
+        return on
+          ? (dcCfg.on || bsCfg.default_on || "mdi:check-circle")
+          : (dcCfg.off || bsCfg.default_off || "mdi:circle-outline");
+      }
 
-      return on ? "mdi:check-circle" : "mdi:circle-outline";
+      return on
+        ? (bsCfg.default_on || "mdi:check-circle")
+        : (bsCfg.default_off || "mdi:circle-outline");
     }
 
-    return "mdi:help-circle-outline";
+    return icons.default || "mdi:help-circle-outline";
   }
 
   _resolveObsoleteConfig(raw) {
