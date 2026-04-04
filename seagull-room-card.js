@@ -293,6 +293,7 @@ class SeagullRoomCard extends HTMLElement {
 
       const st = this._hass.states[item.entity];
       const state = st?.state || "unknown";
+      const domain = String(item.entity || "").split(".")[0];
 
       const defaultDomainIcon = this._defaultEntityIcon(item.entity, state, st?.attributes);
 
@@ -331,11 +332,14 @@ class SeagullRoomCard extends HTMLElement {
       const baseActive = this._isEntityActive(item.entity, state);
       const isActive = invertState ? !baseActive : baseActive;
 
+      const isAutomation = domain === "automation";
       const defaultBg = !hasEntity
         ? "#e5e7eb"
         : (isUnavailable
           ? "#6b7280"
-          : (isActive ? "#f59e0b" : "#4b5563"));
+          : (isAutomation
+            ? (isActive ? "#3b82f6" : "#d1d5db")
+            : (isActive ? "#f59e0b" : "#4b5563")));
       let bgColor = this._resolveDynamicValue(
         bgTpl,
         item.entity,
@@ -351,7 +355,9 @@ class SeagullRoomCard extends HTMLElement {
         ? "#9ca3af"
         : (isUnavailable
           ? "#d1d5db"
-          : (isActive ? "#111827" : "#e5e7eb"));
+          : (isAutomation
+            ? (isActive ? "#eaf2ff" : "#111827")
+            : (isActive ? "#111827" : "#e5e7eb")));
 
       const iColor = this._resolveDynamicValue(
         iconColorTpl,
