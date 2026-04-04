@@ -265,12 +265,10 @@ Default visual fallback for any domain:
 - icon color: pale gray
 - background: gray
 
-### Non-toggle entities fallback
+### Domain-specific styling
 
-If entity domain is not toggle-capable by default, fallback style is:
-
-- active (`on`): blue background + light icon
-- inactive: light-gray background + dark icon
+Default fallback style is now uniform (toggle-like palette).
+Domain differences (e.g. `automation`) should be set through `theme.button.<domain>`.
 
 ### Default icons
 

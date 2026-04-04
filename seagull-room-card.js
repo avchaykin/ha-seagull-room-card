@@ -328,7 +328,6 @@ class SeagullRoomCard extends HTMLElement {
       const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
       const invertState = !!this._resolveDynamicValue(item.invert_state ?? buttonsCfg.invert_state, item.entity, state, false);
       const isUnavailable = state === "unavailable";
-      const canToggle = this._canToggleEntity(item.entity);
       const baseActive = this._isEntityActive(item.entity, state);
       const isActive = invertState ? !baseActive : baseActive;
 
@@ -336,8 +335,7 @@ class SeagullRoomCard extends HTMLElement {
         ? "#e5e7eb"
         : (isUnavailable
           ? "#6b7280"
-          : (!canToggle ? (isActive ? "#3b82f6" : "#d1d5db") : (isActive ? "#f59e0b" : "#4b5563")));
-
+          : (isActive ? "#f59e0b" : "#4b5563"));
       let bgColor = this._resolveDynamicValue(
         bgTpl,
         item.entity,
@@ -353,7 +351,7 @@ class SeagullRoomCard extends HTMLElement {
         ? "#9ca3af"
         : (isUnavailable
           ? "#d1d5db"
-          : (!canToggle ? (isActive ? "#eaf2ff" : "#111827") : (isActive ? "#111827" : "#e5e7eb")));
+          : (isActive ? "#111827" : "#e5e7eb"));
 
       const iColor = this._resolveDynamicValue(
         iconColorTpl,
@@ -1043,21 +1041,6 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     return "mdi:help-circle-outline";
-  }
-
-  _canToggleEntity(entityId) {
-    const domain = String(entityId || "").split(".")[0];
-    const supported = new Set([
-      "light",
-      "switch",
-      "input_boolean",
-      "fan",
-      "humidifier",
-      "cover",
-      "lock",
-      "media_player",
-    ]);
-    return supported.has(domain);
   }
 
   _resolveObsoleteConfig(raw) {

@@ -129,6 +129,7 @@ button:
     active: { color: "#eaf2ff", background: "#3b82f6" }
     inactive: { color: "#111827", background: "#d1d5db" }
   automation:
+    # explicitly kept as old non-toggle palette
     active: { color: "#eaf2ff", background: "#3b82f6" }
     inactive: { color: "#111827", background: "#d1d5db" }
   binary_sensor:
