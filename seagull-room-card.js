@@ -89,6 +89,8 @@ class SeagullRoomCard extends HTMLElement {
   _render() {
     if (!this._config || !this._hass) return;
 
+    this._theme = this._normalizeTheme(this._config?.theme);
+
     if (!this._card) {
       this._card = document.createElement("ha-card");
       this._inner = document.createElement("div");
@@ -102,24 +104,26 @@ class SeagullRoomCard extends HTMLElement {
     const cfg = this._config;
     const buttonsCfg = cfg.buttons || cfg.lights || {};
 
-    const bgColor = cfg.background_color ?? "#eeeeee";
+    const themeCard = this._theme?.card || {};
+    const bgColor = cfg.background_color ?? themeCard.background_color ?? "#eeeeee";
     const opacity = this._clampOpacity(cfg.background_opacity ?? 0.45);
-    const radius = this._toPx(cfg.border_radius ?? 16, 16);
-    const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? 0, 0));
-    const borderColor = cfg.border_color ?? "#aaaaaa";
+    const radius = this._toPx(cfg.border_radius ?? themeCard.border_radius ?? 16, 16);
+    const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? themeCard.border_width ?? 0, 0));
+    const borderColor = cfg.border_color ?? themeCard.border_color ?? "#aaaaaa";
 
-    const icon = cfg.icon ?? "mdi:sofa";
-    const iconColor = cfg.icon_color ?? "#2233aa44";
-    const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? 60, 60));
+    const icon = cfg.icon ?? themeCard.icon ?? "mdi:sofa";
+    const iconColor = cfg.icon_color ?? themeCard.icon_color ?? "#2233aa44";
+    const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? themeCard.icon_size ?? 60, 60));
 
-    const basePadding = Math.max(0, this._toPx(buttonsCfg.padding ?? 10, 10));
-    const padTop = Math.max(0, this._toPx(buttonsCfg.padding_top ?? basePadding, basePadding));
-    const padRight = Math.max(0, this._toPx(buttonsCfg.padding_right ?? basePadding, basePadding));
-    const padBottom = Math.max(0, this._toPx(buttonsCfg.padding_bottom ?? basePadding, basePadding));
-    const padLeft = Math.max(0, this._toPx(buttonsCfg.padding_left ?? basePadding, basePadding));
+    const themeBtn = this._theme?.button || {};
+    const basePadding = Math.max(0, this._toPx(buttonsCfg.padding ?? themeBtn.padding ?? 10, 10));
+    const padTop = Math.max(0, this._toPx(buttonsCfg.padding_top ?? themeBtn.padding_top ?? basePadding, basePadding));
+    const padRight = Math.max(0, this._toPx(buttonsCfg.padding_right ?? themeBtn.padding_right ?? basePadding, basePadding));
+    const padBottom = Math.max(0, this._toPx(buttonsCfg.padding_bottom ?? themeBtn.padding_bottom ?? basePadding, basePadding));
+    const padLeft = Math.max(0, this._toPx(buttonsCfg.padding_left ?? themeBtn.padding_left ?? basePadding, basePadding));
 
-    const size = Math.max(20, this._toPx(buttonsCfg.size ?? 48, 48));
-    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? 5, 5));
+    const size = Math.max(20, this._toPx(buttonsCfg.size ?? themeBtn.size ?? 48, 48));
+    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? themeBtn.gap ?? 5, 5));
     const minRows = Math.max(0, parseInt(buttonsCfg.rows ?? 0, 10) || 0);
     const minRowsHeight = minRows > 0
       ? Math.round(padTop + padBottom + minRows * size + Math.max(0, minRows - 1) * gap)
@@ -128,7 +132,10 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.boxShadow = "none";
     this._card.style.borderRadius = `${radius}px`;
     this._card.style.overflow = "hidden";
-    this._card.style.background = this._toRgba(bgColor, opacity);
+    const bgIsRgba = /^rgba\(/i.test(String(bgColor).trim());
+    this._card.style.background = (cfg.background_opacity == null && bgIsRgba)
+      ? String(bgColor)
+      : this._toRgba(bgColor, opacity);
     this._card.style.border = `${borderWidth}px solid ${borderColor}`;
     this._card.style.position = "relative";
     this._card.style.transition = "filter 120ms ease";
@@ -215,22 +222,25 @@ class SeagullRoomCard extends HTMLElement {
     const value = raw == null ? "" : String(raw);
     if (!value.trim()) return "";
 
-    const size = Math.max(8, this._toPx(textCfg.size ?? 14, 14));
-    const textColor = this._resolveDynamicValue(textCfg.color, entityId, state, "inherit");
-    const textBg = this._resolveDynamicValue(textCfg.background_color, entityId, state, "transparent");
-    const textRadius = Math.max(0, this._toPx(textCfg.border_radius ?? 10, 10));
-    const halign = ["left", "center", "right"].includes(String(textCfg.halign ?? "left").toLowerCase())
-      ? String(textCfg.halign ?? "left").toLowerCase()
+    const themeText = this._theme?.text || {};
+    const size = Math.max(8, this._toPx(textCfg.size ?? themeText.size ?? 14, 14));
+    const textColor = this._resolveDynamicValue(textCfg.color, entityId, state, themeText.color ?? "inherit");
+    const textBg = this._resolveDynamicValue(textCfg.background_color ?? textCfg.background, entityId, state, themeText.background ?? themeText.background_color ?? "transparent");
+    const textRadius = Math.max(0, this._toPx(textCfg.border_radius ?? themeText.border_radius ?? 10, 10));
+    const textBorderW = Math.max(0, this._toPx(textCfg.border_width ?? themeText.border_width ?? 0, 0));
+    const textBorderColor = this._resolveDynamicValue(textCfg.border_color, entityId, state, themeText.border_color ?? "transparent");
+    const halign = ["left", "center", "right"].includes(String(textCfg.halign ?? themeText.halign ?? "left").toLowerCase())
+      ? String(textCfg.halign ?? themeText.halign ?? "left").toLowerCase()
       : "left";
-    const valign = ["top", "center", "bottom"].includes(String(textCfg.valign ?? "top").toLowerCase())
-      ? String(textCfg.valign ?? "top").toLowerCase()
+    const valign = ["top", "center", "bottom"].includes(String(textCfg.valign ?? themeText.valign ?? "top").toLowerCase())
+      ? String(textCfg.valign ?? themeText.valign ?? "top").toLowerCase()
       : "top";
 
-    const basePadding = Math.max(0, this._toPx(textCfg.padding ?? 0, 0));
-    const padTop = Math.max(0, this._toPx(textCfg.padding_top ?? basePadding, basePadding));
-    const padRight = Math.max(0, this._toPx(textCfg.padding_right ?? basePadding, basePadding));
-    const padBottom = Math.max(0, this._toPx(textCfg.padding_bottom ?? basePadding, basePadding));
-    const padLeft = Math.max(0, this._toPx(textCfg.padding_left ?? basePadding, basePadding));
+    const basePadding = Math.max(0, this._toPx(textCfg.padding ?? themeText.padding ?? 0, 0));
+    const padTop = Math.max(0, this._toPx(textCfg.padding_top ?? themeText.padding_top ?? basePadding, basePadding));
+    const padRight = Math.max(0, this._toPx(textCfg.padding_right ?? themeText.padding_right ?? basePadding, basePadding));
+    const padBottom = Math.max(0, this._toPx(textCfg.padding_bottom ?? themeText.padding_bottom ?? basePadding, basePadding));
+    const padLeft = Math.max(0, this._toPx(textCfg.padding_left ?? themeText.padding_left ?? basePadding, basePadding));
 
     const alignY = valign === "top" ? "flex-start" : valign === "bottom" ? "flex-end" : "center";
 
@@ -249,17 +259,18 @@ class SeagullRoomCard extends HTMLElement {
           .sg-room-text-layer h2 { font-size: 1.2em; }
           .sg-room-text-layer h3 { font-size: 1.1em; }
         </style>
-        <div style="width:100%;text-align:${halign};font-size:${size}px;line-height:1.35;color:${this._esc(textColor)};background:${this._esc(textBg)};border-radius:${textRadius}px;padding:6px 8px;box-sizing:border-box;display:block;">${value}</div>
+        <div style="width:100%;text-align:${halign};font-size:${size}px;line-height:1.35;color:${this._esc(textColor)};background:${this._esc(textBg)};border-radius:${textRadius}px;border:${textBorderW}px solid ${this._esc(textBorderColor)};padding:6px 8px;box-sizing:border-box;display:block;">${value}</div>
       </div>
     `;
   }
 
   _buildLightsHtmlAndItems() {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
+    const themeBtn = this._theme?.button || {};
     const cols = Math.max(1, parseInt(buttonsCfg.cols ?? buttonsCfg.columns ?? 3, 10) || 3);
-    const size = Math.max(20, this._toPx(buttonsCfg.size ?? 48, 48));
-    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? 5, 5));
-    const alignRaw = String(buttonsCfg.align ?? "right").toLowerCase();
+    const size = Math.max(20, this._toPx(buttonsCfg.size ?? themeBtn.size ?? 48, 48));
+    const gap = Math.max(0, this._toPx(buttonsCfg.gap ?? themeBtn.gap ?? 5, 5));
+    const alignRaw = String(buttonsCfg.align ?? themeBtn.align ?? "right").toLowerCase();
     const align = ["left", "right", "center", "justified"].includes(alignRaw) ? alignRaw : "justified";
 
     const items = this._collectButtonItems(buttonsCfg)
@@ -288,19 +299,25 @@ class SeagullRoomCard extends HTMLElement {
       const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
       const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
 
-      const baseIconTpl = isObsolete ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon) : (item.icon ?? buttonsCfg.icon);
+      const themeStyle = this._resolveThemeButtonStyle(item, buttonsCfg, st, state, isObsolete);
+
+      const baseIconTpl = isObsolete
+        ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon ?? themeStyle.icon)
+        : (item.icon ?? buttonsCfg.icon ?? themeStyle.icon);
       const icon = this._resolveDynamicValue(baseIconTpl, item.entity, state, st?.attributes?.icon || defaultDomainIcon);
 
       const iconColorTpl = isObsolete
-        ? (obsoleteCfg.color ?? obsoleteCfg.icon_color ?? item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color)
-        : (item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color);
+        ? (obsoleteCfg.color ?? obsoleteCfg.icon_color ?? item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color ?? themeStyle.color)
+        : (item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color ?? themeStyle.color);
       const bgTpl = isObsolete
-        ? (obsoleteCfg.background ?? item.background ?? buttonsCfg.background ?? buttonsCfg.bg)
-        : (item.background ?? buttonsCfg.background ?? buttonsCfg.bg);
-      const borderTpl = isObsolete ? (obsoleteCfg.border ?? item.border ?? buttonsCfg.border) : (item.border ?? buttonsCfg.border);
+        ? (obsoleteCfg.background ?? item.background ?? buttonsCfg.background ?? buttonsCfg.bg ?? themeStyle.background)
+        : (item.background ?? buttonsCfg.background ?? buttonsCfg.bg ?? themeStyle.background);
+      const borderTpl = isObsolete
+        ? (obsoleteCfg.border ?? item.border ?? buttonsCfg.border ?? themeStyle.border_size)
+        : (item.border ?? buttonsCfg.border ?? themeStyle.border_size);
       const borderColorTpl = isObsolete
-        ? (obsoleteCfg.border_color ?? item.border_color ?? buttonsCfg.border_color)
-        : (item.border_color ?? buttonsCfg.border_color);
+        ? (obsoleteCfg.border_color ?? item.border_color ?? buttonsCfg.border_color ?? themeStyle.border_color)
+        : (item.border_color ?? buttonsCfg.border_color ?? themeStyle.border_color);
 
       const lightColorModeRaw = this._resolveDynamicValue(
         item.use_light_color ?? item.light_color ?? buttonsCfg.use_light_color ?? buttonsCfg.light_color,
@@ -346,6 +363,15 @@ class SeagullRoomCard extends HTMLElement {
       );
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
       const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
+      const borderRadiusRaw = this._resolveDynamicValue(
+        item.border_radius ?? buttonsCfg.border_radius ?? themeStyle.border_radius,
+        item.entity,
+        state,
+        null
+      );
+      const borderRadiusCss = borderRadiusRaw == null || borderRadiusRaw === ""
+        ? "9999px"
+        : `${Math.max(0, this._toPx(borderRadiusRaw, 9999))}px`;
 
       const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
       const safeColSpan = Math.min(cols, colSpan);
@@ -359,7 +385,7 @@ class SeagullRoomCard extends HTMLElement {
       `
         : `
         <button class="sg-room-light-btn" data-index="${index}"
-          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
+          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:${borderRadiusCss};border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
           <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
         </button>
       `;
@@ -1127,6 +1153,98 @@ class SeagullRoomCard extends HTMLElement {
 
     // if only color requested but no color attrs, keep default fallback in caller
     return null;
+  }
+
+  _normalizeTheme(theme) {
+    if (!theme || typeof theme !== "object" || Array.isArray(theme)) return null;
+    return theme;
+  }
+
+  _resolveThemeButtonStyle(item, buttonsCfg, st, state, isObsolete = false) {
+    const themeButton = this._theme?.button;
+    if (!themeButton || typeof themeButton !== "object") return {};
+
+    const domain = item?.entity ? String(item.entity).split(".")[0] : "empty";
+    const domainCfg = themeButton?.[domain] && typeof themeButton[domain] === "object" ? themeButton[domain] : {};
+
+    const activeRaw = this._resolveDynamicValue(item.invert_state ?? buttonsCfg.invert_state, item.entity, state, false);
+    const invertState = !!activeRaw;
+    const baseActive = this._isEntityActive(item.entity, state);
+    const isActive = invertState ? !baseActive : baseActive;
+    const isUnavailable = state === "unavailable";
+
+    const merge = (into, from) => {
+      if (!from || typeof from !== "object" || Array.isArray(from)) return into;
+      return { ...into, ...from };
+    };
+
+    let style = {};
+    style = merge(style, this._pickThemeBucket(themeButton, item.entity, state, isActive, isUnavailable, isObsolete));
+    style = merge(style, this._pickThemeBucket(domainCfg, item.entity, state, isActive, isUnavailable, isObsolete));
+
+    return {
+      icon: style.icon,
+      color: style.color ?? style.icon_color,
+      background: style.background,
+      border_size: style.border_size,
+      border_color: style.border_color,
+      border_radius: style.border_radius,
+    };
+  }
+
+  _pickThemeBucket(src, entityId, state, isActive, isUnavailable, isObsolete) {
+    if (!src || typeof src !== "object") return {};
+    let out = {};
+
+    const merge = (obj) => {
+      if (obj && typeof obj === "object" && !Array.isArray(obj)) out = { ...out, ...obj };
+    };
+
+    const baseKeys = ["icon", "color", "icon_color", "background", "border_size", "border_color", "border_radius"];
+    baseKeys.forEach((k) => {
+      if (Object.prototype.hasOwnProperty.call(src, k)) out[k] = src[k];
+    });
+
+    if (isUnavailable && src.unavailable) merge(src.unavailable);
+    else if (isObsolete && src.obsolete) merge(src.obsolete);
+    else if (isActive && src.active) merge(src.active);
+    else if (!isActive && src.inactive) merge(src.inactive);
+
+    if (src.state_value && typeof src.state_value === "object") {
+      const sv = src.state_value[state];
+      merge(sv);
+    }
+
+    if (src.state_not_value && typeof src.state_not_value === "object") {
+      Object.entries(src.state_not_value).forEach(([k, v]) => {
+        if (String(state) !== String(k)) merge(v);
+      });
+    }
+
+    if (src.state_above && typeof src.state_above === "object") {
+      const nState = Number(state);
+      Object.entries(src.state_above).forEach(([k, v]) => {
+        const n = Number(k);
+        if (Number.isFinite(nState) && Number.isFinite(n) && nState > n) merge(v);
+      });
+    }
+
+    if (src.state_below && typeof src.state_below === "object") {
+      const nState = Number(state);
+      Object.entries(src.state_below).forEach(([k, v]) => {
+        const n = Number(k);
+        if (Number.isFinite(nState) && Number.isFinite(n) && nState < n) merge(v);
+      });
+    }
+
+    if (src.state) {
+      const stateCond = this._resolveDynamicValue(src.state, entityId, state, false);
+      if (this._toBool(stateCond, false) && src.state_style && typeof src.state_style === "object") {
+        merge(src.state_style);
+      }
+    }
+
+    return out;
   }
 
   _esc(s) {
