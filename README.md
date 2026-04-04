@@ -137,6 +137,7 @@ Structure:
 - `theme.button`
 
 Draft default-theme schema is documented in `SEAGULL_THEME.default.yaml`.
+Built-in defaults are centralized in code as `SEAGULL_ROOM_THEME_DEFAULT` and merged with `theme`.
 
 Theme acts as fallback defaults: explicit card config fields (`background_color`, `text.*`, `buttons.*`, item-level fields) still override it.
 
