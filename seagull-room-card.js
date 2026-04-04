@@ -32,7 +32,7 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
       unavailable: { background: "btn_unavailable_bg", icon_color: "btn_unavailable_icon" },
       state: {},
       state_value: {},
-      border: { default: "btn_border_transparent" },
+      border: { size: 0, default: "btn_border_transparent" },
       entities: {},
       domains: {
         automation: {
@@ -411,7 +411,7 @@ class SeagullRoomCard extends HTMLElement {
         state,
         defaultIconColor
       );
-      const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
+      const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, themedBtn.border_size ?? 0)) || 0);
       const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, themedBtn.border_color ?? "transparent");
 
       const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
@@ -1273,6 +1273,7 @@ class SeagullRoomCard extends HTMLElement {
     return {
       background: this._themeColor(style.background),
       icon_color: this._themeColor(style.icon_color ?? style.color),
+      border_size: style.border_size ?? style.border ?? btnMap?.border?.size,
       border_color: this._themeColor(style.border_color ?? btnMap?.border?.default),
     };
   }

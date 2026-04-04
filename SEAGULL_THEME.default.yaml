@@ -63,6 +63,7 @@ mapping:
     state_value: {}
 
     border:
+      size: 0
       default: btn_border_transparent
 
     # Domain-level overrides
