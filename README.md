@@ -140,6 +140,13 @@ Draft default-theme schema is documented in `SEAGULL_THEME.default.yaml`.
 
 Theme acts as fallback defaults: explicit card config fields (`background_color`, `text.*`, `buttons.*`, item-level fields) still override it.
 
+For button theme buckets, attribute-based conditions are supported:
+- `attribute_value`
+- `attribute_not_value`
+- `attribute_above`
+- `attribute_below`
+- `attribute` (template bool) + `attribute_style`
+
 ## `buttons`
 
 ### Layout
