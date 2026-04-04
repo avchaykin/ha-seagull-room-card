@@ -691,8 +691,13 @@ class SeagullRoomCard extends HTMLElement {
       arr.forEach((item) => {
         if (typeof item === "string") {
           out.push({ entity: item, width: 1 });
-        } else if (item?.entity || item?.empty === true) {
-          out.push({ width: 1, ...item });
+        } else if (item && typeof item === "object") {
+          const hasEntity = !!item.entity;
+          const hasIconOnly = !!item.icon;
+          const isEmpty = this._toBool(item.empty, false);
+          if (hasEntity || hasIconOnly || isEmpty) {
+            out.push({ width: 1, ...item });
+          }
         }
       });
     };
