@@ -27,19 +27,22 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     card: { background_color: "card_bg", border_color: "card_border", icon_color: "card_icon" },
     text: { color: "text_color", background_color: "text_bg" },
     buttons: {
-      icon_only: { background: "btn_icon_only_bg", icon_color: "btn_icon_only_icon" },
+      active: { background: "btn_toggle_active_bg", icon_color: "btn_toggle_active_icon" },
+      inactive: { background: "btn_toggle_inactive_bg", icon_color: "btn_toggle_inactive_icon" },
       unavailable: { background: "btn_unavailable_bg", icon_color: "btn_unavailable_icon" },
-      toggle: {
-        active: { background: "btn_toggle_active_bg", icon_color: "btn_toggle_active_icon" },
-        inactive: { background: "btn_toggle_inactive_bg", icon_color: "btn_toggle_inactive_icon" },
-      },
-      non_toggle: {
-        active: { background: "btn_non_toggle_active_bg", icon_color: "btn_non_toggle_active_icon" },
-        inactive: { background: "btn_non_toggle_inactive_bg", icon_color: "btn_non_toggle_inactive_icon" },
-      },
+      state: {},
+      state_value: {},
       border: { default: "btn_border_transparent" },
       entities: {},
-      domains: {},
+      domains: {
+        automation: {
+          active: { background: "btn_non_toggle_active_bg", icon_color: "btn_non_toggle_active_icon" },
+          inactive: { background: "btn_non_toggle_inactive_bg", icon_color: "btn_non_toggle_inactive_icon" },
+        },
+        no_entity: {
+          inactive: { background: "btn_icon_only_bg", icon_color: "btn_icon_only_icon" },
+        },
+      },
       rules: [],
     },
   },
@@ -376,7 +379,6 @@ class SeagullRoomCard extends HTMLElement {
         state,
         hasEntity,
         isUnavailable,
-        canToggle,
         isActive,
       });
 
@@ -1225,18 +1227,26 @@ class SeagullRoomCard extends HTMLElement {
     return themed.palette[value] ?? value;
   }
 
-  _resolveButtonThemeDefaults({ entityId, state, hasEntity, isUnavailable, canToggle, isActive }) {
+  _resolveButtonThemeDefaults({ entityId, state, hasEntity, isUnavailable, isActive }) {
     const themed = this._getThemeResolved();
     const btnMap = themed.mapping?.buttons || {};
-    const domain = String(entityId || "").split(".")[0] || "";
+    const domain = hasEntity ? (String(entityId || "").split(".")[0] || "") : "no_entity";
 
     const pickState = (spec) => {
       if (!spec || typeof spec !== "object") return {};
+
+      // direct style object shortcut
+      const hasAnyStateKeys = ["active", "inactive", "unavailable", "state", "state_value"].some((k) => spec[k] !== undefined);
+      if (!hasAnyStateKeys) return spec;
+
       if (isUnavailable && spec.unavailable) return spec.unavailable;
       if (isActive && spec.active) return spec.active;
       if (!isActive && spec.inactive) return spec.inactive;
+
       if (state && spec.state && typeof spec.state === "object" && spec.state[state]) return spec.state[state];
-      return spec;
+      if (state && spec.state_value && typeof spec.state_value === "object" && spec.state_value[state]) return spec.state_value[state];
+
+      return {};
     };
 
     let style = {};
@@ -1246,18 +1256,12 @@ class SeagullRoomCard extends HTMLElement {
       style = { ...style, ...s };
     };
 
-    if (!hasEntity) {
-      merge(btnMap.icon_only);
-    } else if (isUnavailable) {
-      merge(btnMap.unavailable);
-    } else if (canToggle) {
-      merge(btnMap.toggle);
-    } else {
-      merge(btnMap.non_toggle);
-    }
+    // Base mapping applies to all buttons (entity and no_entity)
+    merge(btnMap);
 
+    // Domain and entity hierarchical overrides
     if (domain && btnMap.domains?.[domain]) merge(btnMap.domains[domain]);
-    if (entityId && btnMap.entities?.[entityId]) merge(btnMap.entities[entityId]);
+    if (hasEntity && entityId && btnMap.entities?.[entityId]) merge(btnMap.entities[entityId]);
 
     const rules = Array.isArray(btnMap.rules) ? btnMap.rules : [];
     for (const rule of rules) {

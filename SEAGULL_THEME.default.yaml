@@ -3,8 +3,8 @@
 # palette: named colors
 # mapping: where colors are applied (card, text, buttons)
 #
-# Hierarchy for entity buttons in mapping.buttons:
-# 1) base by type/state (icon_only | unavailable | toggle | non_toggle)
+# Hierarchy for buttons in mapping.buttons:
+# 1) base state buckets on buttons level (active/inactive/unavailable/state/state_value)
 # 2) domain override (mapping.buttons.domains.<domain>)
 # 3) entity override (mapping.buttons.entities.<entity_id>)
 # 4) template rules (mapping.buttons.rules[])
@@ -47,39 +47,42 @@ mapping:
     background_color: text_bg
 
   buttons:
-    icon_only:
-      background: btn_icon_only_bg
-      icon_color: btn_icon_only_icon
-
+    # Base for all buttons (with entity and no_entity)
+    active:
+      background: btn_toggle_active_bg
+      icon_color: btn_toggle_active_icon
+    inactive:
+      background: btn_toggle_inactive_bg
+      icon_color: btn_toggle_inactive_icon
     unavailable:
       background: btn_unavailable_bg
       icon_color: btn_unavailable_icon
 
-    toggle:
-      active:
-        background: btn_toggle_active_bg
-        icon_color: btn_toggle_active_icon
-      inactive:
-        background: btn_toggle_inactive_bg
-        icon_color: btn_toggle_inactive_icon
-
-    non_toggle:
-      active:
-        background: btn_non_toggle_active_bg
-        icon_color: btn_non_toggle_active_icon
-      inactive:
-        background: btn_non_toggle_inactive_bg
-        icon_color: btn_non_toggle_inactive_icon
+    # Optional exact state maps (state string -> style)
+    state: {}
+    state_value: {}
 
     border:
       default: btn_border_transparent
 
-    # Domain-level overrides (examples)
+    # Domain-level overrides
     domains:
       light: {}
       lock: {}
       switch: {}
-      automation: {}
+      # By default automation keeps old non_toggle behavior
+      automation:
+        active:
+          background: btn_non_toggle_active_bg
+          icon_color: btn_non_toggle_active_icon
+        inactive:
+          background: btn_non_toggle_inactive_bg
+          icon_color: btn_non_toggle_inactive_icon
+      # Pseudo-domain for icon-only buttons without entity
+      no_entity:
+        inactive:
+          background: btn_icon_only_bg
+          icon_color: btn_icon_only_icon
 
     # Entity-level overrides
     entities: {}

@@ -199,10 +199,15 @@ You can define theme directly in card config:
 - or `theme: { palette: ..., mapping: ... }`
 
 Entity button mapping is hierarchical:
-1. base kind/state (`icon_only`, `unavailable`, `toggle`, `non_toggle`)
+1. base state buckets on `buttons` level (`active`, `inactive`, `unavailable`, optional `state` / `state_value`)
 2. `domains.<domain>` override
 3. `entities.<entity_id>` override
 4. `rules[]` template-based override
+
+Notes:
+- default base behavior is equivalent to previous `toggle` palette
+- `domains.automation` defaults to previous `non_toggle` palette
+- pseudo-domain `domains.no_entity` controls icon-only buttons without `entity`
 
 Default palette+mapping reference: `SEAGULL_THEME.default.yaml`.
 
