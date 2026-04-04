@@ -1,0 +1,147 @@
+# Seagull Room Card — DEFAULT THEME SPEC (draft)
+#
+# Purpose:
+# - self-contained description of current visual defaults (as in seagull-room-card.js on main)
+# - NO runtime wiring yet; documentation-only file
+#
+# Structure requested:
+#   card, text, button
+#
+# Notes on parity with current code:
+# - card.background_color here already includes opacity (rgba), replacing old split bg+opacity model
+# - text border_* fields are included for target model, currently code uses radius only
+# - button supports hierarchical + state-based style blocks; this file describes intended default mapping
+
+card:
+  border_radius: 16
+  border_width: 0
+  border_color: "#aaaaaa"
+  background_color: "rgba(238, 238, 238, 0.45)" # #eeeeee + opacity 0.45
+  icon: "mdi:sofa"
+  icon_color: "#2233aa44"
+  icon_size: 60
+
+text:
+  color: "inherit"
+  background: "transparent"
+  border_radius: 10
+  border_width: 0
+  border_color: "transparent"
+  size: 14
+  halign: "left"
+  valign: "top"
+  padding: 0
+  padding_top: null
+  padding_right: null
+  padding_bottom: null
+  padding_left: null
+
+button:
+  # layout
+  align: "right" # left | right | center | justified
+  size: 48
+  gap: 5
+  padding: 10
+  padding_top: null
+  padding_right: null
+  padding_bottom: null
+  padding_left: null
+
+  # style hierarchy
+  # 1) base (applies to all domains unless overridden)
+  # 2) domains.<domain>
+  #
+  # for each level, style can be set in two ways:
+  # - base keys (always): icon, color, background, border_size, border_color, border_radius
+  # - state buckets: active/inactive/unavailable/obsolete/state_value/state/state_not_value/state_above/state_below
+  #
+  # icon:
+  # - null => use entity icon fallback chain (item.icon -> buttons.icon -> entity.attributes.icon -> domain fallback)
+  # - for empty (no entity) null means use item/icon-level icon (no entity fallback)
+
+  base:
+    icon: null
+    color: null
+    background: null
+    border_size: 0
+    border_color: "transparent"
+    border_radius: null # null => fully round button (pill/circle)
+
+    # Current defaults in code are:
+    # - toggle-capable domains: orange/gray palette
+    # - non-toggle domains: blue/light-gray palette
+    # To minimize overrides while matching current behavior, base keeps non-toggle defaults,
+    # and toggle-capable domains are overridden below.
+    active:
+      color: "#eaf2ff"
+      background: "#3b82f6"
+    inactive:
+      color: "#111827"
+      background: "#d1d5db"
+    unavailable:
+      color: "#d1d5db"
+      background: "#6b7280"
+    obsolete:
+      # mirrors _resolveObsoleteConfig defaults when obsolete enabled
+      border_size: 2
+      border_color: "#d1d5db"
+
+    # placeholders for extra state targeting
+    state_value: {}
+    state: {}
+    state_not_value: {}
+    state_above: {}
+    state_below: {}
+
+  domains:
+    # Toggle-capable domains in current code:
+    # light, switch, input_boolean, fan, humidifier, cover, lock, media_player
+    light:
+      active:
+        color: "#111827"
+        background: "#f59e0b"
+      inactive:
+        color: "#e5e7eb"
+        background: "#4b5563"
+
+    switch:
+      active: { color: "#111827", background: "#f59e0b" }
+      inactive: { color: "#e5e7eb", background: "#4b5563" }
+
+    input_boolean:
+      active: { color: "#111827", background: "#f59e0b" }
+      inactive: { color: "#e5e7eb", background: "#4b5563" }
+
+    fan:
+      active: { color: "#111827", background: "#f59e0b" }
+      inactive: { color: "#e5e7eb", background: "#4b5563" }
+
+    humidifier:
+      active: { color: "#111827", background: "#f59e0b" }
+      inactive: { color: "#e5e7eb", background: "#4b5563" }
+
+    cover:
+      active: { color: "#111827", background: "#f59e0b" }
+      inactive: { color: "#e5e7eb", background: "#4b5563" }
+
+    lock:
+      # active state for lock means unlocked (per current _isEntityActive)
+      active: { color: "#111827", background: "#f59e0b" }
+      inactive: { color: "#e5e7eb", background: "#4b5563" }
+
+    media_player:
+      # active state for media_player means playing (per current _isEntityActive)
+      active: { color: "#111827", background: "#f59e0b" }
+      inactive: { color: "#e5e7eb", background: "#4b5563" }
+
+    sensor: {}
+
+    # pseudo-domain for buttons without entity
+    empty:
+      # matches current icon-only defaults in code
+      inactive:
+        color: "#9ca3af"
+        background: "#e5e7eb"
+
+  # optional future layer
+  entities: {}
