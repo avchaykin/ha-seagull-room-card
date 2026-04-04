@@ -270,12 +270,11 @@ class SeagullRoomCard extends HTMLElement {
     if (!items.length) return { html: "", items: [] };
 
     const buttonDefs = items.map((item, index) => {
-      const isEmpty = this._toBool(item?.empty, false);
-      const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
-      const safeColSpan = Math.min(cols, colSpan);
-      const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
-
-      if (isEmpty) {
+      const hasEntity = !!item?.entity;
+      if (!hasEntity && this._toBool(item?.empty, false)) {
+        const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
+        const safeColSpan = Math.min(cols, colSpan);
+        const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
         const html = `<div class="sg-room-light-empty" style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;" aria-hidden="true"></div>`;
         return { html, colSpan: safeColSpan };
       }

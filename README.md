@@ -199,7 +199,7 @@ buttons:
 - `invert_state`
 - `obsolete`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
-- `empty` — renders an empty slot (space is reserved, button is not rendered)
+- `empty` — renders an empty slot (space is reserved, button is not rendered); can be used without `entity` to place a blank cell
 - `tap_action`, `double_tap_action`, `hold_action`
 - `hidden` (internal, used by object form with `false`)
 
