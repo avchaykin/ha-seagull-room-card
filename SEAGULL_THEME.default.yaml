@@ -48,8 +48,8 @@ button:
   padding_left: null
 
   # style hierarchy
-  # 1) base (applies to all domains unless overridden)
-  # 2) domains.<domain>
+  # 1) default (applies to all domains unless overridden)
+  # 2) domain sections directly under `button` (e.g. light, lock, sensor, empty)
   #
   # for each level, style can be set in two ways:
   # - base keys (always): icon, color, background, border_size, border_color, border_radius
@@ -59,7 +59,7 @@ button:
   # - null => use entity icon fallback chain (item.icon -> buttons.icon -> entity.attributes.icon -> domain fallback)
   # - for empty (no entity) null means use item/icon-level icon (no entity fallback)
 
-  base:
+  default:
     icon: null
     color: null
     background: null
@@ -67,17 +67,14 @@ button:
     border_color: "transparent"
     border_radius: null # null => fully round button (pill/circle)
 
-    # Current defaults in code are:
-    # - toggle-capable domains: orange/gray palette
-    # - non-toggle domains: blue/light-gray palette
-    # To minimize overrides while matching current behavior, base keeps non-toggle defaults,
-    # and toggle-capable domains are overridden below.
+    # Current default in code for toggle-capable domains
+    # (and used as primary baseline here to avoid repeated domain overrides):
     active:
-      color: "#eaf2ff"
-      background: "#3b82f6"
-    inactive:
       color: "#111827"
-      background: "#d1d5db"
+      background: "#f59e0b"
+    inactive:
+      color: "#e5e7eb"
+      background: "#4b5563"
     unavailable:
       color: "#d1d5db"
       background: "#6b7280"
@@ -93,55 +90,21 @@ button:
     state_above: {}
     state_below: {}
 
-  domains:
-    # Toggle-capable domains in current code:
-    # light, switch, input_boolean, fan, humidifier, cover, lock, media_player
-    light:
-      active:
-        color: "#111827"
-        background: "#f59e0b"
-      inactive:
-        color: "#e5e7eb"
-        background: "#4b5563"
+  # Domain overrides only where they differ from `default`
+  sensor:
+    active:
+      color: "#eaf2ff"
+      background: "#3b82f6"
+    inactive:
+      color: "#111827"
+      background: "#d1d5db"
 
-    switch:
-      active: { color: "#111827", background: "#f59e0b" }
-      inactive: { color: "#e5e7eb", background: "#4b5563" }
-
-    input_boolean:
-      active: { color: "#111827", background: "#f59e0b" }
-      inactive: { color: "#e5e7eb", background: "#4b5563" }
-
-    fan:
-      active: { color: "#111827", background: "#f59e0b" }
-      inactive: { color: "#e5e7eb", background: "#4b5563" }
-
-    humidifier:
-      active: { color: "#111827", background: "#f59e0b" }
-      inactive: { color: "#e5e7eb", background: "#4b5563" }
-
-    cover:
-      active: { color: "#111827", background: "#f59e0b" }
-      inactive: { color: "#e5e7eb", background: "#4b5563" }
-
-    lock:
-      # active state for lock means unlocked (per current _isEntityActive)
-      active: { color: "#111827", background: "#f59e0b" }
-      inactive: { color: "#e5e7eb", background: "#4b5563" }
-
-    media_player:
-      # active state for media_player means playing (per current _isEntityActive)
-      active: { color: "#111827", background: "#f59e0b" }
-      inactive: { color: "#e5e7eb", background: "#4b5563" }
-
-    sensor: {}
-
-    # pseudo-domain for buttons without entity
-    empty:
-      # matches current icon-only defaults in code
-      inactive:
-        color: "#9ca3af"
-        background: "#e5e7eb"
+  # pseudo-domain for buttons without entity
+  empty:
+    # matches current icon-only defaults in code
+    inactive:
+      color: "#9ca3af"
+      background: "#e5e7eb"
 
   # optional future layer
   entities: {}
