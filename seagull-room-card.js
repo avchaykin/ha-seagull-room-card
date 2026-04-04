@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "0.10.10";
+const SEAGULL_ROOM_CARD_VERSION = "1.0.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 const SEAGULL_ROOM_THEME_DEFAULT = {
@@ -1454,13 +1454,18 @@ class SeagullRoomCardEditor extends HTMLElement {
 
   _render() {
     this.innerHTML = `
-      <div style="padding:12px 0; opacity:.85; font-size:13px; line-height:1.4;">
+      <div style="padding:12px 0; opacity:.9; font-size:13px; line-height:1.4;">
         <div><b>Seagull Room Card</b></div>
         <div style="margin-top:6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">
           Version: v${SEAGULL_ROOM_CARD_VERSION}<br>
           Commit: ${SEAGULL_ROOM_CARD_COMMIT}
         </div>
         <div style="margin-top:8px; opacity:.75;">Use the YAML tab to edit card configuration.</div>
+
+        <div style="margin-top:12px;background:var(--card-background-color,#f3f4f6);border-radius:9999px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--divider-color,#d1d5db);">
+          <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Seagull Room Card</div>
+          <div style="background:#0ea5e9;color:#fff;border-radius:9999px;padding:2px 8px;font-size:12px;font-weight:700;line-height:1.6;">v${SEAGULL_ROOM_CARD_VERSION}</div>
+        </div>
       </div>
     `;
   }
