@@ -134,6 +134,10 @@ button:
   binary_sensor:
     active: { color: "#eaf2ff", background: "#3b82f6" }
     inactive: { color: "#111827", background: "#d1d5db" }
+    # optional extra level:
+    # device_class:
+    #   window:
+    #     inactive: { color: "blue" }
   button:
     active: { color: "#eaf2ff", background: "#3b82f6" }
     inactive: { color: "#111827", background: "#d1d5db" }
