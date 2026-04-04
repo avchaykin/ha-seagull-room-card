@@ -1303,8 +1303,12 @@ class SeagullRoomCard extends HTMLElement {
   _paletteMode() {
     const mode = String(this._theme?.palette_mode || "auto").toLowerCase();
     if (mode === "day" || mode === "night") return mode;
-    const sun = this._hass?.states?.["sun.sun"]?.state;
-    return sun === "below_horizon" ? "night" : "day";
+
+    // auto => follow client UI theme (HA frontend darkMode)
+    const darkMode = this._hass?.themes?.darkMode;
+    if (typeof darkMode === "boolean") return darkMode ? "night" : "day";
+
+    return "day";
   }
 
   _paletteColor(value) {

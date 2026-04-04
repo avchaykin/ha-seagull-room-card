@@ -132,7 +132,7 @@ variables:
 Card supports optional `theme` object in config.
 
 Structure:
-- `theme.palette_mode` (`auto|day|night`)
+- `theme.palette_mode` (`auto|day|night`) — `auto` follows HA client UI dark mode (`hass.themes.darkMode`)
 - `theme.palette` (named colors; supports day/night variants)
 - `theme.card`
 - `theme.text`

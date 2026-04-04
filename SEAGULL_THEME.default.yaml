@@ -1,6 +1,6 @@
 # Seagull Room Card — DEFAULT THEME SPEC (palette-enabled)
 
-palette_mode: auto # auto | day | night
+palette_mode: auto # auto | day | night (auto follows HA client dark mode)
 
 palette:
   card_border: { day: "#aaaaaa", night: "#64748b" }
