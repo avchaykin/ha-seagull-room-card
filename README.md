@@ -134,7 +134,7 @@ Card supports optional `theme` object in config.
 Structure:
 - `theme.card`
 - `theme.text`
-- `theme.button`
+- `theme.button` (including `theme.button.icons` for domain fallback icons)
 
 Draft default-theme schema is documented in `SEAGULL_THEME.default.yaml`.
 Built-in defaults are centralized in code as `SEAGULL_ROOM_THEME_DEFAULT` and merged with `theme`.

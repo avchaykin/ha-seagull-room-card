@@ -47,6 +47,27 @@ button:
   padding_bottom: null
   padding_left: null
 
+  # default icon mapping (used when entity has no explicit attributes.icon)
+  icons:
+    default: "mdi:help-circle-outline"
+    light:
+      on: "mdi:lightbulb"
+      off: "mdi:lightbulb-off"
+    lock:
+      locked: "mdi:lock"
+      unlocked: "mdi:lock-open-variant"
+      default: "mdi:lock-reset"
+    binary_sensor:
+      default_on: "mdi:check-circle"
+      default_off: "mdi:circle-outline"
+      device_class:
+        window: { on: "mdi:window-open", off: "mdi:window-closed" }
+        door: { on: "mdi:door-open", off: "mdi:door-closed" }
+        opening: { on: "mdi:garage-open", off: "mdi:garage" }
+        motion: { on: "mdi:motion-sensor", off: "mdi:motion-sensor-off" }
+        occupancy: { on: "mdi:home-account", off: "mdi:home-outline" }
+        lock: { on: "mdi:lock-open-variant", off: "mdi:lock" }
+
   # style hierarchy
   # 1) default (applies to all domains unless overridden)
   # 2) domain sections directly under `button` (e.g. light, lock, sensor, empty)
