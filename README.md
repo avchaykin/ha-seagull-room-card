@@ -221,11 +221,13 @@ Default palette+mapping reference: `SEAGULL_THEME.default.yaml`.
 - `invert_state`
 - `obsolete`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
+- `active`, `inactive` — template bool (`true/false`) to force visual active/inactive state (especially useful without `entity`)
 - `empty` — renders an empty slot (space is reserved, button is not rendered); can be used without `entity` to place a blank cell
 - `tap_action`, `double_tap_action`, `hold_action`
 - `hidden` (internal, used by object form with `false`)
 
 Visibility params inherit from `buttons`/`lights` level and can be overridden per button. Templates can use `entity`.
+`active` / `inactive` also support inheritance and templates.
 `empty` also supports inheritance and templates.
 
 Buttons without `entity` are supported (icon-only): they use a lighter default style and can run actions like `navigate` and `perform-action`.

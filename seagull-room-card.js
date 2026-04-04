@@ -372,7 +372,8 @@ class SeagullRoomCard extends HTMLElement {
       const isUnavailable = state === "unavailable";
       const canToggle = this._canToggleEntity(item.entity);
       const baseActive = this._isEntityActive(item.entity, state);
-      const isActive = invertState ? !baseActive : baseActive;
+      const resolvedActive = this._resolveButtonActiveState(item, buttonsCfg, item.entity, state, baseActive);
+      const isActive = invertState ? !resolvedActive : resolvedActive;
 
       const themedBtn = this._resolveButtonThemeDefaults({
         entityId: item.entity,
@@ -860,6 +861,19 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     return String(state) === String(expected);
+  }
+
+  _resolveButtonActiveState(item, buttonsCfg, entityId, state, fallback = false) {
+    const activeTpl = item?.active ?? buttonsCfg?.active;
+    const inactiveTpl = item?.inactive ?? buttonsCfg?.inactive;
+
+    const activeResolved = this._resolveDynamicValue(activeTpl, entityId, state, undefined);
+    if (activeResolved !== undefined && this._toBool(activeResolved, false)) return true;
+
+    const inactiveResolved = this._resolveDynamicValue(inactiveTpl, entityId, state, undefined);
+    if (inactiveResolved !== undefined && this._toBool(inactiveResolved, false)) return false;
+
+    return fallback;
   }
 
   _toBool(value, fallback = false) {
