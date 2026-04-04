@@ -264,13 +264,22 @@ class SeagullRoomCard extends HTMLElement {
 
     const items = this._collectButtonItems(buttonsCfg)
       .filter((it) => !it.hidden)
-      .filter((it) => !!it.entity)
-      .filter((it) => !!this._hass?.states?.[it.entity])
-      .filter((it) => this._isButtonItemVisible(it, buttonsCfg));
+      .filter((it) => this._toBool(it?.empty, false) || (!!it.entity && !!this._hass?.states?.[it.entity]))
+      .filter((it) => this._toBool(it?.empty, false) || this._isButtonItemVisible(it, buttonsCfg));
 
     if (!items.length) return { html: "", items: [] };
 
     const buttonDefs = items.map((item, index) => {
+      const isEmpty = this._toBool(item?.empty, false);
+      const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
+      const safeColSpan = Math.min(cols, colSpan);
+      const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
+
+      if (isEmpty) {
+        const html = `<div class="sg-room-light-empty" style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;" aria-hidden="true"></div>`;
+        return { html, colSpan: safeColSpan };
+      }
+
       const st = this._hass.states[item.entity];
       const state = st?.state || "unknown";
 
@@ -337,8 +346,14 @@ class SeagullRoomCard extends HTMLElement {
       const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
       const safeColSpan = Math.min(cols, colSpan);
       const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
+      const isEmpty = !!this._resolveDynamicValue(item.empty ?? buttonsCfg.empty, item.entity, state, false);
 
-      const html = `
+      const html = isEmpty
+        ? `
+        <div aria-hidden="true"
+          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;"></div>
+      `
+        : `
         <button class="sg-room-light-btn" data-index="${index}"
           style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:9999px;border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
           <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
@@ -672,7 +687,7 @@ class SeagullRoomCard extends HTMLElement {
       arr.forEach((item) => {
         if (typeof item === "string") {
           out.push({ entity: item, width: 1 });
-        } else if (item?.entity) {
+        } else if (item?.entity || item?.empty === true) {
           out.push({ width: 1, ...item });
         }
       });

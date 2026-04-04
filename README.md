@@ -199,10 +199,12 @@ buttons:
 - `invert_state`
 - `obsolete`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
+- `empty` — renders an empty slot (space is reserved, button is not rendered)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `hidden` (internal, used by object form with `false`)
 
 Visibility params inherit from `buttons`/`lights` level and can be overridden per button. Templates can use `entity`.
+`empty` also supports inheritance and templates.
 
 ---
 
