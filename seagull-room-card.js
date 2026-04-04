@@ -264,7 +264,8 @@ class SeagullRoomCard extends HTMLElement {
 
     const items = this._collectButtonItems(buttonsCfg)
       .filter((it) => !it.hidden)
-      .filter((it) => this._toBool(it?.empty, false) || (!!it.entity && !!this._hass?.states?.[it.entity]))
+      .filter((it) => this._toBool(it?.empty, false) || !!it.entity || !!it.icon || !!buttonsCfg.icon)
+      .filter((it) => !it.entity || !!this._hass?.states?.[it.entity])
       .filter((it) => this._toBool(it?.empty, false) || this._isButtonItemVisible(it, buttonsCfg));
 
     if (!items.length) return { html: "", items: [] };
@@ -314,9 +315,11 @@ class SeagullRoomCard extends HTMLElement {
       const baseActive = this._isEntityActive(item.entity, state);
       const isActive = invertState ? !baseActive : baseActive;
 
-      const defaultBg = isUnavailable
-        ? "#6b7280"
-        : (!canToggle ? (isActive ? "#3b82f6" : "#d1d5db") : (isActive ? "#f59e0b" : "#4b5563"));
+      const defaultBg = !hasEntity
+        ? "#e5e7eb"
+        : (isUnavailable
+          ? "#6b7280"
+          : (!canToggle ? (isActive ? "#3b82f6" : "#d1d5db") : (isActive ? "#f59e0b" : "#4b5563")));
 
       let bgColor = this._resolveDynamicValue(
         bgTpl,
@@ -324,14 +327,16 @@ class SeagullRoomCard extends HTMLElement {
         state,
         defaultBg
       );
-      if (!isUnavailable && lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
+      if (hasEntity && !isUnavailable && lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
         const resolvedLight = this._resolveLightEntityColor(st?.attributes, lightColorMode);
         if (resolvedLight) bgColor = resolvedLight;
       }
 
-      const defaultIconColor = isUnavailable
-        ? "#d1d5db"
-        : (!canToggle ? (isActive ? "#eaf2ff" : "#111827") : (isActive ? "#111827" : "#e5e7eb"));
+      const defaultIconColor = !hasEntity
+        ? "#9ca3af"
+        : (isUnavailable
+          ? "#d1d5db"
+          : (!canToggle ? (isActive ? "#eaf2ff" : "#111827") : (isActive ? "#111827" : "#e5e7eb")));
 
       const iColor = this._resolveDynamicValue(
         iconColorTpl,
@@ -722,11 +727,8 @@ class SeagullRoomCard extends HTMLElement {
 
   _isButtonItemVisible(item, buttonsCfg = {}) {
     const entityId = String(item?.entity || "");
-    if (!entityId) return false;
-
-    const st = this._hass?.states?.[entityId];
-    const state = st?.state;
-    if (state == null) return false;
+    const st = entityId ? this._hass?.states?.[entityId] : null;
+    const state = st?.state ?? "";
 
     const hasOwn = (obj, key) => !!obj && Object.prototype.hasOwnProperty.call(obj, key);
     const resolve = (key, fallback) => {
@@ -738,6 +740,8 @@ class SeagullRoomCard extends HTMLElement {
 
     const showRaw = resolve("show", true);
     if (!this._toBool(showRaw, true)) return false;
+
+    if (!entityId) return true;
 
     if (hasOwn(item, "show_value") || hasOwn(buttonsCfg, "show_value")) {
       const expected = resolve("show_value", undefined);

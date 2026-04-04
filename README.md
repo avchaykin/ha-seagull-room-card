@@ -192,7 +192,7 @@ buttons:
 
 ### Per-button parameters
 
-- `entity` (any domain)
+- `entity` (any domain, optional if `icon` is provided)
 - `width` — width in columns (default `1`)
 - `icon`, `color`, `background`, `border`, `border_color`
 - `use_light_color`
@@ -205,6 +205,8 @@ buttons:
 
 Visibility params inherit from `buttons`/`lights` level and can be overridden per button. Templates can use `entity`.
 `empty` also supports inheritance and templates.
+
+Buttons without `entity` are supported (icon-only): they use a lighter default style and can run actions like `navigate` and `perform-action`.
 
 ---
 
