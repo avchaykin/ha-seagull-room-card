@@ -148,6 +148,11 @@ variables:
 - `use_light_color` — `false | color | brightness | both | true`
 - `invert_state` — `true/false`; inverts active/inactive default state mapping
 - `obsolete` — stale style trigger: hours (number) or object
+- `show` — `true/false` (supports templates)
+- `show_value` — show only if entity state equals value (or one of values in array)
+- `show_not_value` — hide if entity state equals value (or one of values in array)
+- `show_above` — show only if entity state is numerically greater
+- `show_below` — show only if entity state is numerically smaller
 
 ### Default button actions
 
@@ -193,8 +198,11 @@ buttons:
 - `use_light_color`
 - `invert_state`
 - `obsolete`
+- `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
 - `tap_action`, `double_tap_action`, `hold_action`
 - `hidden` (internal, used by object form with `false`)
+
+Visibility params inherit from `buttons`/`lights` level and can be overridden per button. Templates can use `entity`.
 
 ---
 

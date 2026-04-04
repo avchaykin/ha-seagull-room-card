@@ -265,7 +265,8 @@ class SeagullRoomCard extends HTMLElement {
     const items = this._collectButtonItems(buttonsCfg)
       .filter((it) => !it.hidden)
       .filter((it) => !!it.entity)
-      .filter((it) => !!this._hass?.states?.[it.entity]);
+      .filter((it) => !!this._hass?.states?.[it.entity])
+      .filter((it) => this._isButtonItemVisible(it, buttonsCfg));
 
     if (!items.length) return { html: "", items: [] };
 
@@ -703,6 +704,83 @@ class SeagullRoomCard extends HTMLElement {
     fromObject(buttonsCfg.light);
 
     return out;
+  }
+
+  _isButtonItemVisible(item, buttonsCfg = {}) {
+    const entityId = String(item?.entity || "");
+    if (!entityId) return false;
+
+    const st = this._hass?.states?.[entityId];
+    const state = st?.state;
+    if (state == null) return false;
+
+    const hasOwn = (obj, key) => !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+    const resolve = (key, fallback) => {
+      const raw = hasOwn(item, key)
+        ? item[key]
+        : (hasOwn(buttonsCfg, key) ? buttonsCfg[key] : fallback);
+      return this._resolveDynamicValue(raw, entityId, state, fallback);
+    };
+
+    const showRaw = resolve("show", true);
+    if (!this._toBool(showRaw, true)) return false;
+
+    if (hasOwn(item, "show_value") || hasOwn(buttonsCfg, "show_value")) {
+      const expected = resolve("show_value", undefined);
+      if (!this._matchesValueFilter(state, expected)) return false;
+    }
+
+    if (hasOwn(item, "show_not_value") || hasOwn(buttonsCfg, "show_not_value")) {
+      const disallowed = resolve("show_not_value", undefined);
+      if (this._matchesValueFilter(state, disallowed)) return false;
+    }
+
+    if (hasOwn(item, "show_above") || hasOwn(buttonsCfg, "show_above")) {
+      const nState = Number(state);
+      const nMin = Number(resolve("show_above", NaN));
+      if (!Number.isFinite(nState) || !Number.isFinite(nMin) || !(nState > nMin)) return false;
+    }
+
+    if (hasOwn(item, "show_below") || hasOwn(buttonsCfg, "show_below")) {
+      const nState = Number(state);
+      const nMax = Number(resolve("show_below", NaN));
+      if (!Number.isFinite(nState) || !Number.isFinite(nMax) || !(nState < nMax)) return false;
+    }
+
+    return true;
+  }
+
+  _matchesValueFilter(state, expected) {
+    if (Array.isArray(expected)) {
+      return expected.some((v) => String(state) === String(v));
+    }
+
+    if (typeof expected === "string") {
+      const t = expected.trim();
+      if (t.startsWith("[") && t.endsWith("]")) {
+        try {
+          const parsed = JSON.parse(t);
+          if (Array.isArray(parsed)) {
+            return parsed.some((v) => String(state) === String(v));
+          }
+        } catch (_e) {
+          // ignore and compare as plain string
+        }
+      }
+    }
+
+    return String(state) === String(expected);
+  }
+
+  _toBool(value, fallback = false) {
+    if (value === undefined || value === null) return fallback;
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number") return value !== 0;
+
+    const s = String(value).trim().toLowerCase();
+    if (["true", "on", "yes", "1"].includes(s)) return true;
+    if (["false", "off", "no", "0", "", "none", "null", "undefined"].includes(s)) return false;
+    return fallback;
   }
 
   _resolveDynamicValue(input, entityId, state, fallback = null, varsCtx = null) {
