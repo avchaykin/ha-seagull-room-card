@@ -1,0 +1,94 @@
+# Default Seagull Room theme (palette + mapping)
+#
+# palette: named colors
+# mapping: where colors are applied (card, text, buttons)
+#
+# Hierarchy for entity buttons in mapping.buttons:
+# 1) base by type/state (icon_only | unavailable | toggle | non_toggle)
+# 2) domain override (mapping.buttons.domains.<domain>)
+# 3) entity override (mapping.buttons.entities.<entity_id>)
+# 4) template rules (mapping.buttons.rules[])
+
+palette:
+  card_bg: "#eeeeee"
+  card_border: "#aaaaaa"
+  card_icon: "#2233aa44"
+
+  text_color: "inherit"
+  text_bg: "transparent"
+
+  btn_unavailable_bg: "#6b7280"
+  btn_unavailable_icon: "#d1d5db"
+
+  btn_toggle_active_bg: "#f59e0b"
+  btn_toggle_inactive_bg: "#4b5563"
+  btn_toggle_active_icon: "#111827"
+  btn_toggle_inactive_icon: "#e5e7eb"
+
+  btn_non_toggle_active_bg: "#3b82f6"
+  btn_non_toggle_inactive_bg: "#d1d5db"
+  btn_non_toggle_active_icon: "#eaf2ff"
+  btn_non_toggle_inactive_icon: "#111827"
+
+  btn_icon_only_bg: "#d1d5db"
+  btn_icon_only_icon: "#111827"
+
+  btn_border_transparent: "transparent"
+  obsolete_border: "#d1d5db"
+
+mapping:
+  card:
+    background_color: card_bg
+    border_color: card_border
+    icon_color: card_icon
+
+  text:
+    color: text_color
+    background_color: text_bg
+
+  buttons:
+    icon_only:
+      background: btn_icon_only_bg
+      icon_color: btn_icon_only_icon
+
+    unavailable:
+      background: btn_unavailable_bg
+      icon_color: btn_unavailable_icon
+
+    toggle:
+      active:
+        background: btn_toggle_active_bg
+        icon_color: btn_toggle_active_icon
+      inactive:
+        background: btn_toggle_inactive_bg
+        icon_color: btn_toggle_inactive_icon
+
+    non_toggle:
+      active:
+        background: btn_non_toggle_active_bg
+        icon_color: btn_non_toggle_active_icon
+      inactive:
+        background: btn_non_toggle_inactive_bg
+        icon_color: btn_non_toggle_inactive_icon
+
+    border:
+      default: btn_border_transparent
+
+    # Domain-level overrides (examples)
+    domains:
+      light: {}
+      lock: {}
+      switch: {}
+      automation: {}
+
+    # Entity-level overrides
+    entities: {}
+
+    # Custom computed rules (templated condition)
+    # Example:
+    # rules:
+    #   - when: "{{ entity === 'sensor.xxx' && Number(state) > 100 }}"
+    #     style:
+    #       background: btn_toggle_active_bg
+    #       icon_color: btn_toggle_active_icon
+    rules: []

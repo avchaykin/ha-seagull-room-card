@@ -190,6 +190,22 @@ buttons:
       width: 2
 ```
 
+### Theme (palette + mapping)
+
+You can define theme directly in card config:
+
+- `theme_palette` — named colors (token -> color)
+- `theme_mapping` — mapping from tokens to card/text/button parts
+- or `theme: { palette: ..., mapping: ... }`
+
+Entity button mapping is hierarchical:
+1. base kind/state (`icon_only`, `unavailable`, `toggle`, `non_toggle`)
+2. `domains.<domain>` override
+3. `entities.<entity_id>` override
+4. `rules[]` template-based override
+
+Default palette+mapping reference: `SEAGULL_THEME.default.yaml`.
+
 ### Per-button parameters
 
 - `entity` (any domain, optional if `icon` is provided)

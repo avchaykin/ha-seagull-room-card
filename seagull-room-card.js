@@ -1,6 +1,50 @@
 const SEAGULL_ROOM_CARD_VERSION = "0.10.10";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
+const SEAGULL_ROOM_THEME_DEFAULT = {
+  palette: {
+    card_bg: "#eeeeee",
+    card_border: "#aaaaaa",
+    card_icon: "#2233aa44",
+    text_color: "inherit",
+    text_bg: "transparent",
+    btn_unavailable_bg: "#6b7280",
+    btn_unavailable_icon: "#d1d5db",
+    btn_toggle_active_bg: "#f59e0b",
+    btn_toggle_inactive_bg: "#4b5563",
+    btn_toggle_active_icon: "#111827",
+    btn_toggle_inactive_icon: "#e5e7eb",
+    btn_non_toggle_active_bg: "#3b82f6",
+    btn_non_toggle_inactive_bg: "#d1d5db",
+    btn_non_toggle_active_icon: "#eaf2ff",
+    btn_non_toggle_inactive_icon: "#111827",
+    btn_icon_only_bg: "#d1d5db",
+    btn_icon_only_icon: "#111827",
+    btn_border_transparent: "transparent",
+    obsolete_border: "#d1d5db",
+  },
+  mapping: {
+    card: { background_color: "card_bg", border_color: "card_border", icon_color: "card_icon" },
+    text: { color: "text_color", background_color: "text_bg" },
+    buttons: {
+      icon_only: { background: "btn_icon_only_bg", icon_color: "btn_icon_only_icon" },
+      unavailable: { background: "btn_unavailable_bg", icon_color: "btn_unavailable_icon" },
+      toggle: {
+        active: { background: "btn_toggle_active_bg", icon_color: "btn_toggle_active_icon" },
+        inactive: { background: "btn_toggle_inactive_bg", icon_color: "btn_toggle_inactive_icon" },
+      },
+      non_toggle: {
+        active: { background: "btn_non_toggle_active_bg", icon_color: "btn_non_toggle_active_icon" },
+        inactive: { background: "btn_non_toggle_inactive_bg", icon_color: "btn_non_toggle_inactive_icon" },
+      },
+      border: { default: "btn_border_transparent" },
+      entities: {},
+      domains: {},
+      rules: [],
+    },
+  },
+};
+
 class SeagullRoomCard extends HTMLElement {
   static getStubConfig() {
     return {
@@ -101,15 +145,16 @@ class SeagullRoomCard extends HTMLElement {
 
     const cfg = this._config;
     const buttonsCfg = cfg.buttons || cfg.lights || {};
+    const theme = this._getThemeResolved();
 
-    const bgColor = cfg.background_color ?? "#eeeeee";
+    const bgColor = cfg.background_color ?? this._themeColor(theme.mapping?.card?.background_color ?? "card_bg");
     const opacity = this._clampOpacity(cfg.background_opacity ?? 0.45);
     const radius = this._toPx(cfg.border_radius ?? 16, 16);
     const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? 0, 0));
-    const borderColor = cfg.border_color ?? "#aaaaaa";
+    const borderColor = cfg.border_color ?? this._themeColor(theme.mapping?.card?.border_color ?? "card_border");
 
     const icon = cfg.icon ?? "mdi:sofa";
-    const iconColor = cfg.icon_color ?? "#2233aa44";
+    const iconColor = cfg.icon_color ?? this._themeColor(theme.mapping?.card?.icon_color ?? "card_icon");
     const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? 60, 60));
 
     const basePadding = Math.max(0, this._toPx(buttonsCfg.padding ?? 10, 10));
@@ -216,8 +261,19 @@ class SeagullRoomCard extends HTMLElement {
     if (!value.trim()) return "";
 
     const size = Math.max(8, this._toPx(textCfg.size ?? 14, 14));
-    const textColor = this._resolveDynamicValue(textCfg.color, entityId, state, "inherit");
-    const textBg = this._resolveDynamicValue(textCfg.background_color, entityId, state, "transparent");
+    const theme = this._getThemeResolved();
+    const textColor = this._resolveDynamicValue(
+      textCfg.color,
+      entityId,
+      state,
+      this._themeColor(theme.mapping?.text?.color ?? "text_color")
+    );
+    const textBg = this._resolveDynamicValue(
+      textCfg.background_color,
+      entityId,
+      state,
+      this._themeColor(theme.mapping?.text?.background_color ?? "text_bg")
+    );
     const textRadius = Math.max(0, this._toPx(textCfg.border_radius ?? 10, 10));
     const halign = ["left", "center", "right"].includes(String(textCfg.halign ?? "left").toLowerCase())
       ? String(textCfg.halign ?? "left").toLowerCase()
@@ -315,11 +371,20 @@ class SeagullRoomCard extends HTMLElement {
       const baseActive = this._isEntityActive(item.entity, state);
       const isActive = invertState ? !baseActive : baseActive;
 
-      const defaultBg = !hasEntity
+      const themedBtn = this._resolveButtonThemeDefaults({
+        entityId: item.entity,
+        state,
+        hasEntity,
+        isUnavailable,
+        canToggle,
+        isActive,
+      });
+
+      const defaultBg = themedBtn.background ?? (!hasEntity
         ? "#d1d5db"
         : (isUnavailable
           ? "#6b7280"
-          : (!canToggle ? (isActive ? "#3b82f6" : "#d1d5db") : (isActive ? "#f59e0b" : "#4b5563")));
+          : (!canToggle ? (isActive ? "#3b82f6" : "#d1d5db") : (isActive ? "#f59e0b" : "#4b5563"))));
 
       let bgColor = this._resolveDynamicValue(
         bgTpl,
@@ -332,11 +397,11 @@ class SeagullRoomCard extends HTMLElement {
         if (resolvedLight) bgColor = resolvedLight;
       }
 
-      const defaultIconColor = !hasEntity
+      const defaultIconColor = themedBtn.icon_color ?? (!hasEntity
         ? "#111827"
         : (isUnavailable
           ? "#d1d5db"
-          : (!canToggle ? (isActive ? "#eaf2ff" : "#111827") : (isActive ? "#111827" : "#e5e7eb")));
+          : (!canToggle ? (isActive ? "#eaf2ff" : "#111827") : (isActive ? "#111827" : "#e5e7eb"))));
 
       const iColor = this._resolveDynamicValue(
         iconColorTpl,
@@ -345,7 +410,7 @@ class SeagullRoomCard extends HTMLElement {
         defaultIconColor
       );
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
-      const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
+      const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, themedBtn.border_color ?? "transparent");
 
       const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
       const safeColSpan = Math.min(cols, colSpan);
@@ -1127,6 +1192,85 @@ class SeagullRoomCard extends HTMLElement {
 
     // if only color requested but no color attrs, keep default fallback in caller
     return null;
+  }
+
+  _getThemeResolved() {
+    const cfg = this._config || {};
+    const custom = cfg.theme || {};
+    const customPalette = cfg.theme_palette || custom.palette || {};
+    const customMapping = cfg.theme_mapping || custom.mapping || {};
+
+    return {
+      palette: { ...(SEAGULL_ROOM_THEME_DEFAULT.palette || {}), ...(customPalette || {}) },
+      mapping: this._deepMerge(SEAGULL_ROOM_THEME_DEFAULT.mapping || {}, customMapping || {}),
+    };
+  }
+
+  _deepMerge(base, override) {
+    if (!override || typeof override !== "object" || Array.isArray(override)) return { ...(base || {}) };
+    const out = { ...(base || {}) };
+    for (const [k, v] of Object.entries(override)) {
+      if (v && typeof v === "object" && !Array.isArray(v) && out[k] && typeof out[k] === "object" && !Array.isArray(out[k])) {
+        out[k] = this._deepMerge(out[k], v);
+      } else {
+        out[k] = v;
+      }
+    }
+    return out;
+  }
+
+  _themeColor(value) {
+    const themed = this._getThemeResolved();
+    if (typeof value !== "string") return value;
+    return themed.palette[value] ?? value;
+  }
+
+  _resolveButtonThemeDefaults({ entityId, state, hasEntity, isUnavailable, canToggle, isActive }) {
+    const themed = this._getThemeResolved();
+    const btnMap = themed.mapping?.buttons || {};
+    const domain = String(entityId || "").split(".")[0] || "";
+
+    const pickState = (spec) => {
+      if (!spec || typeof spec !== "object") return {};
+      if (isUnavailable && spec.unavailable) return spec.unavailable;
+      if (isActive && spec.active) return spec.active;
+      if (!isActive && spec.inactive) return spec.inactive;
+      if (state && spec.state && typeof spec.state === "object" && spec.state[state]) return spec.state[state];
+      return spec;
+    };
+
+    let style = {};
+    const merge = (spec) => {
+      const s = pickState(spec);
+      if (!s || typeof s !== "object") return;
+      style = { ...style, ...s };
+    };
+
+    if (!hasEntity) {
+      merge(btnMap.icon_only);
+    } else if (isUnavailable) {
+      merge(btnMap.unavailable);
+    } else if (canToggle) {
+      merge(btnMap.toggle);
+    } else {
+      merge(btnMap.non_toggle);
+    }
+
+    if (domain && btnMap.domains?.[domain]) merge(btnMap.domains[domain]);
+    if (entityId && btnMap.entities?.[entityId]) merge(btnMap.entities[entityId]);
+
+    const rules = Array.isArray(btnMap.rules) ? btnMap.rules : [];
+    for (const rule of rules) {
+      if (!rule || typeof rule !== "object") continue;
+      const cond = this._resolveDynamicValue(rule.when ?? rule.if, entityId, state, false);
+      if (this._toBool(cond, false)) merge(rule.style || rule);
+    }
+
+    return {
+      background: this._themeColor(style.background),
+      icon_color: this._themeColor(style.icon_color ?? style.color),
+      border_color: this._themeColor(style.border_color ?? btnMap?.border?.default),
+    };
   }
 
   _esc(s) {
