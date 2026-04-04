@@ -27,20 +27,20 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     card: { background_color: "card_bg", border_color: "card_border", icon_color: "card_icon" },
     text: { color: "text_color", background_color: "text_bg" },
     buttons: {
-      active: { background: "btn_toggle_active_bg", icon_color: "btn_toggle_active_icon" },
-      inactive: { background: "btn_toggle_inactive_bg", icon_color: "btn_toggle_inactive_icon" },
-      unavailable: { background: "btn_unavailable_bg", icon_color: "btn_unavailable_icon" },
+      active: { icon: null, background: "btn_toggle_active_bg", icon_color: "btn_toggle_active_icon" },
+      inactive: { icon: null, background: "btn_toggle_inactive_bg", icon_color: "btn_toggle_inactive_icon" },
+      unavailable: { icon: null, background: "btn_unavailable_bg", icon_color: "btn_unavailable_icon" },
       state: {},
       state_value: {},
       border: { size: 0, default: "btn_border_transparent" },
       entities: {},
       domains: {
         automation: {
-          active: { background: "btn_non_toggle_active_bg", icon_color: "btn_non_toggle_active_icon" },
-          inactive: { background: "btn_non_toggle_inactive_bg", icon_color: "btn_non_toggle_inactive_icon" },
+          active: { icon: null, background: "btn_non_toggle_active_bg", icon_color: "btn_non_toggle_active_icon" },
+          inactive: { icon: null, background: "btn_non_toggle_inactive_bg", icon_color: "btn_non_toggle_inactive_icon" },
         },
         no_entity: {
-          inactive: { background: "btn_icon_only_bg", icon_color: "btn_icon_only_icon" },
+          inactive: { icon: null, background: "btn_icon_only_bg", icon_color: "btn_icon_only_icon" },
         },
       },
       rules: [],

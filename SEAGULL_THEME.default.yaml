@@ -50,12 +50,17 @@ mapping:
     # Base for all buttons (with entity and no_entity)
     # Style keys supported at each hierarchy level: icon, color/icon_color, background, border_size, border_color
     active:
+      # null => keep default icon resolution chain:
+      # item.icon -> buttons.icon -> entity attributes.icon -> domain fallback icon
+      icon: null
       background: btn_toggle_active_bg
       icon_color: btn_toggle_active_icon
     inactive:
+      icon: null
       background: btn_toggle_inactive_bg
       icon_color: btn_toggle_inactive_icon
     unavailable:
+      icon: null
       background: btn_unavailable_bg
       icon_color: btn_unavailable_icon
 
@@ -75,14 +80,18 @@ mapping:
       # By default automation keeps old non_toggle behavior
       automation:
         active:
+          icon: null
           background: btn_non_toggle_active_bg
           icon_color: btn_non_toggle_active_icon
         inactive:
+          icon: null
           background: btn_non_toggle_inactive_bg
           icon_color: btn_non_toggle_inactive_icon
       # Pseudo-domain for icon-only buttons without entity
       no_entity:
         inactive:
+          # null keeps item.icon/buttons.icon (for no_entity there is no entity icon fallback)
+          icon: null
           background: btn_icon_only_bg
           icon_color: btn_icon_only_icon
 
