@@ -90,18 +90,131 @@ button:
     state_above: {}
     state_below: {}
 
-  # Domain overrides only where they differ from `default`
+  # Explicit active/inactive mapping by domain.
+  # Kept aligned with current card logic:
+  # - toggle-capable domains => orange/gray
+  # - all other domains => blue/light-gray
+
+  # Toggle-capable domains (same as `default`)
+  light:
+    active: { color: "#111827", background: "#f59e0b" }
+    inactive: { color: "#e5e7eb", background: "#4b5563" }
+  switch:
+    active: { color: "#111827", background: "#f59e0b" }
+    inactive: { color: "#e5e7eb", background: "#4b5563" }
+  input_boolean:
+    active: { color: "#111827", background: "#f59e0b" }
+    inactive: { color: "#e5e7eb", background: "#4b5563" }
+  fan:
+    active: { color: "#111827", background: "#f59e0b" }
+    inactive: { color: "#e5e7eb", background: "#4b5563" }
+  humidifier:
+    active: { color: "#111827", background: "#f59e0b" }
+    inactive: { color: "#e5e7eb", background: "#4b5563" }
+  cover:
+    active: { color: "#111827", background: "#f59e0b" }
+    inactive: { color: "#e5e7eb", background: "#4b5563" }
+  lock:
+    active: { color: "#111827", background: "#f59e0b" }
+    inactive: { color: "#e5e7eb", background: "#4b5563" }
+  media_player:
+    active: { color: "#111827", background: "#f59e0b" }
+    inactive: { color: "#e5e7eb", background: "#4b5563" }
+
+  # Non-toggle domains
+  alarm_control_panel:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  alert:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  automation:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  binary_sensor:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  button:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  calendar:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  camera:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  climate:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  device_tracker:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  input_button:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  input_datetime:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  input_number:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  input_select:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  input_text:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  number:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  person:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  remote:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  scene:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  script:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  select:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
   sensor:
-    active:
-      color: "#eaf2ff"
-      background: "#3b82f6"
-    inactive:
-      color: "#111827"
-      background: "#d1d5db"
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  siren:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  sun:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  timer:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  update:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  vacuum:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  valve:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  water_heater:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  weather:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
+  zone:
+    active: { color: "#eaf2ff", background: "#3b82f6" }
+    inactive: { color: "#111827", background: "#d1d5db" }
 
   # pseudo-domain for buttons without entity
   empty:
-    # matches current icon-only defaults in code
     inactive:
       color: "#9ca3af"
       background: "#e5e7eb"
