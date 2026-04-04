@@ -208,7 +208,7 @@ Notes:
 - default base behavior is equivalent to previous `toggle` palette
 - `domains.automation` defaults to previous `non_toggle` palette
 - pseudo-domain `domains.no_entity` controls icon-only buttons without `entity`
-- At any hierarchy level for buttons you can set: `color` (alias of `icon_color`), `background`, `border_size`, `border_color`
+- At any hierarchy level for buttons you can set: `icon`, `color` (alias of `icon_color`), `background`, `border_size`, `border_color`
 
 Default palette+mapping reference: `SEAGULL_THEME.default.yaml`.
 

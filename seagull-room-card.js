@@ -347,20 +347,6 @@ class SeagullRoomCard extends HTMLElement {
       const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
       const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
 
-      const baseIconTpl = isObsolete ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon) : (item.icon ?? buttonsCfg.icon);
-      const icon = this._resolveDynamicValue(baseIconTpl, item.entity, state, st?.attributes?.icon || defaultDomainIcon);
-
-      const iconColorTpl = isObsolete
-        ? (obsoleteCfg.color ?? obsoleteCfg.icon_color ?? item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color)
-        : (item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color);
-      const bgTpl = isObsolete
-        ? (obsoleteCfg.background ?? item.background ?? buttonsCfg.background ?? buttonsCfg.bg)
-        : (item.background ?? buttonsCfg.background ?? buttonsCfg.bg);
-      const borderTpl = isObsolete ? (obsoleteCfg.border ?? item.border ?? buttonsCfg.border) : (item.border ?? buttonsCfg.border);
-      const borderColorTpl = isObsolete
-        ? (obsoleteCfg.border_color ?? item.border_color ?? buttonsCfg.border_color)
-        : (item.border_color ?? buttonsCfg.border_color);
-
       const lightColorModeRaw = this._resolveDynamicValue(
         item.use_light_color ?? item.light_color ?? buttonsCfg.use_light_color ?? buttonsCfg.light_color,
         item.entity,
@@ -382,6 +368,22 @@ class SeagullRoomCard extends HTMLElement {
         isUnavailable,
         isActive,
       });
+
+      const baseIconTpl = isObsolete
+        ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon ?? themedBtn.icon)
+        : (item.icon ?? buttonsCfg.icon ?? themedBtn.icon);
+      const icon = this._resolveDynamicValue(baseIconTpl, item.entity, state, st?.attributes?.icon || defaultDomainIcon);
+
+      const iconColorTpl = isObsolete
+        ? (obsoleteCfg.color ?? obsoleteCfg.icon_color ?? item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color)
+        : (item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color);
+      const bgTpl = isObsolete
+        ? (obsoleteCfg.background ?? item.background ?? buttonsCfg.background ?? buttonsCfg.bg)
+        : (item.background ?? buttonsCfg.background ?? buttonsCfg.bg);
+      const borderTpl = isObsolete ? (obsoleteCfg.border ?? item.border ?? buttonsCfg.border) : (item.border ?? buttonsCfg.border);
+      const borderColorTpl = isObsolete
+        ? (obsoleteCfg.border_color ?? item.border_color ?? buttonsCfg.border_color)
+        : (item.border_color ?? buttonsCfg.border_color);
 
       const defaultBg = themedBtn.background ?? (!hasEntity
         ? "#d1d5db"
@@ -1285,6 +1287,7 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     return {
+      icon: style.icon,
       background: this._themeColor(style.background),
       icon_color: this._themeColor(style.icon_color ?? style.color),
       border_size: style.border_size ?? style.border ?? btnMap?.border?.size,

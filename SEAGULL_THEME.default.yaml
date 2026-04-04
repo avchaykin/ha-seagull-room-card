@@ -48,6 +48,7 @@ mapping:
 
   buttons:
     # Base for all buttons (with entity and no_entity)
+    # Style keys supported at each hierarchy level: icon, color/icon_color, background, border_size, border_color
     active:
       background: btn_toggle_active_bg
       icon_color: btn_toggle_active_icon
