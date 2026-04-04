@@ -1173,15 +1173,16 @@ class SeagullRoomCard extends HTMLElement {
     const isActive = invertState ? !baseActive : baseActive;
     const isUnavailable = state === "unavailable";
 
+    const attrs = st?.attributes || {};
+
     const merge = (into, from) => {
       if (!from || typeof from !== "object" || Array.isArray(from)) return into;
       return { ...into, ...from };
     };
 
     let style = {};
-    style = merge(style, this._pickThemeBucket(themeButton, item.entity, state, isActive, isUnavailable, isObsolete));
-    style = merge(style, this._pickThemeBucket(domainCfg, item.entity, state, isActive, isUnavailable, isObsolete));
-
+    style = merge(style, this._pickThemeBucket(themeButton, item.entity, state, attrs, isActive, isUnavailable, isObsolete));
+    style = merge(style, this._pickThemeBucket(domainCfg, item.entity, state, attrs, isActive, isUnavailable, isObsolete));
     return {
       icon: style.icon,
       color: style.color ?? style.icon_color,
@@ -1192,7 +1193,7 @@ class SeagullRoomCard extends HTMLElement {
     };
   }
 
-  _pickThemeBucket(src, entityId, state, isActive, isUnavailable, isObsolete) {
+  _pickThemeBucket(src, entityId, state, attrs, isActive, isUnavailable, isObsolete) {
     if (!src || typeof src !== "object") return {};
     let out = {};
 
@@ -1238,9 +1239,57 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     if (src.state) {
-      const stateCond = this._resolveDynamicValue(src.state, entityId, state, false);
+      const stateCond = this._resolveDynamicValue(src.state, entityId, state, false, attrs);
       if (this._toBool(stateCond, false) && src.state_style && typeof src.state_style === "object") {
         merge(src.state_style);
+      }
+    }
+
+    if (src.attribute_value && typeof src.attribute_value === "object") {
+      for (const [attrName, valuesMap] of Object.entries(src.attribute_value)) {
+        if (!valuesMap || typeof valuesMap !== "object") continue;
+        const attrVal = attrs?.[attrName];
+        const style = valuesMap[String(attrVal)];
+        merge(style);
+      }
+    }
+
+    if (src.attribute_not_value && typeof src.attribute_not_value === "object") {
+      for (const [attrName, valuesMap] of Object.entries(src.attribute_not_value)) {
+        if (!valuesMap || typeof valuesMap !== "object") continue;
+        const attrVal = attrs?.[attrName];
+        Object.entries(valuesMap).forEach(([v, style]) => {
+          if (String(attrVal) !== String(v)) merge(style);
+        });
+      }
+    }
+
+    if (src.attribute_above && typeof src.attribute_above === "object") {
+      for (const [attrName, valuesMap] of Object.entries(src.attribute_above)) {
+        if (!valuesMap || typeof valuesMap !== "object") continue;
+        const attrVal = Number(attrs?.[attrName]);
+        Object.entries(valuesMap).forEach(([v, style]) => {
+          const n = Number(v);
+          if (Number.isFinite(attrVal) && Number.isFinite(n) && attrVal > n) merge(style);
+        });
+      }
+    }
+
+    if (src.attribute_below && typeof src.attribute_below === "object") {
+      for (const [attrName, valuesMap] of Object.entries(src.attribute_below)) {
+        if (!valuesMap || typeof valuesMap !== "object") continue;
+        const attrVal = Number(attrs?.[attrName]);
+        Object.entries(valuesMap).forEach(([v, style]) => {
+          const n = Number(v);
+          if (Number.isFinite(attrVal) && Number.isFinite(n) && attrVal < n) merge(style);
+        });
+      }
+    }
+
+    if (src.attribute) {
+      const attrCond = this._resolveDynamicValue(src.attribute, entityId, state, false, attrs);
+      if (this._toBool(attrCond, false) && src.attribute_style && typeof src.attribute_style === "object") {
+        merge(src.attribute_style);
       }
     }
 
