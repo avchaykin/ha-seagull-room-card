@@ -127,6 +127,19 @@ variables:
 
 ---
 
+## `theme`
+
+Card supports optional `theme` object in config.
+
+Structure:
+- `theme.card`
+- `theme.text`
+- `theme.button`
+
+Draft default-theme schema is documented in `SEAGULL_THEME.default.yaml`.
+
+Theme acts as fallback defaults: explicit card config fields (`background_color`, `text.*`, `buttons.*`, item-level fields) still override it.
+
 ## `buttons`
 
 ### Layout
