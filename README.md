@@ -10,14 +10,26 @@ Home Assistant custom card: `seagull-room-card`.
 
 ## Installation
 
-### 1) Put files into HA `/www`
+### Option A) HACS (recommended)
+
+1. HACS → Frontend → menu (⋮) → Custom repositories
+2. Add repository URL: `https://github.com/avchaykin/ha-seagull-room-card`
+3. Category: `Dashboard`
+4. Install **Seagull Room Card**
+5. Add Lovelace resource:
+   - URL: `/hacsfiles/ha-seagull-room-card/seagull-room-card.js`
+   - Type: `JavaScript Module`
+
+### Option B) Manual install
+
+#### 1) Put files into HA `/www`
 
 Copy to Home Assistant:
 
 - `/config/www/seagull-room-card.js`
 - `/config/www/seagull-room-card-loader.js`
 
-### 2) Add Lovelace resource (recommended loader)
+#### 2) Add Lovelace resource (recommended loader)
 
 - URL: `/local/seagull-room-card-loader.js`
 - Type: `JavaScript Module`
