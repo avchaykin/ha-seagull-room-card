@@ -1,42 +1,38 @@
 # ha-seagull-room-card
 
-Home Assistant custom card: `seagull-room-card`.
+Home Assistant custom card: `custom:seagull-room-card`.
 
-## Screenshot
+<img src="assets/screenshot.jpg" alt="Seagull Room Card screenshot" width="360" />
 
-![Seagull Room Card screenshot](assets/screenshot.jpg)
+## Features
 
----
+- Compact room card with configurable icon, text and button grid
+- Flexible button collections (`entities`, `items`, `button`, `buttons`; `lights` alias supported)
+- Smart visibility (`show*`) + `keep_spot` to preserve layout when hidden
+- Theming with day/night palette and `$palette_key` references
+- Domain-aware defaults (e.g. `sensor` / `binary_sensor` default to `more-info` actions)
+- Action system: `toggle`, `more-info`, `navigate`, `perform-action`, `sequence`
 
 ## Installation
 
-### Option A) HACS (recommended)
+### Option A — HACS (recommended)
 
-1. HACS → Frontend → menu (⋮) → Custom repositories
-2. Add repository URL: `https://github.com/avchaykin/ha-seagull-room-card`
-3. Category: `Dashboard`
+1. HACS → **Frontend** → **⋮** → **Custom repositories**
+2. Add: `https://github.com/avchaykin/ha-seagull-room-card`
+3. Category: **Dashboard**
 4. Install **Seagull Room Card**
 5. Add Lovelace resource:
    - URL: `/hacsfiles/ha-seagull-room-card/seagull-room-card.js`
    - Type: `JavaScript Module`
 
-### Option B) Manual install
+### Option B — Manual
 
-#### 1) Put files into HA `/www`
-
-Copy to Home Assistant:
-
-- `/config/www/seagull-room-card.js`
-- `/config/www/seagull-room-card-loader.js`
-
-#### 2) Add Lovelace resource (recommended loader)
-
-- URL: `/local/seagull-room-card-loader.js`
-- Type: `JavaScript Module`
-
-Loader adds cache-busting automatically, so after deploy you usually only need page refresh.
-
----
+1. Copy files to HA:
+   - `/config/www/seagull-room-card.js`
+   - `/config/www/seagull-room-card-loader.js`
+2. Add Lovelace resource:
+   - URL: `/local/seagull-room-card-loader.js`
+   - Type: `JavaScript Module`
 
 ## Minimal config
 
@@ -47,58 +43,16 @@ buttons:
     - entity: light.living_room
 ```
 
----
-
----
-
-## Parameter reference
-
-## Card-level
-
-- `type` — must be `custom:seagull-room-card`
-- `entity` — optional default entity for card icon actions and templates
-- `background_color` — card background base color
-- `background_opacity` — 0..1 alpha applied to background color
-- `border_radius` — card corner radius (px)
-- `border_width` — card border width (px)
-- `border_color` — card border color
-- `icon` — top-left card icon
-- `icon_color` — top-left icon color
-- `icon_size` — top-left icon size (px)
-- `tap_action`, `double_tap_action`, `hold_action` — actions on card icon
-- `variables` — map of reusable template variables
-- `text` — text layer config
-- `buttons` — buttons layer config
-
-### Card icon actions
+## Actions
 
 Supported action types:
-
 - `toggle`
 - `more-info`
 - `navigate`
 - `perform-action`
-- `sequence` (or `sequence:` inside any action)
+- `sequence`
 
-Examples:
-
-```yaml
-tap_action: toggle
-```
-
-```yaml
-double_tap_action:
-  action: navigate
-  navigation_path: /lovelace/lights
-```
-
-```yaml
-hold_action:
-  action: perform-action
-  perform_action: light.turn_off
-  target:
-    entity_id: light.living_room
-```
+### Example: sequence
 
 ```yaml
 tap_action:
@@ -112,302 +66,71 @@ tap_action:
     - action: more-info
 ```
 
----
+Notes:
+- `sequence` can be used as `action: sequence` or as `sequence:` inside any action object
+- Delay steps support `delay_ms`, `delay`, or plain number (milliseconds)
 
-## `variables`
+## Key config blocks
 
-Card-level variables available in templates:
+### Card-level
 
-- directly by name: `temperature`
-- via object: `vars.temperature`
-
-Example:
-
-```yaml
-variables:
-  temperature: "{{ states('sensor.temp') }}"
-```
-
----
-
-## `text`
-
-- `entity` — entity for text templates and text actions (fallback to card `entity`)
-- `value` — template/HTML text (supports multiline)
-- `color` — text color (template-capable)
-- `background_color` — background color for text block (template-capable)
-- `border_radius` — text background corner radius (px)
-- `size` — font size (px)
-- `halign` — `left | center | right`
-- `valign` — `top | center | bottom`
-- `padding`, `padding_top`, `padding_right`, `padding_bottom`, `padding_left`
-- `tap_action`, `double_tap_action`, `hold_action` — default `more-info`
-
-### Text rendering notes
-
-- Text is visual background layer relative to buttons.
-- Click priority: **buttons > text > card icon**.
-- HTML formatting allowed (`<b>`, `<i>`, `<br/>`, `<h1>..<h3>`).
-- `h1/h2/h3` are bold, slightly larger, no extra margins.
-
----
-
-## `theme`
-
-Card supports optional `theme` object in config.
-
-Structure:
-- `theme.palette_mode` (`auto|day|night`) — `auto` follows HA client UI dark mode (`hass.themes.darkMode`)
-- `theme.palette` (named colors; supports day/night variants)
-- `theme.card`
-- `theme.text`
-- `theme.button` (including `theme.button.icons` for domain fallback icons)
-
-Palette references use `$name` syntax, e.g. `background: "$seagull_01"`.
-
-Draft default-theme schema is documented in `seagull-room-card-theme-default.js`.
-Built-in defaults are centralized in code as `SEAGULL_ROOM_THEME_DEFAULT` and merged with `theme`.
-
-Theme acts as fallback defaults: explicit card config fields (`background_color`, `text.*`, `buttons.*`, item-level fields) still override it.
-
-For button theme buckets, attribute-based conditions are supported:
-- `attribute_value`
-- `attribute_not_value`
-- `attribute_above`
-- `attribute_below`
-- `attribute` (template bool) + `attribute_style`
-
-Also supported as a separate hierarchy level inside domain mapping:
-- `theme.button.<domain>.device_class.<device_class_name>`
-
-Example:
-```yaml
-theme:
-  button:
-    binary_sensor:
-      device_class:
-        window:
-          inactive:
-            color: blue
-```
-
-## `buttons`
-
-### Layout
-
-- `cols` / `columns` — columns count
-- `rows` — minimum row count (controls min card height)
-- `size` — button size (px), default `48`
-- `gap` — gap between buttons
-- `padding`, `padding_top`, `padding_right`, `padding_bottom`, `padding_left`
-- `align` — `left | center | right | justified`
-
-### Default button style (inherited by each button)
-
-- `icon`
-- `color` (icon color)
-- `background`
-- `border`
-- `border_color`
-- `use_light_color` — `false | color | brightness | both | true`
-- `invert_state` — `true/false`; inverts active/inactive default state mapping
-- `obsolete` — stale style trigger: hours (number) or object
-- `show` — `true/false` (supports templates)
-- `show_value` — show only if entity state equals value (or one of values in array)
-- `show_not_value` — hide if entity state equals value (or one of values in array)
-- `show_above` — show only if entity state is numerically greater
-- `show_below` — show only if entity state is numerically smaller
-- `keep_spot` — `true/false`; if hidden by visibility filters or missing in HA state, keep empty slot instead of collapsing layout
-
-### Default button actions
-
+- `entity` (optional default entity for templates/actions)
+- `icon`, `icon_color`, `icon_size`
+- `background_color`, `background_opacity`, `border_radius`, `border_width`, `border_color`
 - `tap_action`, `double_tap_action`, `hold_action`
-- default behavior: tap=`toggle`, double=`more-info`, hold=`more-info`
-- for `sensor.*` and `binary_sensor.*`: all defaults are `more-info`
+- `variables`, `text`, `buttons`, `theme`
 
-### Buttons collection
+### Text
 
-Use any of:
+- `text.entity`, `text.value`
+- `text.color`, `text.background_color`
+- `text.size`, `text.halign`, `text.valign`
+- `text.padding*`
+- `text.tap_action`, `text.double_tap_action`, `text.hold_action`
 
-- `buttons.entities`
-- `buttons.items`
-- `buttons.button`
-- `buttons.buttons`
+### Buttons (layout + defaults)
 
-Legacy alias `lights` is still accepted.
+- Layout: `cols|columns`, `rows`, `size`, `gap`, `padding*`, `align`
+- Collections: `buttons.entities|items|button|buttons` (array/object), `lights` alias
+- Default style: `icon`, `color`, `background`, `border`, `border_color`, `border_radius`
+- Dynamic behavior: `use_light_color`, `invert_state`, `obsolete`
+- Visibility: `show`, `show_value`, `show_not_value`, `show_above`, `show_below`, `keep_spot`
+- Default actions: `tap_action`, `double_tap_action`, `hold_action`
 
-Array form (allows duplicates):
+### Per-button fields
+
+- `entity` (optional if icon-only)
+- `width`
+- `icon`, `color`, `background`, `border`, `border_color`, `border_radius`
+- `empty` (explicit blank slot)
+- `tap_action`, `double_tap_action`, `hold_action`
+- `show*`, `keep_spot`, `invert_state`, `obsolete`
+
+## Theme and palette
+
+`theme` supports:
+- `theme.palette_mode`: `auto | day | night`
+- `theme.palette` with named values (string or `{day, night}`)
+- `theme.card`, `theme.text`, `theme.button`
+
+Use palette values via `$name`:
 
 ```yaml
 buttons:
-  entities:
-    - entity: light.a
-    - entity: light.a
+  background: "$seagull_rose"
 ```
 
-Object form:
+Default theme schema is in: `seagull-room-card-theme-default.js`
 
-```yaml
-buttons:
-  entities:
-    light.a: true
-    light.b: false
-    switch.c:
-      width: 2
-```
+## Domain defaults
 
-### Per-button parameters
+- Active-state mapping:
+  - regular domains: `state == on`
+  - `lock.*`: `state == unlocked`
+  - `media_player.*`: `state == playing`
+- `sensor.*` and `binary_sensor.*` default actions:
+  - tap / hold / double_tap = `more-info`
 
-- `entity` (any domain, optional if `icon` is provided)
-- `width` — width in columns (default `1`)
-- `icon`, `color`, `background`, `border`, `border_color`
-- `use_light_color`
-- `invert_state`
-- `obsolete`
-- `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
-- `keep_spot` — when button becomes hidden, keeps its grid cell as empty slot
-- `empty` — renders an empty slot (space is reserved, button is not rendered); can be used without `entity` to place a blank cell
-- `tap_action`, `double_tap_action`, `hold_action`
-- `hidden` (internal, used by object form with `false`)
+## Version
 
-Visibility params inherit from `buttons`/`lights` level and can be overridden per button. Templates can use `entity`.
-`empty` also supports inheritance and templates.
-
-Buttons without `entity` are supported (icon-only): they use a lighter default style and can run actions like `navigate` and `perform-action`.
-
----
-
-## Domain-specific behavior
-
-### Active state mapping (used by default palettes)
-
-- regular entities: `state == on`
-- `lock.*`: `state == unlocked`
-- `media_player.*`: `state == playing`
-
-### `toggle` action mapping
-
-- regular: `homeassistant.toggle`
-- `lock.*`: `lock.lock` / `lock.unlock`
-- `media_player.*`: `media_player.media_play` / `media_player.media_pause`
-
-### `unavailable`
-
-Default visual fallback for any domain:
-
-- icon color: pale gray
-- background: gray
-
-### Domain-specific styling
-
-Default fallback style is now uniform (toggle-like palette).
-Domain differences (e.g. `automation`) should be set through `theme.button.<domain>`.
-
-### Default icons
-
-- By default card tries entity icon first (`attributes.icon`).
-- For `light.*` without icon it falls back to:
-  - `mdi:lightbulb` (on)
-  - `mdi:lightbulb-off` (off)
-- For `binary_sensor.*` without icon, fallback depends on `device_class` (window/door/opening/etc.) and state.
-
----
-
-## `obsolete` behavior
-
-If configured and entity is stale longer than N hours (`last_updated` / `last_changed`), obsolete style is applied.
-
-Supported forms:
-
-```yaml
-obsolete: 6
-```
-
-or
-
-```yaml
-obsolete:
-  hours: 6
-  icon: mdi:clock-alert-outline
-  color: "#d1d5db"
-  background: "#6b7280"
-  border: 2
-  border_color: "#d1d5db"
-```
-
-Default obsolete style (when only hours provided):
-
-- `border: 2`
-- `border_color: #d1d5db`
-
----
-
-## Template syntax
-
-A value can be configured using:
-
-1) JS mustache expression:
-
-```yaml
-"{{ state === 'on' ? '#fff' : '#000' }}"
-```
-
-2) Jinja-like if/else block:
-
-```yaml
-"{%if states(entity) == 'on' %}#fff{%else%}#000{%endif%}"
-```
-
-3) Rule array:
-
-```yaml
-color:
-  - state: on
-    value: "#ffffff"
-  - state_not: unavailable
-    value: "#dddddd"
-  - state_above: 50
-    value: "#00ff00"
-  - state_below: 10
-    value: "#ff0000"
-  - state_template: "{{ states(entity) == 'unknown' }}"
-    value: "#999999"
-  - value: "#ff0000"  # fallback (else)
-```
-
-### Template context
-
-Available helpers/values include:
-
-- `entity`, `state`, `attributes`
-- `states(entity_id)` helper
-- `vars` and top-level names from `variables`
-- `round`, `upper`, `lower`, `trim`, `capitalize`, `title`
-
-Pipe filters supported for mustache output:
-
-- `|round`, `|round(1)`
-- `|upper`, `|lower`, `|trim`, `|capitalize`, `|title`
-
----
-
-## Auto-deploy notes
-
-Repository includes local auto-deploy hooks:
-
-- `.githooks/post-commit`
-- `scripts/deploy-to-ha.sh`
-
-Enable once:
-
-```bash
-./scripts/setup-hooks.sh
-```
-
----
-
-## Console announce
-
-When loaded, card writes:
-
-`🐦 SEAGULL-ROOM-CARD v... (...) loaded`
+Card displays current version badge in editor and logs version in browser console.
