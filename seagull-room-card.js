@@ -567,7 +567,7 @@ class SeagullRoomCard extends HTMLElement {
           style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:${borderRadiusCss};border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
           <span style="display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:0 ${contentPadX}px;box-sizing:border-box;gap:${textIconGap}px;overflow:hidden;">
             ${showIcon ? `<ha-icon icon="${this._esc(iconName)}" style="color:${this._esc(iColor)};--mdc-icon-size:${iconSizePx}px;flex:0 0 auto;"></ha-icon>` : ""}
-            ${hasText ? `<span style="color:${this._esc(iColor)};font-size:${textFontSize}px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${this._esc(text)}</span>` : ""}
+            ${hasText ? `<span style="color:${this._esc(iColor)};font-size:${textFontSize}px;line-height:1;white-space:nowrap;overflow:hidden;">${this._esc(text)}</span>` : ""}
           </span>
         </button>
       `;
