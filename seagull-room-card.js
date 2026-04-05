@@ -724,7 +724,11 @@ class SeagullRoomCard extends HTMLElement {
 
   _resolveAction(item, key) {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
-    const fallback = key === "tap_action" ? "toggle" : "more-info";
+    const domain = String(item?.entity || "").split(".")[0];
+    const isInfoDomain = domain === "sensor" || domain === "binary_sensor";
+    const fallback = isInfoDomain
+      ? "more-info"
+      : (key === "tap_action" ? "toggle" : "more-info");
     const raw = item?.[key] ?? buttonsCfg?.[key] ?? fallback;
     if (!raw) return null;
 

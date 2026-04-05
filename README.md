@@ -198,6 +198,7 @@ theme:
 
 - `tap_action`, `double_tap_action`, `hold_action`
 - default behavior: tap=`toggle`, double=`more-info`, hold=`more-info`
+- for `sensor.*` and `binary_sensor.*`: all defaults are `more-info`
 
 ### Buttons collection
 
