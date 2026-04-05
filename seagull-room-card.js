@@ -25,8 +25,11 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     btn_auto_inactive_fg: { day: "#111827", night: "#111827" },
     btn_auto_inactive_bg: { day: "#d1d5db", night: "#94a3b8" },
 
-    btn_empty_inactive_fg: { day: "#9ca3af", night: "#cbd5e1" },
+    btn_empty_inactive_fg: { day: "#111827", night: "#e2e8f0" },
     btn_empty_inactive_bg: { day: "#e5e7eb", night: "#334155" },
+
+    btn_alert_active_fg: { day: "#fffafa", night: "#ffe4e6" },
+    btn_alert_active_bg: { day: "#f63b3b", night: "#b91c1c" },
 
     obsolete_border: { day: "#d1d5db", night: "#94a3b8" },
 
@@ -111,6 +114,16 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     automation: {
       active: { color: "$btn_auto_active_fg", background: "$btn_auto_active_bg" },
       inactive: { color: "$btn_auto_inactive_fg", background: "$btn_auto_inactive_bg" },
+    },
+    lock: {
+      active: { color: "$btn_alert_active_fg", background: "$btn_alert_active_bg" },
+    },
+    binary_sensor: {
+      device_class: {
+        door: {
+          active: { color: "$btn_alert_active_fg", background: "$btn_alert_active_bg" },
+        },
+      },
     },
     empty: {
       inactive: { color: "$btn_empty_inactive_fg", background: "$btn_empty_inactive_bg" },
