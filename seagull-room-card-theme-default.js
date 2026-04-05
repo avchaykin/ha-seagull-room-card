@@ -15,8 +15,8 @@ palette:
   btn_active_bg: { day: "#f59e0b", night: "#f59e0b" }
   btn_inactive_fg: { day: "#e5e7eb", night: "#e5e7eb" }
   btn_inactive_bg: { day: "#4b5563", night: "#374151" }
-  btn_unavailable_fg: { day: "#d1d5db", night: "#94a3b8" }
-  btn_unavailable_bg: { day: "#6b7280", night: "#475569" }
+  btn_unavailable_fg: { day: "#f8fafc", night: "#cbd5e1" }
+  btn_unavailable_bg: { day: "#cbd5e1", night: "#64748b" }
   btn_border: { day: "transparent", night: "transparent" }
 
   btn_auto_active_fg: { day: "#eaf2ff", night: "#eaf2ff" }
