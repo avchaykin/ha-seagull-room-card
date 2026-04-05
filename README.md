@@ -140,7 +140,7 @@ Structure:
 
 Palette references use `$name` syntax, e.g. `background: "$seagull_01"`.
 
-Draft default-theme schema is documented in `SEAGULL_THEME.default.yaml`.
+Draft default-theme schema is documented in `seagull-room-card-theme-default.js`.
 Built-in defaults are centralized in code as `SEAGULL_ROOM_THEME_DEFAULT` and merged with `theme`.
 
 Theme acts as fallback defaults: explicit card config fields (`background_color`, `text.*`, `buttons.*`, item-level fields) still override it.
