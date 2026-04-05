@@ -409,7 +409,10 @@ class SeagullRoomCard extends HTMLElement {
 
     const items = this._collectButtonItems(buttonsCfg)
       .filter((it) => !it.hidden)
-      .filter((it) => this._toBool(it?.empty, false) || !!it.entity || !!it.icon || !!buttonsCfg.icon)
+      .filter((it) => {
+        const hasText = this._buttonTextValue(it, buttonsCfg, "") !== "";
+        return this._toBool(it?.empty, false) || !!it.entity || !!it.icon || !!buttonsCfg.icon || hasText;
+      })
       .map((it) => {
         const entityId = String(it?.entity || "");
         const st = entityId ? this._hass?.states?.[entityId] : null;
@@ -457,6 +460,14 @@ class SeagullRoomCard extends HTMLElement {
         ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon ?? themeStyle.icon)
         : (item.icon ?? buttonsCfg.icon ?? themeStyle.icon);
       const icon = this._resolveDynamicValue(baseIconTpl, item.entity, state, st?.attributes?.icon || defaultDomainIcon);
+      const iconName = typeof icon === "string" ? icon.trim() : "";
+
+      const text = this._buttonTextValue(item, buttonsCfg, "");
+      const hasText = text !== "";
+      const textFontSize = Math.max(10, Math.round(size * 0.27));
+      const iconSizePx = Math.max(10, Math.round(size * 0.5));
+      const textIconGap = 6;
+      const contentPadX = 8;
 
       const iconColorTpl = isObsolete
         ? (obsoleteCfg.color ?? obsoleteCfg.icon_color ?? item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color ?? themeStyle.color)
@@ -536,6 +547,16 @@ class SeagullRoomCard extends HTMLElement {
       const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
       const isEmpty = !!this._resolveDynamicValue(item.empty ?? buttonsCfg.empty, item.entity, state, false);
 
+      const isIconExplicitlyHidden = baseIconTpl === false || baseIconTpl === null;
+      let showIcon = !!iconName && !isIconExplicitlyHidden;
+
+      if (hasText && safeColSpan === 1 && showIcon) {
+        const availableTextAndIconWidth = Math.max(0, btnWidth - (contentPadX * 2));
+        const textWidthEstimate = this._estimateTextWidthPx(text, textFontSize);
+        const neededWidth = iconSizePx + textIconGap + textWidthEstimate;
+        if (neededWidth > availableTextAndIconWidth) showIcon = false;
+      }
+
       const html = isEmpty
         ? `
         <div aria-hidden="true"
@@ -544,7 +565,10 @@ class SeagullRoomCard extends HTMLElement {
         : `
         <button class="sg-room-light-btn" data-index="${index}"
           style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:${borderRadiusCss};border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
-          <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
+          <span style="display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:0 ${contentPadX}px;box-sizing:border-box;gap:${textIconGap}px;overflow:hidden;">
+            ${showIcon ? `<ha-icon icon="${this._esc(iconName)}" style="color:${this._esc(iColor)};--mdc-icon-size:${iconSizePx}px;flex:0 0 auto;"></ha-icon>` : ""}
+            ${hasText ? `<span style="color:${this._esc(iColor)};font-size:${textFontSize}px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${this._esc(text)}</span>` : ""}
+          </span>
         </button>
       `;
 
@@ -933,8 +957,9 @@ class SeagullRoomCard extends HTMLElement {
         } else if (item && typeof item === "object") {
           const hasEntity = !!item.entity;
           const hasIconOnly = !!item.icon;
+          const hasText = this._buttonTextValue(item, buttonsCfg, "") !== "";
           const isEmpty = this._toBool(item.empty, false);
-          if (hasEntity || hasIconOnly || isEmpty) {
+          if (hasEntity || hasIconOnly || hasText || isEmpty) {
             out.push({ width: 1, ...item });
           }
         }
@@ -967,6 +992,23 @@ class SeagullRoomCard extends HTMLElement {
     fromObject(buttonsCfg.light);
 
     return out;
+  }
+
+  _buttonTextValue(item, buttonsCfg = {}, fallback = "") {
+    const entityId = String(item?.entity || "");
+    const st = entityId ? this._hass?.states?.[entityId] : null;
+    const state = st?.state ?? "";
+    const raw = item?.text ?? item?.label ?? buttonsCfg?.text ?? buttonsCfg?.label;
+    const resolved = this._resolveDynamicValue(raw, entityId, state, fallback);
+    if (resolved == null) return "";
+    return String(resolved).trim();
+  }
+
+  _estimateTextWidthPx(text, fontSizePx) {
+    const s = String(text ?? "");
+    if (!s) return 0;
+    const fs = Math.max(1, Number(fontSizePx) || 12);
+    return Math.ceil(s.length * fs * 0.56);
   }
 
   _isButtonItemVisible(item, buttonsCfg = {}) {

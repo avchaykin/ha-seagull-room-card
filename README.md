@@ -101,10 +101,15 @@ Notes:
 
 - `entity` (optional if icon-only)
 - `width`
-- `icon`, `color`, `background`, `border`, `border_color`, `border_radius`
+- `icon`, `text`/`label`, `color`, `background`, `border`, `border_color`, `border_radius`
 - `empty` (explicit blank slot)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `show*`, `keep_spot`, `invert_state`, `obsolete`
+
+Notes:
+- If `text`/`label` is present, icon and text are rendered together (icon on the left).
+- For `width: 1`, if icon + text do not fit, only text is shown.
+- If `icon: false` or `icon: null`, icon is hidden explicitly and only text is shown.
 
 ## Theme and palette
 
