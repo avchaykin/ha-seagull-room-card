@@ -475,7 +475,14 @@ class SeagullRoomCard extends HTMLElement {
 
       const text = this._buttonTextValue(item, buttonsCfg, "");
       const hasText = text !== "";
-      const textFontSize = Math.max(10, Math.round(size * 0.27));
+      const textFontSizeRaw = this._resolveDynamicValue(item.font_size ?? buttonsCfg.font_size ?? themeStyle.font_size, item.entity, state, null);
+      const textFontSize = textFontSizeRaw == null || textFontSizeRaw === ""
+        ? Math.max(10, Math.round(size * 0.27))
+        : Math.max(8, this._toPx(textFontSizeRaw, Math.round(size * 0.27)));
+      const textFontWeightRaw = this._resolveDynamicValue(item.font_weight ?? buttonsCfg.font_weight ?? themeStyle.font_weight, item.entity, state, null);
+      const textFontWeight = textFontWeightRaw == null || textFontWeightRaw === "" ? "inherit" : String(textFontWeightRaw);
+      const textFontFamilyRaw = this._resolveDynamicValue(item.font_family ?? buttonsCfg.font_family ?? themeStyle.font_family, item.entity, state, null);
+      const textFontFamily = textFontFamilyRaw == null || textFontFamilyRaw === "" ? "inherit" : String(textFontFamilyRaw);
       const iconSizePx = Math.max(10, Math.round(size * 0.5));
       const textIconGap = 6;
       const contentPadX = 8;
@@ -578,7 +585,7 @@ class SeagullRoomCard extends HTMLElement {
           style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:${borderRadiusCss};border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
           <span style="display:inline-flex;align-items:center;justify-content:center;max-width:100%;padding:0 ${contentPadX}px;box-sizing:border-box;gap:${textIconGap}px;overflow:hidden;">
             ${showIcon ? `<ha-icon icon="${this._esc(iconName)}" style="color:${this._esc(iColor)};--mdc-icon-size:${iconSizePx}px;flex:0 0 auto;"></ha-icon>` : ""}
-            ${hasText ? `<span style="color:${this._esc(iColor)};font-size:${textFontSize}px;line-height:1;white-space:nowrap;overflow:hidden;">${this._esc(text)}</span>` : ""}
+            ${hasText ? `<span style="color:${this._esc(iColor)};font-size:${textFontSize}px;font-weight:${this._esc(textFontWeight)};font-family:${this._esc(textFontFamily)};line-height:1;white-space:nowrap;overflow:hidden;">${this._esc(text)}</span>` : ""}
           </span>
         </button>
       `;

@@ -92,6 +92,7 @@ Notes:
 ### Buttons (layout + defaults)
 
 - Layout: `cols|columns`, `rows`, `size`, `gap`, `padding*`, `align`
+- Text font: `font_family`, `font_weight`, `font_size`
 - Collections: `buttons.entities|items|button|buttons` (array/object), `lights` alias
 - Default style: `icon`, `color`, `background`, `border`, `border_color`, `border_radius`
 - Dynamic behavior: `use_light_color`, `invert_state`, `obsolete`
@@ -103,6 +104,7 @@ Notes:
 - `entity` (optional if icon-only)
 - `width`
 - `icon`, `text`/`label`, `color`, `background`, `border`, `border_color`, `border_radius`
+- `font_family`, `font_weight`, `font_size`
 - `empty` (explicit blank slot)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `show*`, `keep_spot`, `invert_state`, `obsolete`

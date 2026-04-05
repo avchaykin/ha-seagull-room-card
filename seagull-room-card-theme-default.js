@@ -82,6 +82,9 @@ text:
 button:
   align: right
   size: 48
+  font_family: null
+  font_weight: null
+  font_size: null
   gap: 5
   padding: 10
   padding_top: null
