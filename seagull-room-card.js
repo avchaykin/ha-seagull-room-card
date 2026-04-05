@@ -680,10 +680,23 @@ class SeagullRoomCard extends HTMLElement {
     this._runGenericAction(act, item.entity);
   }
 
-  _runGenericAction(act, entityId) {
+  async _runGenericAction(act, entityId) {
     if (!act) return;
     const hass = this._hass;
     const type = act.action;
+
+    if (Array.isArray(act.sequence)) {
+      await this._runActionSequence(act.sequence, entityId);
+      return;
+    }
+
+    if (type === "sequence") {
+      const seq = Array.isArray(act.actions) ? act.actions : act.sequence;
+      if (Array.isArray(seq)) {
+        await this._runActionSequence(seq, entityId);
+      }
+      return;
+    }
 
     if (type === "toggle") {
       if (!entityId) return;
@@ -733,6 +746,44 @@ class SeagullRoomCard extends HTMLElement {
       const target = act.target ?? {};
       hass.callService?.(domain, service, { ...data, ...target });
     }
+  }
+
+  async _runActionSequence(sequence, entityId) {
+    if (!Array.isArray(sequence)) return;
+
+    for (const step of sequence) {
+      if (!step) continue;
+
+      if (typeof step === "number") {
+        await this._sleep(step);
+        continue;
+      }
+
+      if (typeof step === "object") {
+        const delay = Number(step.delay_ms ?? step.delay ?? NaN);
+        if (Number.isFinite(delay) && delay > 0) {
+          await this._sleep(delay);
+          continue;
+        }
+
+        const normalized = this._normalizeSequenceAction(step);
+        if (normalized) await this._runGenericAction(normalized, entityId);
+      }
+    }
+  }
+
+  _normalizeSequenceAction(step) {
+    if (!step || typeof step !== "object") return null;
+    if (step.action || step.type) return { ...step, action: step.action ?? step.type };
+    if (Array.isArray(step.sequence) || Array.isArray(step.actions)) return { action: "sequence", ...step };
+    if (step.perform_action || step.service) return { action: "perform-action", ...step };
+    if (step.navigation_path || step.url_path || step.path) return { action: "navigate", ...step };
+    return null;
+  }
+
+  _sleep(ms) {
+    const wait = Math.max(0, Number(ms) || 0);
+    return new Promise((resolve) => setTimeout(resolve, wait));
   }
 
   _resolveAction(item, key) {

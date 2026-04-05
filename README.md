@@ -78,6 +78,7 @@ Supported action types:
 - `more-info`
 - `navigate`
 - `perform-action`
+- `sequence` (or `sequence:` inside any action)
 
 Examples:
 
@@ -97,6 +98,18 @@ hold_action:
   perform_action: light.turn_off
   target:
     entity_id: light.living_room
+```
+
+```yaml
+tap_action:
+  action: sequence
+  sequence:
+    - action: perform-action
+      perform_action: light.turn_on
+      target:
+        entity_id: light.kitchen
+    - delay_ms: 300
+    - action: more-info
 ```
 
 ---
