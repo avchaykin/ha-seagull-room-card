@@ -1106,6 +1106,14 @@ class SeagullRoomCard extends HTMLElement {
       return jinja == null ? fallback : jinja;
     }
 
+    if (s.includes("{{") && s.includes("}}") && (!s.startsWith("{{") || !s.endsWith("}}"))) {
+      return s.replace(/{{\s*([\s\S]*?)\s*}}/g, (_full, exprRaw) => {
+        const expr = String(exprRaw ?? "").trim();
+        const val = this._evalJsTemplateExpr(expr, entityId, state, "", varsCtx);
+        return val == null ? "" : String(val);
+      });
+    }
+
     if (!s.startsWith("{{") || !s.endsWith("}}")) return s;
 
     const expr = s.slice(2, -2).trim();
