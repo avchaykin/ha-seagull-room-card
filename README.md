@@ -76,6 +76,7 @@ Notes:
 
 - `entity` (optional default entity for templates/actions)
 - `icon`, `icon_color`, `icon_size`
+- `font_family`, `font_weight`, `font_size`
 - `background_color`, `background_opacity`, `border_radius`, `border_width`, `border_color`
 - `tap_action`, `double_tap_action`, `hold_action`
 - `variables`, `text`, `buttons`, `theme`

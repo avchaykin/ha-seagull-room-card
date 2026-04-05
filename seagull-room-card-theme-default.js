@@ -60,6 +60,9 @@ card:
   icon: "mdi:sofa"
   icon_color: "$card_icon"
   icon_size: 60
+  font_family: "'PT Sans Narrow', sans-serif"
+  font_weight: 400
+  font_size: null
 
 text:
   color: "$text_color"
