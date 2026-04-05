@@ -1,0 +1,7 @@
+{
+  "name": "Seagull Room Card",
+  "content_in_root": true,
+  "render_readme": true,
+  "filename": "seagull-room-card.js",
+  "homeassistant": "2024.1.0"
+}
