@@ -397,8 +397,25 @@ class SeagullRoomCard extends HTMLElement {
     const items = this._collectButtonItems(buttonsCfg)
       .filter((it) => !it.hidden)
       .filter((it) => this._toBool(it?.empty, false) || !!it.entity || !!it.icon || !!buttonsCfg.icon)
-      .filter((it) => !it.entity || !!this._hass?.states?.[it.entity])
-      .filter((it) => this._toBool(it?.empty, false) || this._isButtonItemVisible(it, buttonsCfg));
+      .map((it) => {
+        const entityId = String(it?.entity || "");
+        const st = entityId ? this._hass?.states?.[entityId] : null;
+        const state = st?.state ?? "";
+
+        const keepSpotRaw = Object.prototype.hasOwnProperty.call(it || {}, "keep_spot")
+          ? it.keep_spot
+          : buttonsCfg.keep_spot;
+        const keepSpot = this._toBool(this._resolveDynamicValue(keepSpotRaw, entityId, state, false), false);
+
+        const hasEntityState = !entityId || !!st;
+        const isVisible = this._toBool(it?.empty, false) || this._isButtonItemVisible(it, buttonsCfg);
+
+        if (hasEntityState && isVisible) return it;
+        if (!keepSpot) return null;
+
+        return { ...it, empty: true };
+      })
+      .filter(Boolean);
 
     if (!items.length) return { html: "", items: [] };
 

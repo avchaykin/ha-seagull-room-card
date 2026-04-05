@@ -192,6 +192,7 @@ theme:
 - `show_not_value` — hide if entity state equals value (or one of values in array)
 - `show_above` — show only if entity state is numerically greater
 - `show_below` — show only if entity state is numerically smaller
+- `keep_spot` — `true/false`; if hidden by visibility filters or missing in HA state, keep empty slot instead of collapsing layout
 
 ### Default button actions
 
@@ -238,6 +239,7 @@ buttons:
 - `invert_state`
 - `obsolete`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
+- `keep_spot` — when button becomes hidden, keeps its grid cell as empty slot
 - `empty` — renders an empty slot (space is reserved, button is not rendered); can be used without `entity` to place a blank cell
 - `tap_action`, `double_tap_action`, `hold_action`
 - `hidden` (internal, used by object form with `false`)
