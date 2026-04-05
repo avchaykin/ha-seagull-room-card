@@ -132,11 +132,15 @@ variables:
 Card supports optional `theme` object in config.
 
 Structure:
+- `theme.palette_mode` (`auto|day|night`) — `auto` follows HA client UI dark mode (`hass.themes.darkMode`)
+- `theme.palette` (named colors; supports day/night variants)
 - `theme.card`
 - `theme.text`
 - `theme.button` (including `theme.button.icons` for domain fallback icons)
 
-Draft default-theme schema is documented in `SEAGULL_THEME.default.yaml`.
+Palette references use `$name` syntax, e.g. `background: "$seagull_01"`.
+
+Draft default-theme schema is documented in `seagull-room-card-theme-default.js`.
 Built-in defaults are centralized in code as `SEAGULL_ROOM_THEME_DEFAULT` and merged with `theme`.
 
 Theme acts as fallback defaults: explicit card config fields (`background_color`, `text.*`, `buttons.*`, item-level fields) still override it.
@@ -188,11 +192,13 @@ theme:
 - `show_not_value` — hide if entity state equals value (or one of values in array)
 - `show_above` — show only if entity state is numerically greater
 - `show_below` — show only if entity state is numerically smaller
+- `keep_spot` — `true/false`; if hidden by visibility filters or missing in HA state, keep empty slot instead of collapsing layout
 
 ### Default button actions
 
 - `tap_action`, `double_tap_action`, `hold_action`
 - default behavior: tap=`toggle`, double=`more-info`, hold=`more-info`
+- for `sensor.*` and `binary_sensor.*`: all defaults are `more-info`
 
 ### Buttons collection
 
@@ -234,6 +240,7 @@ buttons:
 - `invert_state`
 - `obsolete`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
+- `keep_spot` — when button becomes hidden, keeps its grid cell as empty slot
 - `empty` — renders an empty slot (space is reserved, button is not rendered); can be used without `entity` to place a blank cell
 - `tap_action`, `double_tap_action`, `hold_action`
 - `hidden` (internal, used by object form with `false`)

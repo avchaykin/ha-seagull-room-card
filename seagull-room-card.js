@@ -1,23 +1,73 @@
-const SEAGULL_ROOM_CARD_VERSION = "1.0.0";
+const SEAGULL_ROOM_CARD_VERSION = "1.1.0";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 const SEAGULL_ROOM_THEME_DEFAULT = {
+  palette_mode: "auto", // auto | day | night
+  palette: {
+    card_border: { day: "#aaaaaa", night: "#64748b" },
+    card_bg: { day: "#eeeeee", night: "#0f172a" },
+    card_icon: { day: "#2233aa44", night: "#93c5fd55" },
+
+    text_color: { day: "inherit", night: "#e2e8f0" },
+    text_bg: { day: "transparent", night: "transparent" },
+    text_border: { day: "transparent", night: "transparent" },
+
+    btn_active_fg: { day: "#111827", night: "#111827" },
+    btn_active_bg: { day: "#f59e0b", night: "#f59e0b" },
+    btn_inactive_fg: { day: "#e5e7eb", night: "#e5e7eb" },
+    btn_inactive_bg: { day: "#4b5563", night: "#374151" },
+    btn_unavailable_fg: { day: "#d1d5db", night: "#94a3b8" },
+    btn_unavailable_bg: { day: "#6b7280", night: "#475569" },
+    btn_border: { day: "transparent", night: "transparent" },
+
+    btn_auto_active_fg: { day: "#eaf2ff", night: "#eaf2ff" },
+    btn_auto_active_bg: { day: "#3b82f6", night: "#2563eb" },
+    btn_auto_inactive_fg: { day: "#111827", night: "#111827" },
+    btn_auto_inactive_bg: { day: "#d1d5db", night: "#94a3b8" },
+
+    btn_empty_inactive_fg: { day: "#111827", night: "#e2e8f0" },
+    btn_empty_inactive_bg: { day: "#e5e7eb", night: "#334155" },
+
+    btn_alert_active_fg: { day: "#fffafa", night: "#ffe4e6" },
+    btn_alert_active_bg: { day: "#f63b3b", night: "#b91c1c" },
+
+    obsolete_border: { day: "#d1d5db", night: "#94a3b8" },
+
+    seagull_rose: { day: "#aa332244", night: "#aa332266" },
+    seagull_indigo: { day: "#2233aa44", night: "#2233aa66" },
+    seagull_emerald: { day: "#22aa3344", night: "#22aa3366" },
+    seagull_amber: { day: "#cc992244", night: "#cc992266" },
+    seagull_violet: { day: "#8844cc44", night: "#8844cc66" },
+    seagull_cyan: { day: "#22aacc44", night: "#22aacc66" },
+    seagull_orange_red: { day: "#cc552244", night: "#cc552266" },
+    seagull_lime: { day: "#55aa2244", night: "#55aa2266" },
+    seagull_cornflower: { day: "#4466cc44", night: "#4466cc66" },
+    seagull_magenta: { day: "#cc44aa44", night: "#cc44aa66" },
+    seagull_aqua: { day: "#22ccaa44", night: "#22ccaa66" },
+    seagull_tangerine: { day: "#cc772244", night: "#cc772266" },
+    seagull_slate_blue: { day: "#6677aa44", night: "#6677aa66" },
+    seagull_olive: { day: "#77994444", night: "#77994466" },
+    seagull_plum: { day: "#99447744", night: "#99447766" },
+    seagull_steel: { day: "#44779944", night: "#44779966" },
+    seagull_copper: { day: "#aa664444", night: "#aa664466" },
+    seagull_mint: { day: "#44aa6644", night: "#44aa6666" },
+  },
   card: {
     border_radius: 16,
     border_width: 0,
-    border_color: "#aaaaaa",
-    background_color: "#eeeeee",
+    border_color: "$card_border",
+    background_color: "$card_bg",
     background_opacity: 0.45,
     icon: "mdi:sofa",
-    icon_color: "#2233aa44",
+    icon_color: "$card_icon",
     icon_size: 60,
   },
   text: {
-    color: "inherit",
-    background: "transparent",
+    color: "$text_color",
+    background: "$text_bg",
     border_radius: 10,
     border_width: 0,
-    border_color: "transparent",
+    border_color: "$text_border",
     size: 14,
     halign: "left",
     valign: "top",
@@ -38,15 +88,8 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     padding_left: null,
     icons: {
       default: "mdi:help-circle-outline",
-      light: {
-        on: "mdi:lightbulb",
-        off: "mdi:lightbulb-off",
-      },
-      lock: {
-        locked: "mdi:lock",
-        unlocked: "mdi:lock-open-variant",
-        default: "mdi:lock-reset",
-      },
+      light: { on: "mdi:lightbulb", off: "mdi:lightbulb-off" },
+      lock: { locked: "mdi:lock", unlocked: "mdi:lock-open-variant", default: "mdi:lock-reset" },
       binary_sensor: {
         default_on: "mdi:check-circle",
         default_off: "mdi:circle-outline",
@@ -62,18 +105,28 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     },
     default: {
       border_size: 0,
-      border_color: "transparent",
-      active: { color: "#111827", background: "#f59e0b" },
-      inactive: { color: "#e5e7eb", background: "#4b5563" },
-      unavailable: { color: "#d1d5db", background: "#6b7280" },
-      obsolete: { border_size: 2, border_color: "#d1d5db" },
+      border_color: "$btn_border",
+      active: { color: "$btn_active_fg", background: "$btn_active_bg" },
+      inactive: { color: "$btn_inactive_fg", background: "$btn_inactive_bg" },
+      unavailable: { color: "$btn_unavailable_fg", background: "$btn_unavailable_bg" },
+      obsolete: { border_size: 2, border_color: "$obsolete_border" },
     },
     automation: {
-      active: { color: "#eaf2ff", background: "#3b82f6" },
-      inactive: { color: "#111827", background: "#d1d5db" },
+      active: { color: "$btn_auto_active_fg", background: "$btn_auto_active_bg" },
+      inactive: { color: "$btn_auto_inactive_fg", background: "$btn_auto_inactive_bg" },
+    },
+    lock: {
+      active: { color: "$btn_alert_active_fg", background: "$btn_alert_active_bg" },
+    },
+    binary_sensor: {
+      device_class: {
+        door: {
+          active: { color: "$btn_alert_active_fg", background: "$btn_alert_active_bg" },
+        },
+      },
     },
     empty: {
-      inactive: { color: "#9ca3af", background: "#e5e7eb" },
+      inactive: { color: "$btn_empty_inactive_fg", background: "$btn_empty_inactive_bg" },
     },
   },
 };
@@ -183,14 +236,14 @@ class SeagullRoomCard extends HTMLElement {
 
     const themeCard = this._theme?.card || {};
     const cardDef = SEAGULL_ROOM_THEME_DEFAULT.card;
-    const bgColor = cfg.background_color ?? themeCard.background_color ?? cardDef.background_color;
+    const bgColor = this._paletteColor(cfg.background_color ?? themeCard.background_color ?? cardDef.background_color);
     const opacity = this._clampOpacity(cfg.background_opacity ?? themeCard.background_opacity ?? cardDef.background_opacity);
     const radius = this._toPx(cfg.border_radius ?? themeCard.border_radius ?? cardDef.border_radius, cardDef.border_radius);
     const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? themeCard.border_width ?? cardDef.border_width, cardDef.border_width));
-    const borderColor = cfg.border_color ?? themeCard.border_color ?? cardDef.border_color;
+    const borderColor = this._paletteColor(cfg.border_color ?? themeCard.border_color ?? cardDef.border_color);
 
     const icon = cfg.icon ?? themeCard.icon ?? cardDef.icon;
-    const iconColor = cfg.icon_color ?? themeCard.icon_color ?? cardDef.icon_color;
+    const iconColor = this._paletteColor(cfg.icon_color ?? themeCard.icon_color ?? cardDef.icon_color);
     const iconSize = Math.max(8, this._toPx(cfg.icon_size ?? themeCard.icon_size ?? cardDef.icon_size, cardDef.icon_size));
 
     const themeBtn = this._theme?.button || {};
@@ -304,11 +357,11 @@ class SeagullRoomCard extends HTMLElement {
     const themeText = this._theme?.text || {};
     const txtDef = SEAGULL_ROOM_THEME_DEFAULT.text;
     const size = Math.max(8, this._toPx(textCfg.size ?? themeText.size ?? txtDef.size, txtDef.size));
-    const textColor = this._resolveDynamicValue(textCfg.color, entityId, state, themeText.color ?? txtDef.color);
-    const textBg = this._resolveDynamicValue(textCfg.background_color ?? textCfg.background, entityId, state, themeText.background ?? themeText.background_color ?? txtDef.background);
+    const textColor = this._paletteColor(this._resolveDynamicValue(textCfg.color, entityId, state, themeText.color ?? txtDef.color));
+    const textBg = this._paletteColor(this._resolveDynamicValue(textCfg.background_color ?? textCfg.background, entityId, state, themeText.background ?? themeText.background_color ?? txtDef.background));
     const textRadius = Math.max(0, this._toPx(textCfg.border_radius ?? themeText.border_radius ?? txtDef.border_radius, txtDef.border_radius));
     const textBorderW = Math.max(0, this._toPx(textCfg.border_width ?? themeText.border_width ?? txtDef.border_width, txtDef.border_width));
-    const textBorderColor = this._resolveDynamicValue(textCfg.border_color, entityId, state, themeText.border_color ?? txtDef.border_color);
+    const textBorderColor = this._paletteColor(this._resolveDynamicValue(textCfg.border_color, entityId, state, themeText.border_color ?? txtDef.border_color));
     const halign = ["left", "center", "right"].includes(String(textCfg.halign ?? themeText.halign ?? txtDef.halign).toLowerCase())
       ? String(textCfg.halign ?? themeText.halign ?? txtDef.halign).toLowerCase()
       : txtDef.halign;
@@ -357,8 +410,25 @@ class SeagullRoomCard extends HTMLElement {
     const items = this._collectButtonItems(buttonsCfg)
       .filter((it) => !it.hidden)
       .filter((it) => this._toBool(it?.empty, false) || !!it.entity || !!it.icon || !!buttonsCfg.icon)
-      .filter((it) => !it.entity || !!this._hass?.states?.[it.entity])
-      .filter((it) => this._toBool(it?.empty, false) || this._isButtonItemVisible(it, buttonsCfg));
+      .map((it) => {
+        const entityId = String(it?.entity || "");
+        const st = entityId ? this._hass?.states?.[entityId] : null;
+        const state = st?.state ?? "";
+
+        const keepSpotRaw = Object.prototype.hasOwnProperty.call(it || {}, "keep_spot")
+          ? it.keep_spot
+          : buttonsCfg.keep_spot;
+        const keepSpot = this._toBool(this._resolveDynamicValue(keepSpotRaw, entityId, state, false), false);
+
+        const hasEntityState = !entityId || !!st;
+        const isVisible = this._toBool(it?.empty, false) || this._isButtonItemVisible(it, buttonsCfg);
+
+        if (hasEntityState && isVisible) return it;
+        if (!keepSpot) return null;
+
+        return { ...it, empty: true };
+      })
+      .filter(Boolean);
 
     if (!items.length) return { html: "", items: [] };
 
@@ -424,12 +494,12 @@ class SeagullRoomCard extends HTMLElement {
           : ((domain === "automation")
             ? (isActive ? (autoDef?.active?.background ?? "#3b82f6") : (autoDef?.inactive?.background ?? "#d1d5db"))
             : (isActive ? (dDef?.active?.background ?? "#f59e0b") : (dDef?.inactive?.background ?? "#4b5563"))));
-      let bgColor = this._resolveDynamicValue(
+      let bgColor = this._paletteColor(this._resolveDynamicValue(
         bgTpl,
         item.entity,
         state,
         defaultBg
-      );
+      ));
       if (hasEntity && !isUnavailable && lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
         const resolvedLight = this._resolveLightEntityColor(st?.attributes, lightColorMode);
         if (resolvedLight) bgColor = resolvedLight;
@@ -443,14 +513,14 @@ class SeagullRoomCard extends HTMLElement {
             ? (isActive ? (autoDef?.active?.color ?? "#eaf2ff") : (autoDef?.inactive?.color ?? "#111827"))
             : (isActive ? (dDef?.active?.color ?? "#111827") : (dDef?.inactive?.color ?? "#e5e7eb"))));
 
-      const iColor = this._resolveDynamicValue(
+      const iColor = this._paletteColor(this._resolveDynamicValue(
         iconColorTpl,
         item.entity,
         state,
         defaultIconColor
-      );
+      ));
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
-      const borderColor = this._resolveDynamicValue(borderColorTpl, item.entity, state, "transparent");
+      const borderColor = this._paletteColor(this._resolveDynamicValue(borderColorTpl, item.entity, state, "$btn_border"));
       const borderRadiusRaw = this._resolveDynamicValue(
         item.border_radius ?? buttonsCfg.border_radius ?? themeStyle.border_radius,
         item.entity,
@@ -667,7 +737,11 @@ class SeagullRoomCard extends HTMLElement {
 
   _resolveAction(item, key) {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
-    const fallback = key === "tap_action" ? "toggle" : "more-info";
+    const domain = String(item?.entity || "").split(".")[0];
+    const isInfoDomain = domain === "sensor" || domain === "binary_sensor";
+    const fallback = isInfoDomain
+      ? "more-info"
+      : (key === "tap_action" ? "toggle" : "more-info");
     const raw = item?.[key] ?? buttonsCfg?.[key] ?? fallback;
     if (!raw) return null;
 
@@ -1260,6 +1334,35 @@ class SeagullRoomCard extends HTMLElement {
     return out;
   }
 
+  _paletteMode() {
+    const mode = String(this._theme?.palette_mode || "auto").toLowerCase();
+    if (mode === "day" || mode === "night") return mode;
+
+    // auto => follow client UI theme (HA frontend darkMode)
+    const darkMode = this._hass?.themes?.darkMode;
+    if (typeof darkMode === "boolean") return darkMode ? "night" : "day";
+
+    return "day";
+  }
+
+  _paletteColor(value) {
+    if (value == null) return value;
+    if (typeof value !== "string") return value;
+
+    const raw = value.trim();
+    if (!raw.startsWith("$")) return raw;
+
+    const key = raw.slice(1);
+    const entry = this._theme?.palette?.[key];
+    if (!entry) return raw;
+    if (typeof entry === "string") return entry;
+    if (typeof entry === "object") {
+      const mode = this._paletteMode();
+      return entry[mode] ?? entry.day ?? entry.night ?? raw;
+    }
+    return raw;
+  }
+
   _resolveThemeButtonStyle(item, buttonsCfg, st, state, isObsolete = false) {
     const themeButton = this._theme?.button;
     if (!themeButton || typeof themeButton !== "object") return {};
@@ -1292,10 +1395,10 @@ class SeagullRoomCard extends HTMLElement {
 
     return {
       icon: style.icon,
-      color: style.color ?? style.icon_color,
-      background: style.background,
+      color: this._paletteColor(style.color ?? style.icon_color),
+      background: this._paletteColor(style.background),
       border_size: style.border_size,
-      border_color: style.border_color,
+      border_color: this._paletteColor(style.border_color),
       border_radius: style.border_radius,
     };
   }
