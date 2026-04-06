@@ -688,13 +688,13 @@ class SeagullRoomCard extends HTMLElement {
     const bg = window.getComputedStyle(btn).backgroundColor || "#94a3b8";
     const ringColor = this._toRgba(bg, 0.45);
 
-    btn.style.transition = "filter 120ms ease, box-shadow 120ms ease";
-    btn.style.boxShadow = `0 0 0 5px ${ringColor}`;
+    btn.style.transition = "filter 140ms ease, box-shadow 220ms ease-out";
+    btn.style.boxShadow = `0 0 0 6px ${ringColor}`;
 
     btn._sgTapAnimTimer = setTimeout(() => {
       btn.style.boxShadow = "none";
       btn._sgTapAnimTimer = null;
-    }, 240);
+    }, 380);
   }
 
   _runAction(item, key) {
