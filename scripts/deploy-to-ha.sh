@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 HA_HOST="${HA_HOST:-192.168.1.184}"
 HA_USER="${HA_USER:-avc}"
-HA_KEY="${HA_KEY:-$HOME/.ssh/id_ed25519_openclaw_ha}"
+HA_KEY="${HA_KEY:-$HOME/.ssh/openclaw-ha}"
 HA_TARGET_DIR="${HA_TARGET_DIR:-/config/www}"
 
 FILES=(
