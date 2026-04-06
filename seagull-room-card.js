@@ -631,7 +631,7 @@ class SeagullRoomCard extends HTMLElement {
       const item = this._renderedLightItems?.[index];
       if (!item) return;
 
-      btn.style.transition = "filter 100ms ease";
+      btn.style.transition = "filter 120ms ease";
       btn.addEventListener("mouseenter", () => {
         btn.style.filter = "brightness(1.08)";
       });
@@ -659,6 +659,8 @@ class SeagullRoomCard extends HTMLElement {
         ev.preventDefault();
         if (holdFired) return;
 
+        this._playButtonTapFeedback(btn);
+
         clearTimeout(clickTimer);
         clickTimer = setTimeout(() => {
           this._runAction(item, "tap_action");
@@ -667,10 +669,31 @@ class SeagullRoomCard extends HTMLElement {
 
       btn.addEventListener("dblclick", (ev) => {
         ev.preventDefault();
+        this._playButtonTapFeedback(btn);
         clearTimeout(clickTimer);
         clearTimeout(holdTimer);
         this._runAction(item, "double_tap_action");
       });
+    });
+  }
+
+  _playButtonTapFeedback(btn) {
+    if (!btn) return;
+
+    if (btn._sgTapAnimTimer) {
+      clearTimeout(btn._sgTapAnimTimer);
+      btn._sgTapAnimTimer = null;
+    }
+
+    btn.style.transition = "filter 120ms ease";
+    btn.style.filter = "brightness(0.92)";
+
+    requestAnimationFrame(() => {
+      btn.style.filter = "brightness(1.14)";
+      btn._sgTapAnimTimer = setTimeout(() => {
+        btn.style.filter = "brightness(1)";
+        btn._sgTapAnimTimer = null;
+      }, 170);
     });
   }
 
