@@ -631,7 +631,7 @@ class SeagullRoomCard extends HTMLElement {
       const item = this._renderedLightItems?.[index];
       if (!item) return;
 
-      btn.style.transition = "filter 240ms ease-in-out";
+      btn.style.transition = "filter 120ms ease";
       btn.addEventListener("mouseenter", () => {
         btn.style.filter = "brightness(1.08)";
       });
@@ -659,7 +659,7 @@ class SeagullRoomCard extends HTMLElement {
         ev.preventDefault();
         if (holdFired) return;
 
-        this._playButtonTapFeedback(btn);
+        this._showButtonPressRing(btn);
 
         clearTimeout(clickTimer);
         clickTimer = setTimeout(() => {
@@ -669,7 +669,7 @@ class SeagullRoomCard extends HTMLElement {
 
       btn.addEventListener("dblclick", (ev) => {
         ev.preventDefault();
-        this._playButtonTapFeedback(btn);
+        this._showButtonPressRing(btn);
         clearTimeout(clickTimer);
         clearTimeout(holdTimer);
         this._runAction(item, "double_tap_action");
@@ -677,7 +677,7 @@ class SeagullRoomCard extends HTMLElement {
     });
   }
 
-  _playButtonTapFeedback(btn) {
+  _showButtonPressRing(btn) {
     if (!btn) return;
 
     if (btn._sgTapAnimTimer) {
@@ -685,16 +685,16 @@ class SeagullRoomCard extends HTMLElement {
       btn._sgTapAnimTimer = null;
     }
 
-    btn.style.transition = "filter 240ms ease-in-out";
-    btn.style.filter = "brightness(0.95)";
+    const bg = window.getComputedStyle(btn).backgroundColor || "#94a3b8";
+    const ringColor = this._toRgba(bg, 0.45);
 
-    requestAnimationFrame(() => {
-      btn.style.filter = "brightness(1.1)";
-      btn._sgTapAnimTimer = setTimeout(() => {
-        btn.style.filter = "brightness(1)";
-        btn._sgTapAnimTimer = null;
-      }, 360);
-    });
+    btn.style.transition = "filter 120ms ease, box-shadow 120ms ease";
+    btn.style.boxShadow = `0 0 0 5px ${ringColor}`;
+
+    btn._sgTapAnimTimer = setTimeout(() => {
+      btn.style.boxShadow = "none";
+      btn._sgTapAnimTimer = null;
+    }, 240);
   }
 
   _runAction(item, key) {
