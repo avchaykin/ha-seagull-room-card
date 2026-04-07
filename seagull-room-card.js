@@ -824,7 +824,7 @@ class SeagullRoomCard extends HTMLElement {
         clearTimeout(holdTimer);
         holdTimer = setTimeout(() => {
           holdFired = true;
-          this._runAction(item, "hold_action");
+          this._runAction(item, "hold_action", index);
         }, 420);
       });
 
@@ -843,7 +843,7 @@ class SeagullRoomCard extends HTMLElement {
 
         clearTimeout(clickTimer);
         clickTimer = setTimeout(() => {
-          this._runAction(item, "tap_action");
+          this._runAction(item, "tap_action", index);
         }, 210);
       });
 
@@ -852,7 +852,7 @@ class SeagullRoomCard extends HTMLElement {
         this._showButtonPressRing(btn);
         clearTimeout(clickTimer);
         clearTimeout(holdTimer);
-        this._runAction(item, "double_tap_action");
+        this._runAction(item, "double_tap_action", index);
       });
     });
   }
@@ -877,9 +877,9 @@ class SeagullRoomCard extends HTMLElement {
     }, 380);
   }
 
-  _runAction(item, key) {
+  _runAction(item, key, itemIndex = null) {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
-    const index = this._renderedLightItems?.indexOf(item);
+    const index = Number.isInteger(itemIndex) ? itemIndex : this._renderedLightItems?.indexOf(item);
     if (this._isClimatButton(item, buttonsCfg)) {
       if (key === "tap_action") {
         this._climatRotate(index >= 0 ? index : 0, item);
