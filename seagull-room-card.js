@@ -651,8 +651,8 @@ class SeagullRoomCard extends HTMLElement {
       const climatSuffix = this._climatSuffix(st, state);
       const contentHtml = isClimat
         ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
-            <span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(10, Math.round(btnSize * 0.42))}px;font-weight:700;transform:translateY(2px);position:relative;">
-              ${climatSuffix ? `<span style="position:absolute;top:-0.55em;left:50%;transform:translateX(-50%);font-size:${Math.max(8, Math.round(btnSize * 0.2))}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
+            <span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(9, Math.round(btnSize * 0.34))}px;font-weight:400;transform:translateY(5px);position:relative;">
+              ${climatSuffix ? `<span style="position:absolute;top:-0.18em;left:50%;transform:translateX(-50%);font-size:${Math.max(7, Math.round(btnSize * 0.17))}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
               <span style="display:block;">${this._esc(climatValue)}</span>
             </span>
             <ha-icon icon="${this._esc(icon)}" style="position:relative;top:-2px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * 0.24))}px;"></ha-icon>
