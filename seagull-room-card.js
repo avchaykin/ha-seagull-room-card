@@ -451,7 +451,7 @@ class SeagullRoomCard extends HTMLElement {
       const isEmpty = !!this._resolveDynamicValue(item.empty ?? buttonsCfg.empty, item.entity, state, false);
       const colSpan = mini ? 1 : Math.max(1, parseInt(item.width ?? 1, 10) || 1);
       const safeColSpan = Math.min(cols, colSpan);
-      const btnSize = mini ? Math.floor(size / 2) : size;
+      const btnSize = mini ? Math.max(10, Math.floor(size * 0.36)) : size;
       const btnWidth = mini ? btnSize : (size * safeColSpan + gap * (safeColSpan - 1));
 
       if ((!hasEntity && isEmpty) || isEmpty) {
@@ -576,20 +576,26 @@ class SeagullRoomCard extends HTMLElement {
         return renderButton(b.item, b.item.__idx, { mini: false });
       }
 
-      const miniGap = 2;
-      const miniSize = Math.max(10, Math.floor((size - miniGap) / 2));
+      const miniSize = Math.max(10, Math.floor(size * 0.36));
       const miniButtons = [];
+      const centers = [
+        { x: 30, y: 30 },
+        { x: 70, y: 30 },
+        { x: 30, y: 70 },
+        { x: 70, y: 70 },
+      ];
       for (let i = 0; i < 4; i += 1) {
         const it = b.items[i];
+        const pos = centers[i];
         if (!it) {
-          miniButtons.push(`<div aria-hidden="true" style="width:${miniSize}px;height:${miniSize}px;"></div>`);
+          miniButtons.push(`<div aria-hidden="true" style="position:absolute;left:${pos.x}%;top:${pos.y}%;width:${miniSize}px;height:${miniSize}px;transform:translate(-50%,-50%);"></div>`);
         } else {
-          miniButtons.push(renderButton(it, it.__idx, { mini: true }).html);
+          miniButtons.push(`<div style="position:absolute;left:${pos.x}%;top:${pos.y}%;transform:translate(-50%,-50%);">${renderButton(it, it.__idx, { mini: true }).html}</div>`);
         }
       }
       return {
         colSpan: 1,
-        html: `<div style="grid-column:span 1;width:${size}px;height:${size}px;display:grid;grid-template-columns:repeat(2, ${miniSize}px);grid-template-rows:repeat(2, ${miniSize}px);gap:${miniGap}px;align-content:start;justify-content:start;overflow:hidden;">${miniButtons.join("")}</div>`,
+        html: `<div style="grid-column:span 1;width:${size}px;height:${size}px;position:relative;overflow:hidden;">${miniButtons.join("")}</div>`,
       };
     });
 
