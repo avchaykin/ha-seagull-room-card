@@ -30,7 +30,7 @@ buttons:
 - `entity` (optional): default entity used by templates/actions
 - `icon`, `icon_color`, `icon_size`
 - `background_color`, `background_opacity`, `border_radius`, `border_width`, `border_color`
-- `font_family`, `font_weight`, `font_size` (card-level defaults)
+- `font_family`, `font_weight`, `font_size`, `font_url` (card-level defaults)
 - `tap_action`, `double_tap_action`, `hold_action` (card-level actions)
 - `variables` (custom template variables)
 - `text` (text layer block)

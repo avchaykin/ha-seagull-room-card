@@ -70,6 +70,7 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     icon: "mdi:sofa",
     icon_color: "$card_icon",
     icon_size: 60,
+    font_url: "https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&display=swap",
   },
   text: {
     color: "$text_color",
@@ -250,6 +251,10 @@ class SeagullRoomCard extends HTMLElement {
     const radius = this._toPx(cfg.border_radius ?? themeCard.border_radius ?? cardDef.border_radius, cardDef.border_radius);
     const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? themeCard.border_width ?? cardDef.border_width, cardDef.border_width));
     const borderColor = this._paletteColor(cfg.border_color ?? themeCard.border_color ?? cardDef.border_color);
+    const fontFamily = cfg.font_family ?? themeCard.font_family ?? cardDef.font_family ?? "'PT Sans Narrow', sans-serif";
+    const fontWeight = cfg.font_weight ?? themeCard.font_weight ?? cardDef.font_weight ?? null;
+    const fontSizeRaw = cfg.font_size ?? themeCard.font_size ?? cardDef.font_size ?? null;
+    const fontUrl = cfg.font_url ?? themeCard.font_url ?? cardDef.font_url ?? null;
 
     const icon = cfg.icon ?? themeCard.icon ?? cardDef.icon;
     const iconColor = this._paletteColor(cfg.icon_color ?? themeCard.icon_color ?? cardDef.icon_color);
@@ -280,6 +285,12 @@ class SeagullRoomCard extends HTMLElement {
     this._card.style.border = `${borderWidth}px solid ${borderColor}`;
     this._card.style.position = "relative";
     this._card.style.transition = "filter 120ms ease";
+    this._card.style.fontFamily = String(fontFamily);
+    if (fontWeight != null && fontWeight !== "") this._card.style.fontWeight = String(fontWeight);
+    else this._card.style.removeProperty("font-weight");
+    if (fontSizeRaw != null && fontSizeRaw !== "") this._card.style.fontSize = `${Math.max(8, this._toPx(fontSizeRaw, 14))}px`;
+    else this._card.style.removeProperty("font-size");
+    this._ensureFontLoaded(fontUrl);
 
     this._card.onmouseenter = () => {
       this._card.style.filter = "brightness(1.03)";
@@ -358,6 +369,27 @@ class SeagullRoomCard extends HTMLElement {
 
   _primaryEntityId(entityRef) {
     return this._entityList(entityRef)[0] || "";
+  }
+
+  _ensureFontLoaded(url) {
+    const href = String(url || "").trim();
+    if (!href || typeof document === "undefined") return;
+    if (!this._loadedFontLinks) this._loadedFontLinks = new Set();
+    if (this._loadedFontLinks.has(href)) return;
+
+    const existing = document.querySelector(`link[data-sg-font="${CSS.escape(href)}"]`)
+      || document.querySelector(`link[href="${href}"]`);
+    if (existing) {
+      this._loadedFontLinks.add(href);
+      return;
+    }
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    link.setAttribute("data-sg-font", href);
+    document.head.appendChild(link);
+    this._loadedFontLinks.add(href);
   }
 
   _isClimatButton(item, buttonsCfg = {}) {
