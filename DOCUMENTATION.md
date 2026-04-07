@@ -117,6 +117,8 @@ Supported keys (array or object where relevant):
 Each item may include:
 
 - `entity` (optional for icon/text-only button)
+  - can be a single entity string
+  - or an array of entities
 - `width` (column span)
 - `icon`
 - `text` or `label`
@@ -128,6 +130,28 @@ Each item may include:
 - `keep_spot`
 - `invert_state`
 - `obsolete`
+
+If `entity` is an array:
+
+- first entity is the primary one (state/domain/actions)
+- all entities are available in templates as shortcuts:
+  - `e[0]`, `e[1]`, ... for entity ids
+  - `a[0]['attr']`, `a[1]['attr']`, ... for attributes
+
+Example:
+
+```yaml
+buttons:
+  items:
+    - entity:
+        - input_select.alarm_mode
+        - input_boolean.alarm_pause
+        - timer.alarm_pause_timer
+      color:
+        - state_template: "{{ a[0]['option'] == 'away' || states(e[1]) == 'on' }}"
+          value: goldenrod
+        - value: dimgrey
+```
 
 Button text behavior:
 

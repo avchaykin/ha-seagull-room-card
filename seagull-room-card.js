@@ -341,6 +341,16 @@ class SeagullRoomCard extends HTMLElement {
     return out;
   }
 
+  _entityList(entityRef) {
+    if (Array.isArray(entityRef)) return entityRef.map((x) => String(x || "").trim()).filter(Boolean);
+    const one = String(entityRef || "").trim();
+    return one ? [one] : [];
+  }
+
+  _primaryEntityId(entityRef) {
+    return this._entityList(entityRef)[0] || "";
+  }
+
   _buildTextHtml() {
     const textCfg = this._config?.text;
     if (!textCfg) return "";
@@ -411,7 +421,7 @@ class SeagullRoomCard extends HTMLElement {
       .filter((it) => !it.hidden)
       .filter((it) => this._toBool(it?.empty, false) || !!it.entity || !!it.icon || !!buttonsCfg.icon)
       .map((it) => {
-        const entityId = String(it?.entity || "");
+        const entityId = this._primaryEntityId(it?.entity);
         const st = entityId ? this._hass?.states?.[entityId] : null;
         const state = st?.state ?? "";
 
@@ -433,7 +443,8 @@ class SeagullRoomCard extends HTMLElement {
     if (!items.length) return { html: "", items: [] };
 
     const buttonDefs = items.map((item, index) => {
-      const hasEntity = !!item?.entity;
+      const entityId = this._primaryEntityId(item?.entity);
+      const hasEntity = !!entityId;
       if (!hasEntity && this._toBool(item?.empty, false)) {
         const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
         const safeColSpan = Math.min(cols, colSpan);
@@ -442,11 +453,11 @@ class SeagullRoomCard extends HTMLElement {
         return { html, colSpan: safeColSpan };
       }
 
-      const st = this._hass.states[item.entity];
+      const st = this._hass.states[entityId];
       const state = st?.state || "unknown";
-      const domain = String(item.entity || "").split(".")[0];
+      const domain = String(entityId || "").split(".")[0];
 
-      const defaultDomainIcon = this._defaultEntityIcon(item.entity, state, st?.attributes);
+      const defaultDomainIcon = this._defaultEntityIcon(entityId, state, st?.attributes);
 
       const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
       const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
@@ -480,7 +491,7 @@ class SeagullRoomCard extends HTMLElement {
       const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
       const invertState = !!this._resolveDynamicValue(item.invert_state ?? buttonsCfg.invert_state, item.entity, state, false);
       const isUnavailable = state === "unavailable";
-      const baseActive = this._isEntityActive(item.entity, state);
+      const baseActive = this._isEntityActive(entityId, state);
       const isActive = invertState ? !baseActive : baseActive;
 
       const bDef = SEAGULL_ROOM_THEME_DEFAULT.button;
@@ -500,7 +511,7 @@ class SeagullRoomCard extends HTMLElement {
         state,
         defaultBg
       ));
-      if (hasEntity && !isUnavailable && lightColorMode !== "false" && item.entity.startsWith("light.") && state === "on") {
+      if (hasEntity && !isUnavailable && lightColorMode !== "false" && entityId.startsWith("light.") && state === "on") {
         const resolvedLight = this._resolveLightEntityColor(st?.attributes, lightColorMode);
         if (resolvedLight) bgColor = resolvedLight;
       }
@@ -700,7 +711,7 @@ class SeagullRoomCard extends HTMLElement {
   _runAction(item, key) {
     const act = this._resolveAction(item, key);
     if (!act) return;
-    this._runGenericAction(act, item.entity);
+    this._runGenericAction(act, this._primaryEntityId(item?.entity));
   }
 
   async _runGenericAction(act, entityId) {
@@ -811,7 +822,7 @@ class SeagullRoomCard extends HTMLElement {
 
   _resolveAction(item, key) {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
-    const domain = String(item?.entity || "").split(".")[0];
+    const domain = String(this._primaryEntityId(item?.entity) || "").split(".")[0];
     const isInfoDomain = domain === "sensor" || domain === "binary_sensor";
     const fallback = isInfoDomain
       ? "more-info"
@@ -993,7 +1004,7 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _isButtonItemVisible(item, buttonsCfg = {}) {
-    const entityId = String(item?.entity || "");
+    const entityId = this._primaryEntityId(item?.entity);
     const st = entityId ? this._hass?.states?.[entityId] : null;
     const state = st?.state ?? "";
 
@@ -1454,12 +1465,13 @@ class SeagullRoomCard extends HTMLElement {
     const themeButton = this._theme?.button;
     if (!themeButton || typeof themeButton !== "object") return {};
 
-    const domain = item?.entity ? String(item.entity).split(".")[0] : "empty";
+    const entityId = this._primaryEntityId(item?.entity);
+    const domain = entityId ? String(entityId).split(".")[0] : "empty";
     const domainCfg = themeButton?.[domain] && typeof themeButton[domain] === "object" ? themeButton[domain] : {};
 
     const activeRaw = this._resolveDynamicValue(item.invert_state ?? buttonsCfg.invert_state, item.entity, state, false);
     const invertState = !!activeRaw;
-    const baseActive = this._isEntityActive(item.entity, state);
+    const baseActive = this._isEntityActive(entityId, state);
     const isActive = invertState ? !baseActive : baseActive;
     const isUnavailable = state === "unavailable";
 
