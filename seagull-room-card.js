@@ -1167,6 +1167,16 @@ class SeagullRoomCard extends HTMLElement {
     try {
       const st = this._hass?.states?.[entityId];
       const statesFn = (eid) => this._hass?.states?.[eid]?.state;
+      const stateAttrFn = (eid, attr) => this._hass?.states?.[eid]?.attributes?.[attr];
+      const normalizeEntityList = () => {
+        if (Array.isArray(varsCtx?.e)) return varsCtx.e.map((x) => String(x || "")).filter(Boolean);
+        if (Array.isArray(varsCtx?.entity)) return varsCtx.entity.map((x) => String(x || "")).filter(Boolean);
+        if (Array.isArray(entityId)) return entityId.map((x) => String(x || "")).filter(Boolean);
+        if (entityId != null && String(entityId).trim()) return [String(entityId).trim()];
+        return [];
+      };
+      const entityList = normalizeEntityList();
+      const attrsList = entityList.map((eid) => this._hass?.states?.[eid]?.attributes || {});
       const evalInCtx = (code) => {
         const fn = new Function("ctx", `with (ctx) { return (${code}); }`);
         return fn({
@@ -1174,8 +1184,11 @@ class SeagullRoomCard extends HTMLElement {
           entity: entityId,
           state,
           states: statesFn,
+          state_attr: stateAttrFn,
           all_states: this._hass?.states,
           attributes: st?.attributes || {},
+          e: entityList,
+          a: attrsList,
           is_on: state === "on",
           vars: varsCtx || this._variablesContext || {},
           ...(varsCtx || this._variablesContext || {}),

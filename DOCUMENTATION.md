@@ -213,13 +213,35 @@ Built-ins available in template context include:
 - `entity`
 - `state`
 - `states(entity_id)` helper
+- `state_attr(entity_id, attr)` helper
 - `all_states`
 - `attributes`
+- `e` (entity array shortcut)
+- `a` (attributes array shortcut aligned with `e`)
 - `is_on`
 - `vars` + flattened `variables`
 - filters/helpers: `round`, `upper`, `lower`, `trim`, `capitalize`, `title`
 
 Top-level `variables` can be reused in templates.
+
+Shortcuts examples:
+
+```yaml
+color:
+  - state_template: "{{ state_attr('schedule.dechets', 'trash') == 'ordures' }}"
+    value: dimgrey
+  - value: red
+```
+
+```yaml
+variables:
+  e:
+    - sensor.temp_living
+    - sensor.temp_bedroom
+
+text:
+  value: "Living: {{ states(e[0]) }} / Bedroom attr: {{ a[1]['unit_of_measurement'] }}"
+```
 
 ---
 
