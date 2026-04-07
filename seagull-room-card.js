@@ -557,8 +557,9 @@ class SeagullRoomCard extends HTMLElement {
       const gaugeProgress = Number.isFinite(gaugeValue) && Number.isFinite(denom) && denom !== 0
         ? Math.max(0, Math.min(1, (gaugeValue - scale.min) / denom))
         : 0;
-      const gaugeColor = this._paletteColor(this._resolveDynamicValue(gaugeCfg?.color, item.entity, state, iColor));
-      const gaugeBg = this._paletteColor(this._resolveDynamicValue(gaugeCfg?.background, item.entity, state, "transparent"));
+      const gaugeDefaultColor = this._paletteColor(dDef?.active?.background ?? "#f59e0b");
+      const gaugeColor = this._paletteColor(this._resolveDynamicValue(gaugeCfg?.color, item.entity, state, gaugeDefaultColor));
+      const gaugeBg = this._paletteColor(this._resolveDynamicValue(gaugeCfg?.background, item.entity, state, bgColor));
       const gaugeWidth = Math.max(1, this._toPx(this._resolveDynamicValue(gaugeCfg?.width, item.entity, state, Math.max(2, Math.round(btnSize * 0.12))), Math.max(2, Math.round(btnSize * 0.12))));
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;

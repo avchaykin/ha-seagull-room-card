@@ -187,7 +187,8 @@ Gauge (`gauge`) options:
 - `position`: zero position on circle (`0..1`, turns)
 
 Defaults:
-- `background` is transparent
+- `background` defaults to button background
+- `color` defaults to the active button orange (`$btn_active_bg` in theme)
 
 Example:
 
