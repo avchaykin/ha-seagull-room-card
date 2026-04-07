@@ -563,11 +563,12 @@ class SeagullRoomCard extends HTMLElement {
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
       const visualBorderW = gaugeEnabled ? 0 : borderW;
+      const visualBgColor = gaugeEnabled ? "transparent" : bgColor;
       const donutHtml = gaugeEnabled
-        ? `<span aria-hidden="true" style="position:absolute;inset:0;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
+        ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
         : "";
 
-      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${visualBorderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};${unavailablePattern}padding:0;direction:ltr;">
+      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${visualBorderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(visualBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
             <ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>
