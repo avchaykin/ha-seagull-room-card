@@ -126,6 +126,7 @@ Each item may include:
 - `font_family`, `font_weight`, `font_size`
 - `mini` (render as mini button)
 - `gauge` (value visualization overlay)
+- `type` (special rendering mode, e.g. `climat`)
 - `empty` (render blank slot)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
@@ -203,6 +204,27 @@ buttons:
         background: rgba(255,255,255,0.18)
         width: 4
         position: 0.75
+```
+
+Climat button mode (`type: climat`):
+
+- layout: top value + bottom icon
+- value area ~60% of button height
+- supports one or multiple entities (`entity` can be array)
+- tap action: rotates visible entity/value/icon
+- hold action: always opens `more-info` for currently shown entity
+- for temperature/humidity/percent values, shows small suffix on the right (`°` or `%`)
+- uses narrow font (`PT Sans Narrow`)
+
+Example:
+
+```yaml
+buttons:
+  items:
+    - type: climat
+      entity:
+        - sensor.living_temperature
+        - sensor.living_humidity
 ```
 
 Button text behavior:

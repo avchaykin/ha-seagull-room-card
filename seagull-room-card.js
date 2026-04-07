@@ -360,6 +360,40 @@ class SeagullRoomCard extends HTMLElement {
     return this._entityList(entityRef)[0] || "";
   }
 
+  _isClimatButton(item, buttonsCfg = {}) {
+    const entityId = this._primaryEntityId(item?.entity);
+    const state = entityId ? this._hass?.states?.[entityId]?.state : "";
+    const t = this._resolveDynamicValue(item?.type ?? buttonsCfg?.type, item?.entity, state, "");
+    const s = String(t || "").trim().toLowerCase();
+    return s === "climat" || s === "climate";
+  }
+
+  _climatDisplayEntityId(item, buttonsCfg = {}, index = 0) {
+    const entities = this._entityList(item?.entity);
+    if (!entities.length) return "";
+    if (!this._isClimatButton(item, buttonsCfg)) return entities[0];
+    if (!this._climatRotation) this._climatRotation = {};
+    const i = Math.max(0, Number(this._climatRotation[index] || 0)) % entities.length;
+    return entities[i] || entities[0];
+  }
+
+  _climatRotate(index, item) {
+    const entities = this._entityList(item?.entity);
+    if (!entities.length) return;
+    if (!this._climatRotation) this._climatRotation = {};
+    const cur = Math.max(0, Number(this._climatRotation[index] || 0));
+    this._climatRotation[index] = (cur + 1) % entities.length;
+    this._render();
+  }
+
+  _climatSuffix(st, state) {
+    const unit = String(st?.attributes?.unit_of_measurement || "").trim();
+    const dc = String(st?.attributes?.device_class || "").toLowerCase();
+    if (unit.includes("%") || dc === "humidity" || /^\s*\d+(\.\d+)?\s*%\s*$/.test(String(state))) return "%";
+    if (unit.includes("°") || dc === "temperature") return "°";
+    return "";
+  }
+
   _buildTextHtml() {
     const textCfg = this._config?.text;
     if (!textCfg) return "";
@@ -453,7 +487,7 @@ class SeagullRoomCard extends HTMLElement {
 
     const renderButton = (item, index, opts = {}) => {
       const mini = !!opts.mini;
-      const entityId = this._primaryEntityId(item?.entity);
+      const entityId = this._climatDisplayEntityId(item, buttonsCfg, index);
       const hasEntity = !!entityId;
       const st = hasEntity ? this._hass.states[entityId] : null;
       const state = st?.state || "unknown";
@@ -540,6 +574,7 @@ class SeagullRoomCard extends HTMLElement {
         ? "background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.22) 0px, rgba(255,255,255,0.22) 6px, rgba(255,255,255,0) 6px, rgba(255,255,255,0) 12px);"
         : "";
       const gridSpanStyle = mini ? "" : `grid-column:span ${safeColSpan};`;
+      const isClimat = this._isClimatButton(item, buttonsCfg);
 
       const gaugeRaw = this._resolveDynamicValue(item.gauge ?? buttonsCfg.gauge, item.entity, state, null);
       const gaugeCfg = gaugeRaw === true ? {} : (gaugeRaw && typeof gaugeRaw === "object" ? gaugeRaw : null);
@@ -578,10 +613,24 @@ class SeagullRoomCard extends HTMLElement {
         ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
         : "";
 
+      const climatValueRaw = state;
+      const climatValueNum = Number(climatValueRaw);
+      const climatValue = Number.isFinite(climatValueNum) ? String(Math.round(climatValueNum * 10) / 10) : String(climatValueRaw ?? "");
+      const climatSuffix = this._climatSuffix(st, state);
+      const contentHtml = isClimat
+        ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'PT Sans Narrow',sans-serif;">
+            <span style="height:60%;display:flex;align-items:flex-end;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(10, Math.round(btnSize * 0.42))}px;font-weight:700;">
+              <span>${this._esc(climatValue)}</span>
+              ${climatSuffix ? `<span style="margin-left:2px;font-size:${Math.max(8, Math.round(btnSize * 0.2))}px;opacity:.9;align-self:flex-start;line-height:1.1;">${this._esc(climatSuffix)}</span>` : ""}
+            </span>
+            <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * 0.24))}px;"></ha-icon>
+          </span>`
+        : `<ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
+
       const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${visualBorderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(visualBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
-            <ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>
+            ${contentHtml}
           </span>
         </button>`;
       return { html, colSpan: safeColSpan };
@@ -795,6 +844,19 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _runAction(item, key) {
+    const buttonsCfg = this._config.buttons || this._config.lights || {};
+    const index = this._renderedLightItems?.indexOf(item);
+    if (this._isClimatButton(item, buttonsCfg)) {
+      if (key === "tap_action") {
+        this._climatRotate(index >= 0 ? index : 0, item);
+        return;
+      }
+      if (key === "hold_action") {
+        this._runGenericAction({ action: "more-info" }, this._climatDisplayEntityId(item, buttonsCfg, index >= 0 ? index : 0));
+        return;
+      }
+    }
+
     const act = this._resolveAction(item, key);
     if (!act) return;
     this._runGenericAction(act, this._primaryEntityId(item?.entity));
