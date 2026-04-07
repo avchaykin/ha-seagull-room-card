@@ -125,6 +125,7 @@ Each item may include:
 - `color`, `background`, `border`, `border_color`, `border_radius`
 - `font_family`, `font_weight`, `font_size`
 - `mini` (render as mini button)
+- `gauge` (value visualization overlay)
 - `empty` (render blank slot)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
@@ -173,6 +174,31 @@ buttons:
       mini: true
     - entity: light.e
       mini: true
+```
+
+Gauge (`gauge`) options:
+
+- `type`: currently `donut`
+- `value`: numeric value (default = entity state)
+- `scale`: max number (e.g. `100`) or object `{ min, max }`
+- `color`: gauge color
+- `background`: gauge background color
+- `width`: donut thickness (px)
+- `position`: zero position on circle (`0..1`, turns)
+
+Example:
+
+```yaml
+buttons:
+  items:
+    - entity: sensor.humidity_living
+      gauge:
+        type: donut
+        scale: { min: 0, max: 100 }
+        color: deepskyblue
+        background: rgba(255,255,255,0.18)
+        width: 4
+        position: 0.75
 ```
 
 Button text behavior:
