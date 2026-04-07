@@ -136,6 +136,7 @@ If `entity` is an array:
 - first entity is the primary one (state/domain/actions)
 - all entities are available in templates as shortcuts:
   - `e[0]`, `e[1]`, ... for entity ids
+  - `s[0]`, `s[1]`, ... for states (`states(e[i])`)
   - `a[0]['attr']`, `a[1]['attr']`, ... for attributes
 
 Example:
@@ -148,7 +149,7 @@ buttons:
         - input_boolean.alarm_pause
         - timer.alarm_pause_timer
       color:
-        - state_template: "{{ a[0]['option'] == 'away' || states(e[1]) == 'on' }}"
+        - state_template: "{{ s[0] == 'away' || s[1] == 'on' }}"
           value: goldenrod
         - value: dimgrey
 ```

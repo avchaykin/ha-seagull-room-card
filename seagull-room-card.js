@@ -1188,6 +1188,7 @@ class SeagullRoomCard extends HTMLElement {
       };
       const entityList = normalizeEntityList();
       const attrsList = entityList.map((eid) => this._hass?.states?.[eid]?.attributes || {});
+      const statesList = entityList.map((eid) => this._hass?.states?.[eid]?.state);
       const evalInCtx = (code) => {
         const fn = new Function("ctx", `with (ctx) { return (${code}); }`);
         return fn({
@@ -1199,6 +1200,7 @@ class SeagullRoomCard extends HTMLElement {
           all_states: this._hass?.states,
           attributes: st?.attributes || {},
           e: entityList,
+          s: statesList,
           a: attrsList,
           is_on: state === "on",
           vars: varsCtx || this._variablesContext || {},
