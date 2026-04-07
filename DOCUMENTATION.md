@@ -186,6 +186,9 @@ Gauge (`gauge`) options:
 - `width`: donut thickness (px)
 - `position`: zero position on circle (`0..1`, turns)
 
+Defaults:
+- `background` is transparent
+
 Example:
 
 ```yaml
