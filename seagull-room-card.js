@@ -400,12 +400,21 @@ class SeagullRoomCard extends HTMLElement {
     return s === "climat" || s === "climate";
   }
 
+  _climatKey(item, index = 0) {
+    const explicit = item?.id ?? item?.key ?? item?.name ?? null;
+    if (explicit != null && String(explicit).trim()) return `id:${String(explicit).trim()}`;
+    const entities = this._entityList(item?.entity);
+    if (entities.length) return `e:${entities.join("|")}`;
+    return `idx:${index}`;
+  }
+
   _climatDisplayEntityId(item, buttonsCfg = {}, index = 0) {
     const entities = this._entityList(item?.entity);
     if (!entities.length) return "";
     if (!this._isClimatButton(item, buttonsCfg)) return entities[0];
     if (!this._climatRotation) this._climatRotation = {};
-    const i = Math.max(0, Number(this._climatRotation[index] || 0)) % entities.length;
+    const key = this._climatKey(item, index);
+    const i = Math.max(0, Number(this._climatRotation[key] || 0)) % entities.length;
     return entities[i] || entities[0];
   }
 
@@ -413,8 +422,9 @@ class SeagullRoomCard extends HTMLElement {
     const entities = this._entityList(item?.entity);
     if (!entities.length) return;
     if (!this._climatRotation) this._climatRotation = {};
-    const cur = Math.max(0, Number(this._climatRotation[index] || 0));
-    this._climatRotation[index] = (cur + 1) % entities.length;
+    const key = this._climatKey(item, index);
+    const cur = Math.max(0, Number(this._climatRotation[key] || 0));
+    this._climatRotation[key] = (cur + 1) % entities.length;
     this._render();
   }
 
