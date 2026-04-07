@@ -546,9 +546,9 @@ class SeagullRoomCard extends HTMLElement {
         ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon ?? themeStyle.icon)
         : (item.icon ?? buttonsCfg.icon ?? themeStyle.icon);
       const entityOriginalIcon = st?.attributes?.icon || defaultDomainIcon;
-      const icon = isUnavailable
-        ? entityOriginalIcon
-        : this._resolveDynamicValue(baseIconTpl, item.entity, state, entityOriginalIcon);
+      const resolvedIcon = this._resolveDynamicValue(baseIconTpl, item.entity, state, entityOriginalIcon);
+      const hasExplicitIcon = !(baseIconTpl == null || baseIconTpl === false || String(baseIconTpl).trim() === "");
+      const icon = (isUnavailable && !hasExplicitIcon) ? entityOriginalIcon : resolvedIcon;
 
       const iconColorTpl = isObsolete
         ? (obsoleteCfg.color ?? obsoleteCfg.icon_color ?? item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color ?? themeStyle.color)
@@ -650,13 +650,14 @@ class SeagullRoomCard extends HTMLElement {
       const climatValueNum = Number(climatValueRaw);
       const climatValue = Number.isFinite(climatValueNum) ? String(Math.round(climatValueNum * 10) / 10) : String(climatValueRaw ?? "");
       const climatSuffix = this._climatSuffix(st, state);
+      const showClimatValue = !isUnavailable;
       const contentHtml = isClimat
         ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
-            <span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(9, Math.round(btnSize * 0.34))}px;font-weight:400;transform:translateY(8px);position:relative;">
-              ${climatSuffix ? `<span style="position:absolute;top:-0.05em;left:50%;transform:translateX(-50%);font-size:${Math.max(7, Math.round(btnSize * 0.17))}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
+            ${showClimatValue ? `<span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(9, Math.round(btnSize * 0.34))}px;font-weight:400;transform:translateY(8px);position:relative;">
+              ${climatSuffix ? `<span style="position:absolute;top:-0.42em;left:50%;transform:translateX(-50%);font-size:${Math.max(7, Math.round(btnSize * 0.17))}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
               <span style="display:block;">${this._esc(climatValue)}</span>
-            </span>
-            <ha-icon icon="${this._esc(icon)}" style="position:relative;top:-2px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * 0.24))}px;"></ha-icon>
+            </span>` : `<span style="height:60%;"></span>`}
+            <ha-icon icon="${this._esc(icon)}" style="position:relative;top:${showClimatValue ? "-2" : "0"}px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * (showClimatValue ? 0.24 : 0.34)))}px;"></ha-icon>
           </span>`
         : `<ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
 
