@@ -214,7 +214,7 @@ Climat button mode (`type: climat`):
 - tap action: rotates visible entity/value/icon
 - hold action: always opens `more-info` for currently shown entity
 - for temperature/humidity/percent values, shows small suffix on the right (`°` or `%`)
-- uses narrow font (`PT Sans Narrow`)
+- uses condensed font (`Oswald`)
 
 Example:
 
@@ -442,7 +442,7 @@ Button press feedback uses a temporary translucent outer ring (`box-shadow`) bas
 type: custom:seagull-room-card
 entity: climate.living_room
 icon: mdi:sofa
-font_family: "PT Sans Narrow, sans-serif"
+font_family: "Oswald, sans-serif"
 
 text:
   value: "{{ states('sensor.living_room_temperature')|round }}°C"

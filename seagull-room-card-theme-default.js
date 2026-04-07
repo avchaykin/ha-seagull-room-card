@@ -69,10 +69,10 @@ card:
   icon: "mdi:sofa"
   icon_color: "$card_icon"
   icon_size: 60
-  font_family: "'PT Sans Narrow', sans-serif"
+  font_family: "'Oswald', sans-serif"
   font_weight: null
   font_size: null
-  font_url: "https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&display=swap"
+  font_url: "https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap"
 
 text:
   color: "$text_color"

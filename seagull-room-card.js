@@ -70,7 +70,7 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     icon: "mdi:sofa",
     icon_color: "$card_icon",
     icon_size: 60,
-    font_url: "https://fonts.googleapis.com/css2?family=PT+Sans+Narrow:wght@400;700&display=swap",
+    font_url: "https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap",
   },
   text: {
     color: "$text_color",
@@ -251,7 +251,7 @@ class SeagullRoomCard extends HTMLElement {
     const radius = this._toPx(cfg.border_radius ?? themeCard.border_radius ?? cardDef.border_radius, cardDef.border_radius);
     const borderWidth = Math.max(0, this._toPx(cfg.border_width ?? themeCard.border_width ?? cardDef.border_width, cardDef.border_width));
     const borderColor = this._paletteColor(cfg.border_color ?? themeCard.border_color ?? cardDef.border_color);
-    const fontFamily = cfg.font_family ?? themeCard.font_family ?? cardDef.font_family ?? "'PT Sans Narrow', sans-serif";
+    const fontFamily = cfg.font_family ?? themeCard.font_family ?? cardDef.font_family ?? "'Oswald', sans-serif";
     const fontWeight = cfg.font_weight ?? themeCard.font_weight ?? cardDef.font_weight ?? null;
     const fontSizeRaw = cfg.font_size ?? themeCard.font_size ?? cardDef.font_size ?? null;
     const fontUrl = cfg.font_url ?? themeCard.font_url ?? cardDef.font_url ?? null;
@@ -650,7 +650,7 @@ class SeagullRoomCard extends HTMLElement {
       const climatValue = Number.isFinite(climatValueNum) ? String(Math.round(climatValueNum * 10) / 10) : String(climatValueRaw ?? "");
       const climatSuffix = this._climatSuffix(st, state);
       const contentHtml = isClimat
-        ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'PT Sans Narrow','PT Sans','Arial Narrow',Arial,sans-serif;">
+        ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
             <span style="height:60%;display:flex;align-items:flex-end;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(10, Math.round(btnSize * 0.42))}px;font-weight:700;">
               <span>${this._esc(climatValue)}</span>
               ${climatSuffix ? `<span style="margin-left:2px;font-size:${Math.max(8, Math.round(btnSize * 0.2))}px;opacity:.9;align-self:flex-start;line-height:1.1;">${this._esc(climatSuffix)}</span>` : ""}
