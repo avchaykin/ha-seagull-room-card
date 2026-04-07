@@ -242,6 +242,7 @@ Built-ins available in template context include:
 - `all_states`
 - `attributes`
 - `e` (entity array shortcut)
+- `s` (states array shortcut aligned with `e`)
 - `a` (attributes array shortcut aligned with `e`)
 - `is_on`
 - `vars` + flattened `variables`
@@ -265,8 +266,31 @@ variables:
     - sensor.temp_bedroom
 
 text:
-  value: "Living: {{ states(e[0]) }} / Bedroom attr: {{ a[1]['unit_of_measurement'] }}"
+  value: "Living: {{ s[0] }} / Bedroom attr: {{ a[1]['unit_of_measurement'] }}"
 ```
+
+Rules arrays with `state` / `state_template`:
+
+```yaml
+icon:
+  - state: "on"
+    value: mdi:lightbulb
+  - value: mdi:lightbulb-off
+```
+
+```yaml
+color:
+  - state_template: "{{ s[0] == 'HOME' && s[1] == 'off' }}"
+    value: dimgrey
+  - state_template: "{{ s[0] == 'AWAY' }}"
+    value: goldenrod
+  - value: red
+```
+
+Notes:
+- `state` compares against the primary entity state.
+- `state_template` lets you use full expression logic.
+- in rules arrays, use `value` (not `icon`/`color`) for the resolved output.
 
 ---
 
