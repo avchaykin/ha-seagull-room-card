@@ -546,6 +546,9 @@ class SeagullRoomCard extends HTMLElement {
       const safeColSpan = Math.min(cols, colSpan);
       const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
       const isEmpty = !!this._resolveDynamicValue(item.empty ?? buttonsCfg.empty, item.entity, state, false);
+      const unavailablePattern = (hasEntity && isUnavailable)
+        ? "background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.22) 0px, rgba(255,255,255,0.22) 6px, rgba(255,255,255,0) 6px, rgba(255,255,255,0) 12px);"
+        : "";
 
       const html = isEmpty
         ? `
@@ -554,7 +557,7 @@ class SeagullRoomCard extends HTMLElement {
       `
         : `
         <button class="sg-room-light-btn" data-index="${index}"
-          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:${borderRadiusCss};border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};padding:0;direction:ltr;">
+          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:${borderRadiusCss};border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
         </button>
       `;
