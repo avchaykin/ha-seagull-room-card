@@ -12,10 +12,10 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     text_bg: { day: "transparent", night: "transparent" },
     text_border: { day: "transparent", night: "transparent" },
 
-    btn_active_fg: { day: "#111827", night: "#111827" },
+    btn_active_fg: { day: "#111827", night: "#f8fafc" },
     btn_active_bg: { day: "#f59e0b", night: "#f59e0b" },
-    btn_inactive_fg: { day: "#e5e7eb", night: "#e5e7eb" },
-    btn_inactive_bg: { day: "#4b5563", night: "#374151" },
+    btn_inactive_fg: { day: "#111827", night: "#f8fafc" },
+    btn_inactive_bg: { day: "#cbd5e1", night: "#374151" },
     seagull_primary: { day: "#4b5563", night: "#374151" },
     seagull_active: { day: "#f59e0b", night: "#f59e0b" },
     seagull_active_red: { day: "#ef4444", night: "#dc2626" },
@@ -31,7 +31,7 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
 
     btn_auto_active_fg: { day: "#eaf2ff", night: "#eaf2ff" },
     btn_auto_active_bg: { day: "#3b82f6", night: "#2563eb" },
-    btn_auto_inactive_fg: { day: "#111827", night: "#111827" },
+    btn_auto_inactive_fg: { day: "#111827", night: "#f8fafc" },
     btn_auto_inactive_bg: { day: "#d1d5db", night: "#94a3b8" },
 
     btn_empty_inactive_fg: { day: "#111827", night: "#e2e8f0" },
