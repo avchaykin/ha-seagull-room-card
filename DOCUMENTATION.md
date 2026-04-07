@@ -124,6 +124,7 @@ Each item may include:
 - `text` or `label`
 - `color`, `background`, `border`, `border_color`, `border_radius`
 - `font_family`, `font_weight`, `font_size`
+- `mini` (render as mini button)
 - `empty` (render blank slot)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
@@ -152,6 +153,26 @@ buttons:
         - state_template: "{{ s[0] == 'away' || s[1] == 'on' }}"
           value: goldenrod
         - value: dimgrey
+```
+
+Mini buttons:
+
+- `mini: true` makes button 4x smaller (2x2 packing)
+- consecutive mini buttons are grouped 4 per normal slot, then continue into next slot
+
+```yaml
+buttons:
+  items:
+    - entity: light.a
+      mini: true
+    - entity: light.b
+      mini: true
+    - entity: light.c
+      mini: true
+    - entity: light.d
+      mini: true
+    - entity: light.e
+      mini: true
 ```
 
 Button text behavior:

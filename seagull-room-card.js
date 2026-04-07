@@ -442,27 +442,28 @@ class SeagullRoomCard extends HTMLElement {
 
     if (!items.length) return { html: "", items: [] };
 
-    const buttonDefs = items.map((item, index) => {
+    const renderButton = (item, index, opts = {}) => {
+      const mini = !!opts.mini;
       const entityId = this._primaryEntityId(item?.entity);
       const hasEntity = !!entityId;
-      if (!hasEntity && this._toBool(item?.empty, false)) {
-        const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
-        const safeColSpan = Math.min(cols, colSpan);
-        const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
-        const html = `<div class="sg-room-light-empty" style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;" aria-hidden="true"></div>`;
-        return { html, colSpan: safeColSpan };
+      const st = hasEntity ? this._hass.states[entityId] : null;
+      const state = st?.state || "unknown";
+      const isEmpty = !!this._resolveDynamicValue(item.empty ?? buttonsCfg.empty, item.entity, state, false);
+      const colSpan = mini ? 1 : Math.max(1, parseInt(item.width ?? 1, 10) || 1);
+      const safeColSpan = Math.min(cols, colSpan);
+      const btnSize = mini ? Math.floor(size / 2) : size;
+      const btnWidth = mini ? btnSize : (size * safeColSpan + gap * (safeColSpan - 1));
+
+      if ((!hasEntity && isEmpty) || isEmpty) {
+        const emptyHtml = `<div aria-hidden="true" style="${mini ? "" : `grid-column:span ${safeColSpan};`}width:${btnWidth}px;height:${btnSize}px;"></div>`;
+        return { html: emptyHtml, colSpan: safeColSpan };
       }
 
-      const st = this._hass.states[entityId];
-      const state = st?.state || "unknown";
       const domain = String(entityId || "").split(".")[0];
-
       const defaultDomainIcon = this._defaultEntityIcon(entityId, state, st?.attributes);
-
       const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
       const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
       const isUnavailable = state === "unavailable";
-
       const themeStyle = this._resolveThemeButtonStyle(item, buttonsCfg, st, state, isObsolete);
 
       const baseIconTpl = isObsolete
@@ -508,12 +509,7 @@ class SeagullRoomCard extends HTMLElement {
           : ((domain === "automation")
             ? (isActive ? (autoDef?.active?.background ?? "#3b82f6") : (autoDef?.inactive?.background ?? "#d1d5db"))
             : (isActive ? (dDef?.active?.background ?? "#f59e0b") : (dDef?.inactive?.background ?? "#4b5563"))));
-      let bgColor = this._paletteColor(this._resolveDynamicValue(
-        bgTpl,
-        item.entity,
-        state,
-        defaultBg
-      ));
+      let bgColor = this._paletteColor(this._resolveDynamicValue(bgTpl, item.entity, state, defaultBg));
       if (hasEntity && !isUnavailable && lightColorMode !== "false" && entityId.startsWith("light.") && state === "on") {
         const resolvedLight = this._resolveLightEntityColor(st?.attributes, lightColorMode);
         if (resolvedLight) bgColor = resolvedLight;
@@ -526,46 +522,75 @@ class SeagullRoomCard extends HTMLElement {
           : ((domain === "automation")
             ? (isActive ? (autoDef?.active?.color ?? "#eaf2ff") : (autoDef?.inactive?.color ?? "#111827"))
             : (isActive ? (dDef?.active?.color ?? "#111827") : (dDef?.inactive?.color ?? "#e5e7eb"))));
-
-      const iColor = this._paletteColor(this._resolveDynamicValue(
-        iconColorTpl,
-        item.entity,
-        state,
-        defaultIconColor
-      ));
+      const iColor = this._paletteColor(this._resolveDynamicValue(iconColorTpl, item.entity, state, defaultIconColor));
       const borderW = Math.max(0, Number(this._resolveDynamicValue(borderTpl, item.entity, state, 0)) || 0);
       const borderColor = this._paletteColor(this._resolveDynamicValue(borderColorTpl, item.entity, state, "$btn_border"));
-      const borderRadiusRaw = this._resolveDynamicValue(
-        item.border_radius ?? buttonsCfg.border_radius ?? themeStyle.border_radius,
-        item.entity,
-        state,
-        null
-      );
-      const borderRadiusCss = borderRadiusRaw == null || borderRadiusRaw === ""
-        ? "9999px"
-        : `${Math.max(0, this._toPx(borderRadiusRaw, 9999))}px`;
-
-      const colSpan = Math.max(1, parseInt(item.width ?? 1, 10) || 1);
-      const safeColSpan = Math.min(cols, colSpan);
-      const btnWidth = size * safeColSpan + gap * (safeColSpan - 1);
-      const isEmpty = !!this._resolveDynamicValue(item.empty ?? buttonsCfg.empty, item.entity, state, false);
+      const borderRadiusRaw = this._resolveDynamicValue(item.border_radius ?? buttonsCfg.border_radius ?? themeStyle.border_radius, item.entity, state, null);
+      const borderRadiusCss = borderRadiusRaw == null || borderRadiusRaw === "" ? "9999px" : `${Math.max(0, this._toPx(borderRadiusRaw, 9999))}px`;
       const unavailablePattern = (hasEntity && isUnavailable)
         ? "background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.22) 0px, rgba(255,255,255,0.22) 6px, rgba(255,255,255,0) 6px, rgba(255,255,255,0) 12px);"
         : "";
+      const gridSpanStyle = mini ? "" : `grid-column:span ${safeColSpan};`;
 
-      const html = isEmpty
-        ? `
-        <div aria-hidden="true"
-          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;"></div>
-      `
-        : `
-        <button class="sg-room-light-btn" data-index="${index}"
-          style="grid-column:span ${safeColSpan};width:${btnWidth}px;height:${size}px;border-radius:${borderRadiusCss};border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};${unavailablePattern}padding:0;direction:ltr;">
-          <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(size * 0.5)}px;"></ha-icon>
-        </button>
-      `;
-
+      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${borderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(bgColor)};${unavailablePattern}padding:0;direction:ltr;">
+          <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>
+        </button>`;
       return { html, colSpan: safeColSpan };
+    };
+
+    const indexedItems = items.map((it, idx) => ({ ...it, __idx: idx }));
+    const blocks = [];
+    for (let i = 0; i < indexedItems.length; i += 1) {
+      const it = indexedItems[i];
+      const entityId = this._primaryEntityId(it?.entity);
+      const st = entityId ? this._hass?.states?.[entityId] : null;
+      const state = st?.state ?? "";
+      const isMini = this._toBool(this._resolveDynamicValue(it.mini ?? buttonsCfg.mini, it.entity, state, false), false);
+      const isEmpty = this._toBool(it?.empty, false);
+
+      if (!isMini || isEmpty) {
+        blocks.push({ kind: "normal", item: it });
+        continue;
+      }
+
+      const miniRun = [];
+      while (i < indexedItems.length) {
+        const cur = indexedItems[i];
+        const curEntity = this._primaryEntityId(cur?.entity);
+        const curState = curEntity ? this._hass?.states?.[curEntity]?.state : "";
+        const curMini = this._toBool(this._resolveDynamicValue(cur.mini ?? buttonsCfg.mini, cur.entity, curState, false), false);
+        const curEmpty = this._toBool(cur?.empty, false);
+        if (!curMini || curEmpty) break;
+        miniRun.push(cur);
+        i += 1;
+      }
+      i -= 1;
+
+      for (let k = 0; k < miniRun.length; k += 4) {
+        blocks.push({ kind: "mini-group", items: miniRun.slice(k, k + 4) });
+      }
+    }
+
+    const buttonDefs = blocks.map((b) => {
+      if (b.kind === "normal") {
+        return renderButton(b.item, b.item.__idx, { mini: false });
+      }
+
+      const miniGap = 2;
+      const miniSize = Math.max(10, Math.floor((size - miniGap) / 2));
+      const miniButtons = [];
+      for (let i = 0; i < 4; i += 1) {
+        const it = b.items[i];
+        if (!it) {
+          miniButtons.push(`<div aria-hidden="true" style="width:${miniSize}px;height:${miniSize}px;"></div>`);
+        } else {
+          miniButtons.push(renderButton(it, it.__idx, { mini: true }).html);
+        }
+      }
+      return {
+        colSpan: 1,
+        html: `<div style="grid-column:span 1;width:${size}px;height:${size}px;display:grid;grid-template-columns:repeat(2, ${miniSize}px);grid-template-rows:repeat(2, ${miniSize}px);gap:${miniGap}px;align-content:start;justify-content:start;overflow:hidden;">${miniButtons.join("")}</div>`,
+      };
     });
 
     const buttons = buttonDefs.map((b) => b.html).join("");
