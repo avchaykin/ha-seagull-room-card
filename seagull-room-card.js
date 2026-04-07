@@ -1161,6 +1161,8 @@ class SeagullRoomCard extends HTMLElement {
       return byRules == null ? fallback : byRules;
     }
 
+    if (typeof input === "object") return input;
+
     if (typeof input === "number" || typeof input === "boolean") return input;
     if (typeof input !== "string") return String(input);
 
