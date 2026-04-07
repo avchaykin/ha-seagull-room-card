@@ -461,13 +461,17 @@ class SeagullRoomCard extends HTMLElement {
 
       const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
       const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
+      const isUnavailable = state === "unavailable";
 
       const themeStyle = this._resolveThemeButtonStyle(item, buttonsCfg, st, state, isObsolete);
 
       const baseIconTpl = isObsolete
         ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon ?? themeStyle.icon)
         : (item.icon ?? buttonsCfg.icon ?? themeStyle.icon);
-      const icon = this._resolveDynamicValue(baseIconTpl, item.entity, state, st?.attributes?.icon || defaultDomainIcon);
+      const entityOriginalIcon = st?.attributes?.icon || defaultDomainIcon;
+      const icon = isUnavailable
+        ? entityOriginalIcon
+        : this._resolveDynamicValue(baseIconTpl, item.entity, state, entityOriginalIcon);
 
       const iconColorTpl = isObsolete
         ? (obsoleteCfg.color ?? obsoleteCfg.icon_color ?? item.color ?? item.icon_color ?? buttonsCfg.color ?? buttonsCfg.icon_color ?? themeStyle.color)
@@ -490,7 +494,6 @@ class SeagullRoomCard extends HTMLElement {
       );
       const lightColorMode = this._normalizeLightColorMode(lightColorModeRaw);
       const invertState = !!this._resolveDynamicValue(item.invert_state ?? buttonsCfg.invert_state, item.entity, state, false);
-      const isUnavailable = state === "unavailable";
       const baseActive = this._isEntityActive(entityId, state);
       const isActive = invertState ? !baseActive : baseActive;
 
