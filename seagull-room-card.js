@@ -618,12 +618,12 @@ class SeagullRoomCard extends HTMLElement {
       const climatValue = Number.isFinite(climatValueNum) ? String(Math.round(climatValueNum * 10) / 10) : String(climatValueRaw ?? "");
       const climatSuffix = this._climatSuffix(st, state);
       const contentHtml = isClimat
-        ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'PT Sans Narrow',sans-serif;">
+        ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'PT Sans Narrow','PT Sans','Arial Narrow',Arial,sans-serif;">
             <span style="height:60%;display:flex;align-items:flex-end;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(10, Math.round(btnSize * 0.42))}px;font-weight:700;">
               <span>${this._esc(climatValue)}</span>
               ${climatSuffix ? `<span style="margin-left:2px;font-size:${Math.max(8, Math.round(btnSize * 0.2))}px;opacity:.9;align-self:flex-start;line-height:1.1;">${this._esc(climatSuffix)}</span>` : ""}
             </span>
-            <ha-icon icon="${this._esc(icon)}" style="color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * 0.24))}px;"></ha-icon>
+            <ha-icon icon="${this._esc(icon)}" style="position:relative;top:-2px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * 0.24))}px;"></ha-icon>
           </span>`
         : `<ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
 
