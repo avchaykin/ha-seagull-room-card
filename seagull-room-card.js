@@ -393,11 +393,17 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _isClimatButton(item, buttonsCfg = {}) {
+    return this._climatMode(item, buttonsCfg) !== "";
+  }
+
+  _climatMode(item, buttonsCfg = {}) {
     const entityId = this._primaryEntityId(item?.entity);
     const state = entityId ? this._hass?.states?.[entityId]?.state : "";
     const t = this._resolveDynamicValue(item?.type ?? buttonsCfg?.type, item?.entity, state, "");
     const s = String(t || "").trim().toLowerCase();
-    return s === "climat" || s === "climate";
+    if (s === "climat_icon") return "climat_icon";
+    if (s === "climat" || s === "climate") return "climat";
+    return "";
   }
 
   _climatKey(item, index = 0) {
@@ -617,7 +623,8 @@ class SeagullRoomCard extends HTMLElement {
         ? "background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.22) 0px, rgba(255,255,255,0.22) 6px, rgba(255,255,255,0) 6px, rgba(255,255,255,0) 12px);"
         : "";
       const gridSpanStyle = mini ? "" : `grid-column:span ${safeColSpan};`;
-      const isClimat = this._isClimatButton(item, buttonsCfg);
+      const climatMode = this._climatMode(item, buttonsCfg);
+      const isClimat = climatMode !== "";
 
       const gaugeRaw = this._resolveDynamicValue(item.gauge ?? buttonsCfg.gauge, item.entity, state, null);
       const gaugeCfg = gaugeRaw === true ? {} : (gaugeRaw && typeof gaugeRaw === "object" ? gaugeRaw : null);
@@ -651,7 +658,7 @@ class SeagullRoomCard extends HTMLElement {
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
       const visualBorderW = gaugeEnabled ? 0 : borderW;
-      const visualBgColor = gaugeEnabled ? "transparent" : bgColor;
+      const visualBgColor = (gaugeEnabled || climatMode === "climat_icon") ? "transparent" : bgColor;
       const donutHtml = gaugeEnabled
         ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
         : "";
@@ -662,13 +669,21 @@ class SeagullRoomCard extends HTMLElement {
       const climatSuffix = this._climatSuffix(st, state);
       const showClimatValue = !isUnavailable;
       const contentHtml = isClimat
-        ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
-            ${showClimatValue ? `<span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(9, Math.round(btnSize * 0.34))}px;font-weight:400;transform:translateY(8px);position:relative;">
-              ${climatSuffix ? `<span style="position:absolute;top:-0.42em;left:50%;transform:translateX(-50%);font-size:${Math.max(7, Math.round(btnSize * 0.17))}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
-              <span style="display:block;">${this._esc(climatValue)}</span>
-            </span>` : `<span style="height:60%;"></span>`}
-            <ha-icon icon="${this._esc(icon)}" style="position:relative;top:${showClimatValue ? "-2" : "0"}px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * (showClimatValue ? 0.24 : 0.34)))}px;"></ha-icon>
-          </span>`
+        ? (climatMode === "climat_icon"
+          ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
+              <ha-icon icon="${this._esc(icon)}" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:${this._esc(bgColor)};opacity:.95;--mdc-icon-size:${Math.max(14, Math.round(btnSize * 0.82))}px;"></ha-icon>
+              ${showClimatValue ? `<span style="position:absolute;left:14%;bottom:8%;display:inline-flex;align-items:flex-start;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(11, Math.round(btnSize * 0.45))}px;font-weight:500;">
+                <span>${this._esc(climatValue)}</span>
+                ${climatSuffix ? `<span style="margin-left:2px;font-size:${Math.max(7, Math.round(btnSize * 0.17))}px;opacity:.95;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
+              </span>` : ""}
+            </span>`
+          : `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
+              ${showClimatValue ? `<span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(9, Math.round(btnSize * 0.34))}px;font-weight:400;transform:translateY(8px);position:relative;">
+                ${climatSuffix ? `<span style="position:absolute;top:-0.42em;left:50%;transform:translateX(-50%);font-size:${Math.max(7, Math.round(btnSize * 0.17))}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
+                <span style="display:block;">${this._esc(climatValue)}</span>
+              </span>` : `<span style="height:60%;"></span>`}
+              <ha-icon icon="${this._esc(icon)}" style="position:relative;top:${showClimatValue ? "-2" : "0"}px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * (showClimatValue ? 0.24 : 0.34)))}px;"></ha-icon>
+            </span>`)
         : `<ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
 
       const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${visualBorderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(visualBgColor)};${unavailablePattern}padding:0;direction:ltr;">

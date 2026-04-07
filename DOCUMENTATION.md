@@ -227,6 +227,22 @@ buttons:
         - sensor.living_humidity
 ```
 
+Climat icon style (`type: climat_icon`):
+
+- button background is hidden
+- large icon is rendered as background (icon color uses button `background` color)
+- value text is larger, lower and left-aligned
+- unit (`%`, `°C`, `°F`) is shown on the right of value, top-aligned
+
+```yaml
+buttons:
+  items:
+    - type: climat_icon
+      entity:
+        - sensor.living_temperature
+        - sensor.living_humidity
+```
+
 Button text behavior:
 
 - If text exists, icon is shown on the left.
