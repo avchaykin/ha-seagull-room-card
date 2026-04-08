@@ -344,6 +344,7 @@ Built-ins available in template context include:
 - `states(entity_id)` helper
 - `state_attr(entity_id, attr)` helper
 - `time_rest(entity_id, attr?, unit)` helper
+- `timer_progress(timer_entity_id)` helper
 - `all_states`
 - `attributes`
 - `e` (entity array shortcut)
@@ -384,6 +385,19 @@ text:
 ```yaml
 text:
   value: "До события: {{ time_rest('sensor.next_event', '', 'hour') }} ч"
+```
+
+`timer_progress` example:
+
+```yaml
+buttons:
+  items:
+    - entity: timer.kitchen
+      view:
+        type: gauge
+        show_value: true
+        value: "{{ timer_progress('timer.kitchen') }}"
+        scale: 100
 ```
 
 Rules arrays with `state` / `state_template`:

@@ -1461,6 +1461,54 @@ class SeagullRoomCard extends HTMLElement {
         if (unit.startsWith("min")) return roundUp(diffSec / 60);
         return roundUp(diffSec);
       };
+      const timerProgressFn = (eid) => {
+        const id = String(eid || "").trim();
+        if (!id) return null;
+        const stObj = this._hass?.states?.[id];
+        if (!stObj) return null;
+
+        const stateRaw = String(stObj.state || "").toLowerCase();
+        if (stateRaw === "idle") return 100;
+
+        const attrs = stObj.attributes || {};
+        const parseDurationSec = (v) => {
+          if (typeof v === "number" && Number.isFinite(v)) return v;
+          const s = String(v || "").trim();
+          if (!s) return NaN;
+          if (/^\d+(?:\.\d+)?$/.test(s)) return Number(s);
+          const m = s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);
+          if (!m) return NaN;
+          const a = Number(m[1] || 0);
+          const b = Number(m[2] || 0);
+          const c = Number(m[3] || 0);
+          return m[3] != null ? (a * 3600 + b * 60 + c) : (a * 60 + b);
+        };
+
+        const totalSec = parseDurationSec(attrs.duration);
+        if (!Number.isFinite(totalSec) || totalSec <= 0) return null;
+
+        const remFromAttr = parseDurationSec(attrs.remaining);
+        let remainingSec = Number.isFinite(remFromAttr) ? remFromAttr : NaN;
+
+        if (!Number.isFinite(remainingSec)) {
+          const finishMs = Date.parse(String(attrs.finishes_at || ""));
+          if (Number.isFinite(finishMs)) {
+            remainingSec = Math.max(0, (finishMs - Date.now()) / 1000);
+          }
+        }
+
+        if (!Number.isFinite(remainingSec)) {
+          const startMs = Date.parse(String(attrs.started_at || ""));
+          if (Number.isFinite(startMs)) {
+            const elapsed = Math.max(0, (Date.now() - startMs) / 1000);
+            remainingSec = Math.max(0, totalSec - elapsed);
+          }
+        }
+
+        if (!Number.isFinite(remainingSec)) return null;
+        const progress = ((totalSec - remainingSec) / totalSec) * 100;
+        return Math.max(0, Math.min(100, Math.round(progress * 10) / 10));
+      };
       const normalizeEntityList = () => {
         if (Array.isArray(varsCtx?.e)) return varsCtx.e.map((x) => String(x || "")).filter(Boolean);
         if (Array.isArray(varsCtx?.entity)) return varsCtx.entity.map((x) => String(x || "")).filter(Boolean);
@@ -1480,6 +1528,7 @@ class SeagullRoomCard extends HTMLElement {
           states: statesFn,
           state_attr: stateAttrFn,
           time_rest: timeRestFn,
+          timer_progress: timerProgressFn,
           all_states: this._hass?.states,
           attributes: st?.attributes || {},
           e: entityList,
