@@ -246,6 +246,18 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     const cfg = this._config;
+    const debugEnabled = this._toBool(cfg?.debug, false);
+    if (debugEnabled) {
+      try {
+        const marker = `[seagull-room-card][debug] render ${new Date().toISOString()}`;
+        console.log(marker);
+        if (typeof window !== "undefined") {
+          window.__seagullRoomCardDebugLastRender = marker;
+        }
+      } catch (_e) {
+        // noop
+      }
+    }
     const buttonsCfg = cfg.buttons || cfg.lights || {};
 
     const themeCard = this._theme?.card || {};
@@ -524,7 +536,7 @@ class SeagullRoomCard extends HTMLElement {
 
   _buildLightsHtmlAndItems() {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
-    const debugEnabled = this._toBool(this._config?.debug, false);
+    const debugEnabledButtons = this._toBool(this._config?.debug, false);
     const themeBtn = this._theme?.button || {};
     const btnDef = SEAGULL_ROOM_THEME_DEFAULT.button;
     const cols = Math.max(1, parseInt(buttonsCfg.cols ?? buttonsCfg.columns ?? 3, 10) || 3);
@@ -747,7 +759,7 @@ class SeagullRoomCard extends HTMLElement {
 
     const indexedItems = items.map((it, idx) => ({ ...it, __idx: idx }));
 
-    if (debugEnabled) {
+    if (debugEnabledButtons) {
       try {
         const dbg = indexedItems.map((it, idx) => {
           const e = this._entityList(it?.entity);
