@@ -655,7 +655,6 @@ class SeagullRoomCard extends HTMLElement {
       const gaugeCfg = view.type === "gauge" ? ((item?.view && typeof item.view === "object") ? item.view : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {})) : null;
       const gaugeStyle = String(this._resolveDynamicValue(gaugeCfg?.style, item.entity, state, "donut")).toLowerCase();
       const gaugeEnabled = !!gaugeCfg && gaugeStyle === "donut";
-      const hasGaugeValueOverride = gaugeCfg && Object.prototype.hasOwnProperty.call(gaugeCfg, "value");
 
       const toScaleMinMax = (scale) => {
         if (scale && typeof scale === "object") {
@@ -706,12 +705,8 @@ class SeagullRoomCard extends HTMLElement {
       const unitFontPxBig = unitFontSizeCfg == null ? Math.max(7, Math.round(btnSize * 0.17)) : Math.max(7, this._toPx(unitFontSizeCfg, 8));
       const valueFontPxThree = valueFontSizeCfg == null ? Math.max(9, Math.round(btnSize * 0.31)) : Math.max(8, this._toPx(valueFontSizeCfg, 10));
       const unitFontPxThree = unitFontSizeCfg == null ? Math.max(7, Math.round(btnSize * 0.17)) : Math.max(7, this._toPx(unitFontSizeCfg, 8));
-      const gaugeShowValue = hasGaugeValueOverride
-        ? this._toBool(this._resolveDynamicValue(gaugeCfg?.show_value, item.entity, state, true), true)
-        : this._toBool(this._resolveDynamicValue(gaugeCfg?.show_value, item.entity, state, false), false);
-      const gaugeValue = Number.isFinite(gaugeNumericValue)
-        ? String(Math.round(gaugeNumericValue * 10) / 10)
-        : String(gaugeValueRaw ?? "");
+      const gaugeShowValue = this._toBool(this._resolveDynamicValue(gaugeCfg?.show_value, item.entity, state, false), false);
+      const gaugeValue = this._formatClimatValue(st, state, climatSuffix);
       const contentHtml = isNumber
         ? (numberStyle === "big"
           ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:${this._esc(String(numberFontFamily))};">
