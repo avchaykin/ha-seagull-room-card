@@ -1462,7 +1462,8 @@ class SeagullRoomCard extends HTMLElement {
         return roundUp(diffSec);
       };
       const timerProgressFn = (eid) => {
-        const id = String(eid || "").trim();
+        const idRaw = (eid == null || String(eid).trim() === "") ? entityId : eid;
+        const id = String(idRaw || "").trim();
         if (!id) return null;
         const stObj = this._hass?.states?.[id];
         if (!stObj) return null;
@@ -1485,6 +1486,7 @@ class SeagullRoomCard extends HTMLElement {
         };
 
         const totalSec = parseDurationSec(attrs.duration);
+        if ((!Number.isFinite(totalSec) || totalSec <= 0) && stateRaw === "idle") return 100;
         if (!Number.isFinite(totalSec) || totalSec <= 0) return null;
 
         const remFromAttr = parseDurationSec(attrs.remaining);
