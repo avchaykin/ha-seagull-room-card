@@ -125,8 +125,7 @@ Each item may include:
 - `color`, `background`, `border`, `border_color`, `border_radius`
 - `font_family`, `font_weight`, `font_size`
 - `mini` (render as mini button)
-- `gauge` (value visualization overlay)
-- `type` (special rendering mode, e.g. `climat`)
+- `view` (button presentation mode)
 - `empty` (render blank slot)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
@@ -177,36 +176,40 @@ buttons:
       mini: true
 ```
 
-Gauge (`gauge`) options:
-
-- `type`: currently `donut`
-- `value`: numeric value (default = entity state)
-- `scale`: max number (e.g. `100`) or object `{ min, max }`
-- `color`: gauge color
-- `background`: gauge background color
-- `width`: donut thickness (px)
-- `position`: zero position on circle (`0..1`, turns)
-
-Defaults:
-- `background` defaults to button background
-- `color` defaults to the active button orange (`$btn_active_bg` in theme)
-
-Example:
+View modes (`view`):
 
 ```yaml
-buttons:
-  items:
-    - entity: sensor.humidity_living
-      gauge:
-        type: donut
-        scale: { min: 0, max: 100 }
-        color: deepskyblue
-        background: rgba(255,255,255,0.18)
-        width: 4
-        position: 0.75
+view:
+  type: button
 ```
 
-Climat button mode (`type: climat`):
+Default button mode (can be omitted).
+
+```yaml
+view:
+  type: gauge
+  style: donut
+  color: ...
+  background: ...
+  scale: { min: 0, max: 100 }
+  value: ...
+  width: 4
+  position: 0.75
+```
+
+Gauge options:
+- `style`: `donut`
+- `value` (default entity state)
+- `scale` number or `{min,max}`
+- `color`, `background`, `width`, `position`
+
+```yaml
+view:
+  type: number
+  style: three-lines
+```
+
+Number mode `three-lines`:
 
 - layout: top value + bottom icon
 - value area ~60% of button height
@@ -215,19 +218,23 @@ Climat button mode (`type: climat`):
 - hold action: always opens `more-info` for currently shown entity
 - for temperature/humidity/percent values, shows small suffix on the right (`°` or `%`)
 - uses condensed font (`Oswald`)
+- `unit_of_measurement`: `true | false | <string>`
+- `value_font_size`, `unit_font_size`
 
 Example:
 
 ```yaml
 buttons:
   items:
-    - type: climat
+    - view:
+        type: number
+        style: three-lines
       entity:
         - sensor.living_temperature
         - sensor.living_humidity
 ```
 
-Climat icon style (`type: climat_icon`):
+Number mode `big`:
 
 - button background is hidden
 - large icon is rendered as background (icon color uses button `background` color)
@@ -237,7 +244,9 @@ Climat icon style (`type: climat_icon`):
 ```yaml
 buttons:
   items:
-    - type: climat_icon
+    - view:
+        type: number
+        style: big
       entity:
         - sensor.living_temperature
         - sensor.living_humidity

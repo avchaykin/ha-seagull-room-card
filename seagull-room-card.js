@@ -396,18 +396,18 @@ class SeagullRoomCard extends HTMLElement {
     this._loadedFontLinks.add(href);
   }
 
-  _isClimatButton(item, buttonsCfg = {}) {
-    return this._climatMode(item, buttonsCfg) !== "";
-  }
-
-  _climatMode(item, buttonsCfg = {}) {
+  _buttonView(item, buttonsCfg = {}) {
     const entityId = this._primaryEntityId(item?.entity);
     const state = entityId ? this._hass?.states?.[entityId]?.state : "";
-    const t = this._resolveDynamicValue(item?.type ?? buttonsCfg?.type, item?.entity, state, "");
-    const s = String(t || "").trim().toLowerCase();
-    if (s === "climat_icon") return "climat_icon";
-    if (s === "climat" || s === "climate") return "climat";
-    return "";
+    const raw = this._resolveDynamicValue(item?.view ?? buttonsCfg?.view, item?.entity, state, null);
+    const cfg = raw && typeof raw === "object" ? raw : {};
+    const type = String(this._resolveDynamicValue(cfg.type, item?.entity, state, "button") || "button").trim().toLowerCase();
+    const style = String(this._resolveDynamicValue(cfg.style, item?.entity, state, "") || "").trim().toLowerCase();
+    return { type: type || "button", style };
+  }
+
+  _isNumberView(item, buttonsCfg = {}) {
+    return this._buttonView(item, buttonsCfg).type === "number";
   }
 
   _climatKey(item, index = 0) {
@@ -421,7 +421,7 @@ class SeagullRoomCard extends HTMLElement {
   _climatDisplayEntityId(item, buttonsCfg = {}, index = 0) {
     const entities = this._entityList(item?.entity);
     if (!entities.length) return "";
-    if (!this._isClimatButton(item, buttonsCfg)) return entities[0];
+    if (!this._isNumberView(item, buttonsCfg)) return entities[0];
     if (!this._climatRotation) this._climatRotation = {};
     const key = this._climatKey(item, index);
     const i = Math.max(0, Number(this._climatRotation[key] || 0)) % entities.length;
@@ -438,7 +438,9 @@ class SeagullRoomCard extends HTMLElement {
     this._render();
   }
 
-  _climatSuffix(st, state) {
+  _climatSuffix(st, state, unitCfg = true) {
+    if (unitCfg === false) return "";
+    if (typeof unitCfg === "string" && unitCfg.trim()) return unitCfg.trim();
     const unit = String(st?.attributes?.unit_of_measurement || "").trim();
     const dc = String(st?.attributes?.device_class || "").toLowerCase();
     if (unit.includes("%") || dc === "humidity" || /^\s*\d+(\.\d+)?\s*%\s*$/.test(String(state))) return "%";
@@ -637,13 +639,12 @@ class SeagullRoomCard extends HTMLElement {
         ? "background-image:repeating-linear-gradient(135deg, rgba(255,255,255,0.22) 0px, rgba(255,255,255,0.22) 6px, rgba(255,255,255,0) 6px, rgba(255,255,255,0) 12px);"
         : "";
       const gridSpanStyle = mini ? "" : `grid-column:span ${safeColSpan};`;
-      const climatMode = this._climatMode(item, buttonsCfg);
-      const isClimat = climatMode !== "";
-
-      const gaugeRaw = this._resolveDynamicValue(item.gauge ?? buttonsCfg.gauge, item.entity, state, null);
-      const gaugeCfg = gaugeRaw === true ? {} : (gaugeRaw && typeof gaugeRaw === "object" ? gaugeRaw : null);
-      const gaugeType = String(this._resolveDynamicValue(gaugeCfg?.type, item.entity, state, "")).toLowerCase();
-      const gaugeEnabled = !!gaugeCfg && gaugeType === "donut";
+      const view = this._buttonView(item, buttonsCfg);
+      const isNumber = view.type === "number";
+      const numberStyle = view.style || "three-lines";
+      const gaugeCfg = view.type === "gauge" ? ((item?.view && typeof item.view === "object") ? item.view : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {})) : null;
+      const gaugeStyle = String(this._resolveDynamicValue(gaugeCfg?.style, item.entity, state, "")).toLowerCase();
+      const gaugeEnabled = !!gaugeCfg && gaugeStyle === "donut";
 
       const toScaleMinMax = (scale) => {
         if (scale && typeof scale === "object") {
@@ -672,26 +673,36 @@ class SeagullRoomCard extends HTMLElement {
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
       const visualBorderW = gaugeEnabled ? 0 : borderW;
-      const visualBgColor = (gaugeEnabled || climatMode === "climat_icon") ? "transparent" : bgColor;
+      const visualBgColor = (gaugeEnabled || (isNumber && numberStyle === "big")) ? "transparent" : bgColor;
       const donutHtml = gaugeEnabled
         ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
         : "";
 
-      const climatSuffix = this._climatSuffix(st, state);
+      const unitCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.unit_of_measurement : undefined)
+        ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? buttonsCfg.view.unit_of_measurement : undefined), item.entity, state, true);
+      const valueFontSizeCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.value_font_size : undefined)
+        ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? buttonsCfg.view.value_font_size : undefined), item.entity, state, null);
+      const unitFontSizeCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.unit_font_size : undefined)
+        ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? buttonsCfg.view.unit_font_size : undefined), item.entity, state, null);
+      const climatSuffix = this._climatSuffix(st, state, unitCfg);
       const climatValue = this._formatClimatValue(st, state, climatSuffix);
       const showClimatValue = !isUnavailable;
-      const contentHtml = isClimat
-        ? (climatMode === "climat_icon"
+      const valueFontPxBig = valueFontSizeCfg == null ? Math.max(10, Math.round(btnSize * 0.37)) : Math.max(8, this._toPx(valueFontSizeCfg, 12));
+      const unitFontPxBig = unitFontSizeCfg == null ? Math.max(7, Math.round(btnSize * 0.17)) : Math.max(7, this._toPx(unitFontSizeCfg, 8));
+      const valueFontPxThree = valueFontSizeCfg == null ? Math.max(9, Math.round(btnSize * 0.34)) : Math.max(8, this._toPx(valueFontSizeCfg, 10));
+      const unitFontPxThree = unitFontSizeCfg == null ? Math.max(7, Math.round(btnSize * 0.17)) : Math.max(7, this._toPx(unitFontSizeCfg, 8));
+      const contentHtml = isNumber
+        ? (numberStyle === "big"
           ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
               <ha-icon icon="${this._esc(icon)}" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:${this._esc(climatIconBgColor)};opacity:.95;--mdc-icon-size:${Math.max(16, Math.round(btnSize * 0.9))}px;"></ha-icon>
-              ${showClimatValue ? `<span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:flex-start;line-height:1;color:${this._esc(climatIconTextColor)};font-size:${Math.max(10, Math.round(btnSize * 0.37))}px;font-weight:400;">
+              ${showClimatValue ? `<span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:flex-start;line-height:1;color:${this._esc(climatIconTextColor)};font-size:${valueFontPxBig}px;font-weight:400;">
                 <span>${this._esc(climatValue)}</span>
-                ${climatSuffix ? `<span style="margin-left:0px;margin-top:0.12em;font-size:${Math.max(7, Math.round(btnSize * 0.17))}px;opacity:.95;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
+                ${climatSuffix ? `<span style="margin-left:0px;margin-top:0.12em;font-size:${unitFontPxBig}px;opacity:.95;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
               </span>` : ""}
             </span>`
           : `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
-              ${showClimatValue ? `<span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(9, Math.round(btnSize * 0.34))}px;font-weight:400;transform:translateY(8px);position:relative;">
-                ${climatSuffix ? `<span style="position:absolute;top:-0.42em;left:50%;transform:translateX(-50%);font-size:${Math.max(7, Math.round(btnSize * 0.17))}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
+              ${showClimatValue ? `<span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${valueFontPxThree}px;font-weight:400;transform:translateY(8px);position:relative;">
+                ${climatSuffix ? `<span style="position:absolute;top:-0.42em;left:50%;transform:translateX(-50%);font-size:${unitFontPxThree}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
                 <span style="display:block;">${this._esc(climatValue)}</span>
               </span>` : `<span style="height:60%;"></span>`}
               <ha-icon icon="${this._esc(icon)}" style="position:relative;top:${showClimatValue ? "-2" : "0"}px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * (showClimatValue ? 0.24 : 0.34)))}px;"></ha-icon>
@@ -917,7 +928,7 @@ class SeagullRoomCard extends HTMLElement {
   _runAction(item, key, itemIndex = null) {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
     const index = Number.isInteger(itemIndex) ? itemIndex : this._renderedLightItems?.indexOf(item);
-    if (this._isClimatButton(item, buttonsCfg)) {
+    if (this._isNumberView(item, buttonsCfg)) {
       if (key === "tap_action") {
         this._climatRotate(index >= 0 ? index : 0, item);
         return;
