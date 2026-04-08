@@ -680,6 +680,8 @@ class SeagullRoomCard extends HTMLElement {
 
       const unitCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.unit_of_measurement : undefined)
         ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? buttonsCfg.view.unit_of_measurement : undefined), item.entity, state, true);
+      const numberFontFamily = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? (item.view.font_familly ?? item.view.font_family) : undefined)
+        ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? (buttonsCfg.view.font_familly ?? buttonsCfg.view.font_family) : undefined), item.entity, state, "inherit");
       const valueFontSizeCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.value_font_size : undefined)
         ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? buttonsCfg.view.value_font_size : undefined), item.entity, state, null);
       const unitFontSizeCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.unit_font_size : undefined)
@@ -693,14 +695,14 @@ class SeagullRoomCard extends HTMLElement {
       const unitFontPxThree = unitFontSizeCfg == null ? Math.max(7, Math.round(btnSize * 0.17)) : Math.max(7, this._toPx(unitFontSizeCfg, 8));
       const contentHtml = isNumber
         ? (numberStyle === "big"
-          ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
+          ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:${this._esc(String(numberFontFamily))};">
               <ha-icon icon="${this._esc(icon)}" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:${this._esc(climatIconBgColor)};opacity:.95;--mdc-icon-size:${Math.max(16, Math.round(btnSize * 0.9))}px;"></ha-icon>
               ${showClimatValue ? `<span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:flex-start;line-height:1;color:${this._esc(climatIconTextColor)};font-size:${valueFontPxBig}px;font-weight:400;">
                 <span>${this._esc(climatValue)}</span>
                 ${climatSuffix ? `<span style="margin-left:0px;margin-top:0.12em;font-size:${unitFontPxBig}px;opacity:.95;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
               </span>` : ""}
             </span>`
-          : `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:'Oswald','PT Sans Narrow','Arial Narrow',Arial,sans-serif;">
+          : `<span style="position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:2px 0;font-family:${this._esc(String(numberFontFamily))};">
               ${showClimatValue ? `<span style="height:60%;display:flex;align-items:center;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${valueFontPxThree}px;font-weight:400;transform:translateY(8px);position:relative;">
                 ${climatSuffix ? `<span style="position:absolute;top:-0.42em;left:50%;transform:translateX(-50%);font-size:${unitFontPxThree}px;opacity:.9;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
                 <span style="display:block;">${this._esc(climatValue)}</span>

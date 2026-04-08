@@ -222,6 +222,7 @@ Number mode `three-lines`:
 - uses condensed font (`Oswald`)
 - `unit_of_measurement`: `true | false | <string>`
 - `value_font_size`, `unit_font_size`
+- `font_familly` (or `font_family`) to override number-view font; default is HA/Lovelace standard (`inherit`)
 
 Example:
 
