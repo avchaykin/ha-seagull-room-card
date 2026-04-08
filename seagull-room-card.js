@@ -670,6 +670,7 @@ class SeagullRoomCard extends HTMLElement {
       };
 
       const gaugeValueRaw = this._resolveDynamicValue(gaugeCfg?.value, item.entity, state, state);
+      const hasGaugeValueOverride = !!gaugeCfg && Object.prototype.hasOwnProperty.call(gaugeCfg, "value");
       const gaugeNumericValue = Number(gaugeValueRaw);
       const scale = toScaleMinMax(this._resolveDynamicValue(gaugeCfg?.scale, item.entity, state, 100));
       const denom = (scale.max - scale.min);
@@ -706,7 +707,8 @@ class SeagullRoomCard extends HTMLElement {
       const valueFontPxThree = valueFontSizeCfg == null ? Math.max(9, Math.round(btnSize * 0.31)) : Math.max(8, this._toPx(valueFontSizeCfg, 10));
       const unitFontPxThree = unitFontSizeCfg == null ? Math.max(7, Math.round(btnSize * 0.17)) : Math.max(7, this._toPx(unitFontSizeCfg, 8));
       const gaugeShowValue = this._toBool(this._resolveDynamicValue(gaugeCfg?.show_value, item.entity, state, false), false);
-      const gaugeValue = this._formatClimatValue(st, state, climatSuffix);
+      const gaugeSuffix = hasGaugeValueOverride ? this._climatSuffix(st, gaugeValueRaw, unitCfg) : climatSuffix;
+      const gaugeValue = this._formatClimatValue(st, hasGaugeValueOverride ? gaugeValueRaw : state, gaugeSuffix);
       const contentHtml = isNumber
         ? (numberStyle === "big"
           ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:${this._esc(String(numberFontFamily))};">
@@ -728,7 +730,7 @@ class SeagullRoomCard extends HTMLElement {
               <ha-icon icon="${this._esc(icon)}" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:${this._esc(this._toRgba(iColor, 0.2))};opacity:1;--mdc-icon-size:${Math.max(12, Math.round(btnSize * 0.5))}px;"></ha-icon>
               <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:flex-start;line-height:1;color:${this._esc(iColor)};font-size:${valueFontPxBig}px;font-weight:${this._esc(String(numberFontWeight))};">
                 <span>${this._esc(gaugeValue)}</span>
-                ${climatSuffix ? `<span style="margin-left:0px;margin-top:0.12em;font-size:${unitFontPxBig}px;opacity:.95;line-height:1;">${this._esc(climatSuffix)}</span>` : ""}
+                ${gaugeSuffix ? `<span style="margin-left:0px;margin-top:0.12em;font-size:${unitFontPxBig}px;opacity:.95;line-height:1;">${this._esc(gaugeSuffix)}</span>` : ""}
               </span>
             </span>`
         : `<ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
