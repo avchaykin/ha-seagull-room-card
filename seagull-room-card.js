@@ -1477,17 +1477,28 @@ class SeagullRoomCard extends HTMLElement {
           const s = String(v || "").trim();
           if (!s) return NaN;
           if (/^\d+(?:\.\d+)?$/.test(s)) return Number(s);
-          const m = s.match(/^(\d+):(\d{1,2})(?::(\d{1,2}))?$/);
-          if (!m) return NaN;
-          const a = Number(m[1] || 0);
-          const b = Number(m[2] || 0);
-          const c = Number(m[3] || 0);
-          return m[3] != null ? (a * 3600 + b * 60 + c) : (a * 60 + b);
+          const iso = s.match(/^P(?:\d+Y)?(?:\d+M)?(?:\d+D)?(?:T(?:(\d+(?:\.\d+)?)H)?(?:(\d+(?:\.\d+)?)M)?(?:(\d+(?:\.\d+)?)S)?)?$/i);
+          if (iso) {
+            const h = Number(iso[1] || 0);
+            const m = Number(iso[2] || 0);
+            const sec = Number(iso[3] || 0);
+            return h * 3600 + m * 60 + sec;
+          }
+
+          const parts = s.split(":");
+          if (parts.length === 2 || parts.length === 3) {
+            const nums = parts.map((p) => Number(p));
+            if (nums.every((n) => Number.isFinite(n))) {
+              if (parts.length === 3) return nums[0] * 3600 + nums[1] * 60 + nums[2];
+              return nums[0] * 60 + nums[1];
+            }
+          }
+
+          return NaN;
         };
 
-        const totalSec = parseDurationSec(attrs.duration);
+        let totalSec = parseDurationSec(attrs.duration);
         if ((!Number.isFinite(totalSec) || totalSec <= 0) && stateRaw === "idle") return 100;
-        if (!Number.isFinite(totalSec) || totalSec <= 0) return null;
 
         const remFromAttr = parseDurationSec(attrs.remaining);
         let remainingSec = Number.isFinite(remFromAttr) ? remFromAttr : NaN;
@@ -1503,9 +1514,22 @@ class SeagullRoomCard extends HTMLElement {
           const startMs = Date.parse(String(attrs.started_at || ""));
           if (Number.isFinite(startMs)) {
             const elapsed = Math.max(0, (Date.now() - startMs) / 1000);
-            remainingSec = Math.max(0, totalSec - elapsed);
+            if (Number.isFinite(totalSec) && totalSec > 0) {
+              remainingSec = Math.max(0, totalSec - elapsed);
+            }
           }
         }
+
+        if ((!Number.isFinite(totalSec) || totalSec <= 0) && Number.isFinite(remainingSec)) {
+          const finishMs = Date.parse(String(attrs.finishes_at || ""));
+          if (Number.isFinite(finishMs)) {
+            const nowSec = Date.now() / 1000;
+            const elapsed = Math.max(0, nowSec - (finishMs / 1000 - remainingSec));
+            totalSec = remainingSec + elapsed;
+          }
+        }
+
+        if (!Number.isFinite(totalSec) || totalSec <= 0) return null;
 
         if (!Number.isFinite(remainingSec)) return null;
         const progress = ((totalSec - remainingSec) / totalSec) * 100;
