@@ -584,14 +584,7 @@ class SeagullRoomCard extends HTMLElement {
       const baseIconTpl = isObsolete
         ? (obsoleteCfg.icon ?? item.icon ?? buttonsCfg.icon ?? themeStyle.icon)
         : (item.icon ?? buttonsCfg.icon ?? themeStyle.icon);
-      const entitiesForView = this._entityList(item?.entity);
-      const viewRotIndex = this._viewRotationIndex(item, index, entitiesForView.length || 1);
-      const viewForIcon = this._buttonView(item, buttonsCfg);
-      const useGaugeIconArray = viewForIcon.type === "gauge" && Array.isArray(baseIconTpl);
-      const iconTplSelectedRaw = useGaugeIconArray ? baseIconTpl[Math.min(baseIconTpl.length - 1, viewRotIndex)] : baseIconTpl;
-      const iconTplSelected = (useGaugeIconArray && (iconTplSelectedRaw == null || iconTplSelectedRaw === ""))
-        ? (baseIconTpl.find((x) => x != null && String(x).trim() !== "") ?? null)
-        : iconTplSelectedRaw;
+      const iconTplSelected = baseIconTpl;
       const entityOriginalIcon = st?.attributes?.icon || defaultDomainIcon;
       const resolvedIcon = this._resolveDynamicValue(iconTplSelected, item.entity, state, entityOriginalIcon);
       const hasExplicitIcon = !(iconTplSelected == null || iconTplSelected === false || String(iconTplSelected).trim() === "");
