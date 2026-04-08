@@ -203,7 +203,6 @@ Gauge options:
 - `scale` number or `{min,max}`
 - `color`, `background`, `width`, `position`
 - `show_value`: show value text over gauge (number-like)
-- supports `entity` arrays with tap rotation
 - `icon` can be an array aligned with `entity` order
 
 ```yaml

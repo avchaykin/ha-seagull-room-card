@@ -412,7 +412,7 @@ class SeagullRoomCard extends HTMLElement {
 
   _isRotatingView(item, buttonsCfg = {}) {
     const t = this._buttonView(item, buttonsCfg).type;
-    return t === "number" || t === "gauge";
+    return t === "number";
   }
 
   _viewRotationIndex(item, index = 0, count = 1) {
