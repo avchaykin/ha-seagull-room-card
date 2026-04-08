@@ -766,9 +766,10 @@ class SeagullRoomCard extends HTMLElement {
             show: this._resolveDynamicValue(it?.show ?? buttonsCfg?.show, it?.entity, st?.state ?? "", true),
           };
         });
-        console.debug("[seagull-room-card][debug] button vars", dbg);
+        if (typeof window !== "undefined") window.__seagullRoomCardDebug = dbg;
+        console.log("[seagull-room-card][debug] button vars", dbg);
       } catch (err) {
-        console.debug("[seagull-room-card][debug] failed to collect button vars", err);
+        console.warn("[seagull-room-card][debug] failed to collect button vars", err);
       }
     }
     const blocks = [];
