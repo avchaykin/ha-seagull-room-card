@@ -206,8 +206,10 @@ Gauge options:
 ```yaml
 view:
   type: number
-  style: three-lines
+  style: big
 ```
+
+Default style for `view.type: number` is `big`.
 
 Number mode `three-lines`:
 
