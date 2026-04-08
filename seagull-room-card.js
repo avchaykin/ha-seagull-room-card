@@ -1260,7 +1260,8 @@ class SeagullRoomCard extends HTMLElement {
   }
 
   _isButtonItemVisible(item, buttonsCfg = {}) {
-    const entityId = this._primaryEntityId(item?.entity);
+    const entityRef = item?.entity;
+    const entityId = this._primaryEntityId(entityRef);
     const st = entityId ? this._hass?.states?.[entityId] : null;
     const state = st?.state ?? "";
 
@@ -1269,7 +1270,7 @@ class SeagullRoomCard extends HTMLElement {
       const raw = hasOwn(item, key)
         ? item[key]
         : (hasOwn(buttonsCfg, key) ? buttonsCfg[key] : fallback);
-      return this._resolveDynamicValue(raw, entityId, state, fallback);
+      return this._resolveDynamicValue(raw, entityRef, state, fallback);
     };
 
     const showRaw = resolve("show", true);
