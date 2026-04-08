@@ -524,7 +524,6 @@ class SeagullRoomCard extends HTMLElement {
 
   _buildLightsHtmlAndItems() {
     const buttonsCfg = this._config.buttons || this._config.lights || {};
-    const debugEnabled = this._toBool(this._config?.debug, false);
     const themeBtn = this._theme?.button || {};
     const btnDef = SEAGULL_ROOM_THEME_DEFAULT.button;
     const cols = Math.max(1, parseInt(buttonsCfg.cols ?? buttonsCfg.columns ?? 3, 10) || 3);
@@ -746,31 +745,6 @@ class SeagullRoomCard extends HTMLElement {
     };
 
     const indexedItems = items.map((it, idx) => ({ ...it, __idx: idx }));
-
-    if (debugEnabled) {
-      try {
-        const dbg = indexedItems.map((it, idx) => {
-          const e = this._entityList(it?.entity);
-          const s = e.map((id) => this._hass?.states?.[id]?.state);
-          const a = e.map((id) => this._hass?.states?.[id]?.attributes || {});
-          const primary = e[0] || "";
-          const st = primary ? this._hass?.states?.[primary] : null;
-          return {
-            index: idx,
-            entity: it?.entity,
-            e,
-            s,
-            a,
-            state: st?.state ?? "",
-            view: this._buttonView(it, buttonsCfg),
-            show: this._resolveDynamicValue(it?.show ?? buttonsCfg?.show, it?.entity, st?.state ?? "", true),
-          };
-        });
-        console.debug("[seagull-room-card][debug] button vars", dbg);
-      } catch (err) {
-        console.debug("[seagull-room-card][debug] failed to collect button vars", err);
-      }
-    }
     const blocks = [];
     for (let i = 0; i < indexedItems.length; i += 1) {
       const it = indexedItems[i];
