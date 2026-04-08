@@ -643,7 +643,7 @@ class SeagullRoomCard extends HTMLElement {
       const isNumber = view.type === "number";
       const numberStyle = view.style || "three-lines";
       const gaugeCfg = view.type === "gauge" ? ((item?.view && typeof item.view === "object") ? item.view : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {})) : null;
-      const gaugeStyle = String(this._resolveDynamicValue(gaugeCfg?.style, item.entity, state, "")).toLowerCase();
+      const gaugeStyle = String(this._resolveDynamicValue(gaugeCfg?.style, item.entity, state, "donut")).toLowerCase();
       const gaugeEnabled = !!gaugeCfg && gaugeStyle === "donut";
 
       const toScaleMinMax = (scale) => {

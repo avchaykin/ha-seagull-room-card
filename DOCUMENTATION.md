@@ -198,7 +198,7 @@ view:
 ```
 
 Gauge options:
-- `style`: `donut`
+- `style`: `donut` (default)
 - `value` (default entity state)
 - `scale` number or `{min,max}`
 - `color`, `background`, `width`, `position`
