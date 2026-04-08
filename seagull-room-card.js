@@ -1435,6 +1435,32 @@ class SeagullRoomCard extends HTMLElement {
       const st = this._hass?.states?.[entityId];
       const statesFn = (eid) => this._hass?.states?.[eid]?.state;
       const stateAttrFn = (eid, attr) => this._hass?.states?.[eid]?.attributes?.[attr];
+      const timeRestFn = (eid, attrOrUnit, unitMaybe) => {
+        const id = String(eid || "").trim();
+        if (!id) return null;
+
+        const arg2 = attrOrUnit == null ? "" : String(attrOrUnit).trim();
+        const looksLikeUnit = ["day", "days", "hour", "hours", "min", "mins", "minute", "minutes", "sec", "secs", "second", "seconds"].includes(arg2.toLowerCase());
+        const attr = looksLikeUnit ? "" : arg2;
+        const unitRaw = looksLikeUnit ? arg2 : (unitMaybe == null ? "sec" : String(unitMaybe));
+        const unit = unitRaw.trim().toLowerCase();
+
+        const rawVal = attr
+          ? this._hass?.states?.[id]?.attributes?.[attr]
+          : this._hass?.states?.[id]?.state;
+        if (rawVal == null || rawVal === "") return null;
+
+        const targetMs = Date.parse(String(rawVal));
+        if (!Number.isFinite(targetMs)) return null;
+
+        const diffSec = (targetMs - Date.now()) / 1000;
+        const roundUp = (n) => (n >= 0 ? Math.ceil(n) : Math.floor(n));
+
+        if (unit.startsWith("day")) return roundUp(diffSec / 86400);
+        if (unit.startsWith("hour")) return roundUp(diffSec / 3600);
+        if (unit.startsWith("min")) return roundUp(diffSec / 60);
+        return roundUp(diffSec);
+      };
       const normalizeEntityList = () => {
         if (Array.isArray(varsCtx?.e)) return varsCtx.e.map((x) => String(x || "")).filter(Boolean);
         if (Array.isArray(varsCtx?.entity)) return varsCtx.entity.map((x) => String(x || "")).filter(Boolean);
@@ -1453,6 +1479,7 @@ class SeagullRoomCard extends HTMLElement {
           state,
           states: statesFn,
           state_attr: stateAttrFn,
+          time_rest: timeRestFn,
           all_states: this._hass?.states,
           attributes: st?.attributes || {},
           e: entityList,

@@ -343,6 +343,7 @@ Built-ins available in template context include:
 - `state`
 - `states(entity_id)` helper
 - `state_attr(entity_id, attr)` helper
+- `time_rest(entity_id, attr?, unit)` helper
 - `all_states`
 - `attributes`
 - `e` (entity array shortcut)
@@ -371,6 +372,18 @@ variables:
 
 text:
   value: "Living: {{ s[0] }} / Bedroom attr: {{ a[1]['unit_of_measurement'] }}"
+```
+
+`time_rest` examples:
+
+```yaml
+text:
+  value: "До старта: {{ time_rest('timer.wakeup', 'finishes_at', 'min') }} мин"
+```
+
+```yaml
+text:
+  value: "До события: {{ time_rest('sensor.next_event', '', 'hour') }} ч"
 ```
 
 Rules arrays with `state` / `state_template`:
