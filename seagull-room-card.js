@@ -693,7 +693,7 @@ class SeagullRoomCard extends HTMLElement {
       const numberFontFamily = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? (item.view.font_familly ?? item.view.font_family) : undefined)
         ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? (buttonsCfg.view.font_familly ?? buttonsCfg.view.font_family) : undefined), item.entity, state, "inherit");
       const numberFontWeight = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.font_weight : undefined)
-        ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? buttonsCfg.view.font_weight : undefined), item.entity, state, 600);
+        ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? buttonsCfg.view.font_weight : undefined), item.entity, state, 400);
       const valueFontSizeCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.value_font_size : undefined)
         ?? (buttonsCfg?.view && typeof buttonsCfg.view === "object" ? buttonsCfg.view.value_font_size : undefined), item.entity, state, null);
       const unitFontSizeCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.unit_font_size : undefined)

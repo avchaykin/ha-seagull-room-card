@@ -225,7 +225,7 @@ Number mode `three-lines`:
 - `unit_of_measurement`: `true | false | <string>`
 - `value_font_size`, `unit_font_size`
 - `font_familly` (or `font_family`) to override number-view font; default is HA/Lovelace standard (`inherit`)
-- `font_weight` to control number-view text weight (default: `600`)
+- `font_weight` to control number-view text weight (default: `400`)
 
 Example:
 
