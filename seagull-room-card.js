@@ -1502,14 +1502,15 @@ class SeagullRoomCard extends HTMLElement {
         let totalSec = parseDurationSec(attrs.duration);
         if ((!Number.isFinite(totalSec) || totalSec <= 0) && stateRaw === "idle") return 100;
 
-        const remFromAttr = parseDurationSec(attrs.remaining);
-        let remainingSec = Number.isFinite(remFromAttr) ? remFromAttr : NaN;
+        let remainingSec = NaN;
+        const finishMs = Date.parse(String(attrs.finishes_at || ""));
+        if (Number.isFinite(finishMs)) {
+          remainingSec = Math.max(0, (finishMs - Date.now()) / 1000);
+        }
 
         if (!Number.isFinite(remainingSec)) {
-          const finishMs = Date.parse(String(attrs.finishes_at || ""));
-          if (Number.isFinite(finishMs)) {
-            remainingSec = Math.max(0, (finishMs - Date.now()) / 1000);
-          }
+          const remFromAttr = parseDurationSec(attrs.remaining);
+          remainingSec = Number.isFinite(remFromAttr) ? remFromAttr : NaN;
         }
 
         if (!Number.isFinite(remainingSec)) {
@@ -1523,7 +1524,6 @@ class SeagullRoomCard extends HTMLElement {
         }
 
         if ((!Number.isFinite(totalSec) || totalSec <= 0) && Number.isFinite(remainingSec)) {
-          const finishMs = Date.parse(String(attrs.finishes_at || ""));
           if (Number.isFinite(finishMs)) {
             const nowSec = Date.now() / 1000;
             const elapsed = Math.max(0, nowSec - (finishMs / 1000 - remainingSec));
