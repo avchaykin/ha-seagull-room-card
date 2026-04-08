@@ -202,6 +202,9 @@ Gauge options:
 - `value` (default entity state)
 - `scale` number or `{min,max}`
 - `color`, `background`, `width`, `position`
+- `show_value`: show value text over gauge (number-like)
+- supports `entity` arrays with tap rotation
+- `icon` can be an array aligned with `entity` order
 
 ```yaml
 view:
@@ -223,6 +226,7 @@ Number mode `three-lines`:
 - `unit_of_measurement`: `true | false | <string>`
 - `value_font_size`, `unit_font_size`
 - `font_familly` (or `font_family`) to override number-view font; default is HA/Lovelace standard (`inherit`)
+- `font_weight` to control number-view text weight (default: `600`)
 
 Example:
 
