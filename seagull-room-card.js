@@ -761,13 +761,6 @@ class SeagullRoomCard extends HTMLElement {
 
     if (debugEnabledButtons) {
       try {
-        if (typeof window !== "undefined") {
-          window.__seagullRoomCardDebug = [];
-          window.__seagullRoomCardDebugMeta = {
-            itemsCount: indexedItems.length,
-            at: new Date().toISOString(),
-          };
-        }
         const dbg = indexedItems.map((it, idx) => {
           const e = this._entityList(it?.entity);
           const s = e.map((id) => this._hass?.states?.[id]?.state);
@@ -787,7 +780,6 @@ class SeagullRoomCard extends HTMLElement {
         });
         if (typeof window !== "undefined") window.__seagullRoomCardDebug = dbg;
         console.log("[seagull-room-card][debug] button vars", dbg);
-        console.log("[seagull-room-card][debug] button vars count", dbg.length);
       } catch (err) {
         console.warn("[seagull-room-card][debug] failed to collect button vars", err);
       }
