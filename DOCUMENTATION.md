@@ -141,8 +141,31 @@ Badge (`badge`) supports condition keys compatible with button visibility (`show
 - `size`
 
 Behavior:
-- without `icon`/`text`: small dot in top-right corner of button bounding box
-- with `icon` (or `text`): larger badge placed on button circumference (top-right)
+- without `icon`/`text`: small dot in top-right corner of button bounding box (inside the box)
+- with `icon` (or `text`): larger badge center placed on button circumference in top-right sector
+
+Example:
+
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      badge:
+        show: "{{ state == 'on' }}"
+        color: "#ef4444"
+```
+
+```yaml
+buttons:
+  items:
+    - entity: alarm_control_panel.home
+      badge:
+        state: "armed_away"
+        icon: mdi:shield-lock
+        color: "#22c55e"
+        icon_color: "#ffffff"
+        size: 16
+```
 
 If `entity` is an array:
 
