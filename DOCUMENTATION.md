@@ -131,6 +131,7 @@ Each item may include:
 - `empty` (render blank slot)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
+- `show`, `show_state`, `show_not_state`, `show_above`, `show_below`
 - `keep_spot`
 - `invert_state`
 - `obsolete`
@@ -215,6 +216,10 @@ buttons:
           value: goldenrod
         - value: dimgrey
 ```
+
+Visibility naming:
+- Preferred: `show_state`, `show_not_state`
+- Deprecated (still supported): `show_value`, `show_not_value`
 
 Mini buttons:
 

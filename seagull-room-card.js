@@ -1341,13 +1341,17 @@ class SeagullRoomCard extends HTMLElement {
 
     if (!entityId) return true;
 
-    if (hasOwn(item, "show_value") || hasOwn(buttonsCfg, "show_value")) {
-      const expected = resolve("show_value", undefined);
+    if (hasOwn(item, "show_state") || hasOwn(buttonsCfg, "show_state") || hasOwn(item, "show_value") || hasOwn(buttonsCfg, "show_value")) {
+      const expected = hasOwn(item, "show_state") || hasOwn(buttonsCfg, "show_state")
+        ? resolve("show_state", undefined)
+        : resolve("show_value", undefined);
       if (!this._matchesValueFilter(state, expected)) return false;
     }
 
-    if (hasOwn(item, "show_not_value") || hasOwn(buttonsCfg, "show_not_value")) {
-      const disallowed = resolve("show_not_value", undefined);
+    if (hasOwn(item, "show_not_state") || hasOwn(buttonsCfg, "show_not_state") || hasOwn(item, "show_not_value") || hasOwn(buttonsCfg, "show_not_value")) {
+      const disallowed = hasOwn(item, "show_not_state") || hasOwn(buttonsCfg, "show_not_state")
+        ? resolve("show_not_state", undefined)
+        : resolve("show_not_value", undefined);
       if (this._matchesValueFilter(state, disallowed)) return false;
     }
 
@@ -1399,13 +1403,16 @@ class SeagullRoomCard extends HTMLElement {
       if (!this._toBool(resolve("show", true), true)) return false;
     }
 
-    const expected = hasOwn("show_value") ? resolve("show_value", undefined)
+    const expected = hasOwn("show_state") ? resolve("show_state", undefined)
+      : (hasOwn("show_value") ? resolve("show_value", undefined)
       : (hasOwn("state") ? resolve("state", undefined)
-        : (hasOwn("state_value") ? resolve("state_value", undefined) : undefined));
+        : (hasOwn("state_value") ? resolve("state_value", undefined) : undefined)));
     if (expected !== undefined && !this._matchesValueFilter(state, expected)) return false;
 
-    const disallowed = hasOwn("show_not_value") ? resolve("show_not_value", undefined)
-      : (hasOwn("state_not_value") ? resolve("state_not_value", undefined) : undefined);
+    const disallowed = hasOwn("show_not_state") ? resolve("show_not_state", undefined)
+      : (hasOwn("show_not_value") ? resolve("show_not_value", undefined)
+      : (hasOwn("state_not_value") ? resolve("state_not_value", undefined) : undefined));
+    
     if (disallowed !== undefined && this._matchesValueFilter(state, disallowed)) return false;
 
     if (hasOwn("show_above")) {
@@ -1452,13 +1459,15 @@ class SeagullRoomCard extends HTMLElement {
     const hasOwn = (k) => Object.prototype.hasOwnProperty.call(cfg, k);
     const resolve = (k, fallback) => this._resolveDynamicValue(cfg[k], entityRef, state, fallback);
 
-    const expected = hasOwn("show_value") ? resolve("show_value", undefined)
+    const expected = hasOwn("show_state") ? resolve("show_state", undefined)
+      : (hasOwn("show_value") ? resolve("show_value", undefined)
       : (hasOwn("state") ? resolve("state", undefined)
-        : (hasOwn("state_value") ? resolve("state_value", undefined) : undefined));
+        : (hasOwn("state_value") ? resolve("state_value", undefined) : undefined)));
     if (expected !== undefined && !this._matchesValueFilter(state, expected)) return false;
 
-    const disallowed = hasOwn("show_not_value") ? resolve("show_not_value", undefined)
-      : (hasOwn("state_not_value") ? resolve("state_not_value", undefined) : undefined);
+    const disallowed = hasOwn("show_not_state") ? resolve("show_not_state", undefined)
+      : (hasOwn("show_not_value") ? resolve("show_not_value", undefined)
+      : (hasOwn("state_not_value") ? resolve("state_not_value", undefined) : undefined));
     if (disallowed !== undefined && this._matchesValueFilter(state, disallowed)) return false;
 
     return true;
@@ -2153,16 +2162,43 @@ class SeagullRoomCard extends HTMLElement {
 
 class SeagullRoomCardEditor extends HTMLElement {
   setConfig(_config) {
+    this._config = _config || {};
     this._render();
   }
 
+  _findDeprecatedVisibilityKeys(obj, path = "") {
+    const out = [];
+    if (!obj || typeof obj !== "object") return out;
+    if (Array.isArray(obj)) {
+      obj.forEach((v, i) => out.push(...this._findDeprecatedVisibilityKeys(v, `${path}[${i}]`)));
+      return out;
+    }
+    for (const [k, v] of Object.entries(obj)) {
+      const p = path ? `${path}.${k}` : k;
+      const parentIsView = path.endsWith(".view") || path === "view";
+      if ((k === "show_value" || k === "show_not_value") && !parentIsView) out.push(p);
+      out.push(...this._findDeprecatedVisibilityKeys(v, p));
+    }
+    return out;
+  }
+
   _render() {
+    const deprecated = this._findDeprecatedVisibilityKeys(this._config || {});
+    const warnHtml = deprecated.length
+      ? `<div style="margin-top:10px;background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.35;">
+          <div style="font-weight:700;">Deprecated config keys detected</div>
+          <div>Use <code>show_state</code>/<code>show_not_state</code> instead of <code>show_value</code>/<code>show_not_value</code>.</div>
+          <div style="margin-top:4px;opacity:.85;max-height:90px;overflow:auto;">${deprecated.map((p) => `<div>• <code>${p}</code></div>`).join("")}</div>
+        </div>`
+      : "";
+
     this.innerHTML = `
       <div style="padding:12px 0; opacity:.9; font-size:13px; line-height:1.4;">
         <div style="margin-top:12px;background:var(--card-background-color,#f3f4f6);border-radius:9999px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--divider-color,#d1d5db);">
           <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Seagull Room Card</div>
           <div style="background:#0ea5e9;color:#fff;border-radius:9999px;padding:2px 8px;font-size:12px;font-weight:700;line-height:1.6;">v${SEAGULL_ROOM_CARD_VERSION}</div>
         </div>
+        ${warnHtml}
       </div>
     `;
   }
