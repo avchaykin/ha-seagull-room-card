@@ -698,12 +698,17 @@ class SeagullRoomCard extends HTMLElement {
       let finalIconColor = iColor;
       let finalBgColor = visualBgColor;
       if (isPhantom) {
+        const lockDef = bDef.lock || {};
         const activeBgDefault = (domain === "automation")
           ? (autoDef?.active?.background ?? dDef?.active?.background ?? "#f59e0b")
-          : (dDef?.active?.background ?? "#f59e0b");
+          : (domain === "lock")
+            ? (lockDef?.active?.background ?? "#f63b3b")
+            : (dDef?.active?.background ?? "#f59e0b");
         const activeFgDefault = (domain === "automation")
           ? (autoDef?.active?.color ?? dDef?.active?.color ?? "#111827")
-          : (dDef?.active?.color ?? "#111827");
+          : (domain === "lock")
+            ? (lockDef?.active?.color ?? "#fffafa")
+            : (dDef?.active?.color ?? "#111827");
 
         const phantomBgRaw = this._resolveDynamicValue(phantomCfg?.background ?? phantomCfg?.bg, item.entity, state, null);
         const phantomColorRaw = this._resolveDynamicValue(phantomCfg?.color, item.entity, state, null);
@@ -712,8 +717,8 @@ class SeagullRoomCard extends HTMLElement {
         const activeBg = this._paletteColor(activeBgDefault);
         const activeFg = this._paletteColor(activeFgDefault);
 
-        finalBgColor = this._paletteColor(phantomBgRaw != null ? phantomBgRaw : this._toRgba(activeBg, 0.45));
-        finalIconColor = this._paletteColor(phantomColorRaw != null ? phantomColorRaw : this._toRgba(activeFg, 0.55));
+        finalBgColor = this._paletteColor(phantomBgRaw != null ? phantomBgRaw : this._toRgba(activeBg, 0.28));
+        finalIconColor = this._paletteColor(phantomColorRaw != null ? phantomColorRaw : this._toRgba(activeFg, 0.42));
         if (phantomIconRaw != null && phantomIconRaw !== "") finalIcon = phantomIconRaw;
       }
       const donutHtml = gaugeEnabled
