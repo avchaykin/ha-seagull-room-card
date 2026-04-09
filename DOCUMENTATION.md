@@ -285,6 +285,8 @@ view:
   length: 10
   color: "#111111"
   time_color: "#ef4444"
+  show_state: "on"
+  accent_color: "#22c55e"
 ```
 
 Watchface mode:
@@ -293,6 +295,8 @@ Watchface mode:
 - `length`: notch length toward center
 - active notch based on current minute is highlighted with `time_color`
 - other notches use `color`
+- optional `show_state`: marks periods in the last 60 minutes where entity was in that state
+- `accent_color`: color for such historical marks
 
 Number mode `three-lines`:
 

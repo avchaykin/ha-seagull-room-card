@@ -751,8 +751,12 @@ class SeagullRoomCard extends HTMLElement {
       const watchLength = Math.max(2, this._toPx(watchLengthRaw, Math.max(6, Math.round(btnSize * 0.22))));
       const watchColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.color, item.entity, state, "#111111"));
       const watchTimeColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.time_color, item.entity, state, "#ef4444"));
+      const watchAccentColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.accent_color, item.entity, state, "#22c55e"));
+      const watchShowState = this._resolveDynamicValue(viewCfg?.show_state, item.entity, state, "");
       const watchMinute = new Date().getMinutes();
       const watchIndex = Math.min(watchNotches - 1, Math.floor(watchMinute / (60 / watchNotches)));
+      this._ensureWatchfaceHistory(entityId, watchShowState, watchNotches);
+      const watchMarks = this._getWatchfaceMinuteMarks(entityId, watchShowState, watchNotches);
       const watchStroke = Math.max(0.9, Math.min(2.4, 2.5 - (watchNotches / 60) * 1.4));
       const watchLengthPct = Math.max(2, Math.min(40, (watchLength / Math.max(1, btnSize)) * 100));
       const rOuter = 46;
@@ -765,7 +769,9 @@ class SeagullRoomCard extends HTMLElement {
             const y1 = 50 + rInner * Math.sin(angle);
             const x2 = 50 + rOuter * Math.cos(angle);
             const y2 = 50 + rOuter * Math.sin(angle);
-            const c = i === watchIndex ? watchTimeColor : watchColor;
+            const c = i === watchIndex
+              ? watchTimeColor
+              : (watchMarks && watchMarks[i] ? watchAccentColor : watchColor);
             return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${this._esc(c)}" stroke-width="${watchStroke.toFixed(2)}" stroke-linecap="round" />`;
           }).join("")}
         </svg>
@@ -1477,6 +1483,76 @@ class SeagullRoomCard extends HTMLElement {
     const enabledRaw = Object.prototype.hasOwnProperty.call(cfg, "enabled") ? cfg.enabled : true;
     if (!this._toBool(this._resolveDynamicValue(enabledRaw, entityRef, state, true), true)) return null;
     return cfg;
+  }
+
+  _watchfaceCacheKey(entityId, showState) {
+    return `${entityId}::${String(showState)}`;
+  }
+
+  _getWatchfaceMinuteMarks(entityId, showState, notches) {
+    if (!entityId || showState == null || showState === "") return null;
+    const key = this._watchfaceCacheKey(entityId, showState);
+    const rec = this._watchfaceHistoryCache?.[key];
+    if (!rec || !Array.isArray(rec.marks)) return null;
+    return rec.marks.slice(0, Math.max(1, notches));
+  }
+
+  _ensureWatchfaceHistory(entityId, showState, notches) {
+    if (!entityId || showState == null || showState === "") return;
+    if (!this._watchfaceHistoryCache) this._watchfaceHistoryCache = {};
+
+    const key = this._watchfaceCacheKey(entityId, showState);
+    const now = Date.now();
+    const minuteBucket = Math.floor(now / 60000);
+    const cached = this._watchfaceHistoryCache[key];
+    if (cached && cached.bucket === minuteBucket) return;
+    if (cached && cached.loading) return;
+
+    this._watchfaceHistoryCache[key] = { ...(cached || {}), loading: true, bucket: minuteBucket };
+
+    const end = new Date(now);
+    const start = new Date(now - 60 * 60 * 1000);
+    const path = `history/period/${encodeURIComponent(start.toISOString())}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(end.toISOString())}`;
+
+    this._hass.callApi("GET", path)
+      .then((resp) => {
+        const rows = Array.isArray(resp) && Array.isArray(resp[0]) ? resp[0] : [];
+        const target = String(showState);
+        const stepMs = (60 * 60 * 1000) / Math.max(1, notches);
+        const marks = Array.from({ length: Math.max(1, notches) }, () => false);
+
+        if (!rows.length) {
+          this._watchfaceHistoryCache[key] = { marks, bucket: minuteBucket, loading: false };
+          this._render();
+          return;
+        }
+
+        const events = rows
+          .map((r) => ({
+            state: String(r?.state ?? ""),
+            ts: Date.parse(String(r?.last_changed || r?.last_updated || "")),
+          }))
+          .filter((e) => Number.isFinite(e.ts))
+          .sort((a, b) => a.ts - b.ts);
+
+        for (let i = 0; i < events.length; i += 1) {
+          const cur = events[i];
+          const segStart = Math.max(start.getTime(), cur.ts);
+          const segEnd = Math.min(end.getTime(), i + 1 < events.length ? events[i + 1].ts : end.getTime());
+          if (segEnd <= segStart) continue;
+          if (cur.state !== target) continue;
+
+          const from = Math.max(0, Math.floor((segStart - start.getTime()) / stepMs));
+          const to = Math.min(marks.length - 1, Math.floor((Math.max(segStart, segEnd - 1) - start.getTime()) / stepMs));
+          for (let j = from; j <= to; j += 1) marks[j] = true;
+        }
+
+        this._watchfaceHistoryCache[key] = { marks, bucket: minuteBucket, loading: false };
+        this._render();
+      })
+      .catch(() => {
+        this._watchfaceHistoryCache[key] = { marks: Array.from({ length: Math.max(1, notches) }, () => false), bucket: minuteBucket, loading: false };
+      });
   }
 
   _isPhantomVisible(cfg, entityRef, state, stObj) {
