@@ -751,7 +751,7 @@ class SeagullRoomCard extends HTMLElement {
 
         if (hasBadgeIcon || hasBadgeText) {
           const iconSize = Math.max(9, Math.round(badgeSize * 0.72));
-          badgeHtml = `<span aria-hidden="true" style="position:absolute;top:0;right:0;transform:translate(50%,-50%);width:${badgeSize}px;height:${badgeSize}px;border-radius:999px;background:${this._esc(badgeColor)};display:inline-flex;align-items:center;justify-content:center;pointer-events:none;z-index:3;">
+          badgeHtml = `<span aria-hidden="true" style="position:absolute;left:85.36%;top:14.64%;transform:translate(-50%,-50%);width:${badgeSize}px;height:${badgeSize}px;border-radius:999px;background:${this._esc(badgeColor)};display:inline-flex;align-items:center;justify-content:center;pointer-events:none;z-index:3;">
               ${hasBadgeIcon
       ? `<ha-icon icon="${this._esc(String(badgeIcon))}" style="color:${this._esc(badgeIconColor)};--mdc-icon-size:${iconSize}px;"></ha-icon>`
       : `<span style="color:${this._esc(badgeIconColor)};font-size:${Math.max(7, Math.round(badgeSize * 0.52))}px;line-height:1;font-weight:700;">${this._esc(String(badgeText))}</span>`}
