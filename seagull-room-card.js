@@ -711,10 +711,11 @@ class SeagullRoomCard extends HTMLElement {
         const activeFg = this._paletteColor(activeFgDefault);
 
         finalBgColor = this._paletteColor(phantomBgRaw != null ? phantomBgRaw : activeBg);
-        finalIconColor = this._paletteColor(phantomColorRaw != null ? phantomColorRaw : activeFg);
+        finalIconColor = this._paletteColor(phantomColorRaw != null ? phantomColorRaw : "rgba(148,163,184,0.55)");
         if (phantomIconRaw != null && phantomIconRaw !== "") finalIcon = phantomIconRaw;
         finalBorderStyle = "dashed";
         finalBorderColor = this._paletteColor("rgba(148,163,184,0.55)");
+        if (phantomColorRaw == null) finalIconColor = finalBorderColor;
       }
       const donutHtml = gaugeEnabled
         ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
