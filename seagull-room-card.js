@@ -753,7 +753,7 @@ class SeagullRoomCard extends HTMLElement {
       const watchTimeColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.time_color, item.entity, state, "#ef4444"));
       const watchMinute = new Date().getMinutes();
       const watchIndex = Math.min(watchNotches - 1, Math.floor(watchMinute / (60 / watchNotches)));
-      const watchStroke = Math.max(0.7, Math.min(2, 2.2 - (watchNotches / 60) * 1.6));
+      const watchStroke = Math.max(0.9, Math.min(2.4, 2.5 - (watchNotches / 60) * 1.4));
       const watchLengthPct = Math.max(2, Math.min(40, (watchLength / Math.max(1, btnSize)) * 100));
       const rOuter = 46;
       const rInner = Math.max(4, rOuter - (watchLengthPct * 0.42));
