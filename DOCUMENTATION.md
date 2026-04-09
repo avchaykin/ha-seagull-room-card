@@ -126,12 +126,23 @@ Each item may include:
 - `font_family`, `font_weight`, `font_size`
 - `mini` (render as mini button)
 - `view` (button presentation mode)
+- `badge` (top-right indicator)
 - `empty` (render blank slot)
 - `tap_action`, `double_tap_action`, `hold_action`
 - `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
 - `keep_spot`
 - `invert_state`
 - `obsolete`
+
+Badge (`badge`) supports condition keys compatible with button visibility (`show`, `show_value`/`state`, `show_not_value`, `show_above`, `show_below`) and display keys:
+- `color` / `background`
+- `icon`, `icon_color`
+- `text`
+- `size`
+
+Behavior:
+- without `icon`/`text`: small dot in top-right corner of button bounding box
+- with `icon` (or `text`): larger badge placed on button circumference (top-right)
 
 If `entity` is an array:
 

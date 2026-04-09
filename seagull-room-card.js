@@ -735,10 +735,37 @@ class SeagullRoomCard extends HTMLElement {
             </span>`
         : `<ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
 
+      const badgeRaw = item?.badge ?? buttonsCfg?.badge;
+      const badgeCfg = this._resolveDynamicValue(badgeRaw, item.entity, state, null);
+      const badgeVisible = this._isBadgeVisible(badgeCfg, item.entity, state);
+      let badgeHtml = "";
+      if (badgeVisible && badgeCfg && typeof badgeCfg === "object") {
+        const badgeIcon = this._resolveDynamicValue(badgeCfg.icon, item.entity, state, "");
+        const badgeText = this._resolveDynamicValue(badgeCfg.text, item.entity, state, "");
+        const hasBadgeIcon = !!String(badgeIcon || "").trim();
+        const hasBadgeText = !hasBadgeIcon && !!String(badgeText || "").trim();
+        const badgeColor = this._paletteColor(this._resolveDynamicValue(badgeCfg.color ?? badgeCfg.background, item.entity, state, "#ef4444"));
+        const badgeIconColor = this._paletteColor(this._resolveDynamicValue(badgeCfg.icon_color ?? badgeCfg.text_color, item.entity, state, "#ffffff"));
+        const defaultBadgeSize = hasBadgeIcon ? Math.max(12, Math.round(btnSize * 0.34)) : Math.max(8, Math.round(btnSize * 0.18));
+        const badgeSize = Math.max(6, this._toPx(this._resolveDynamicValue(badgeCfg.size, item.entity, state, defaultBadgeSize), defaultBadgeSize));
+
+        if (hasBadgeIcon || hasBadgeText) {
+          const iconSize = Math.max(8, Math.round(badgeSize * 0.62));
+          badgeHtml = `<span aria-hidden="true" style="position:absolute;top:0;right:0;transform:translate(28%,-28%);width:${badgeSize}px;height:${badgeSize}px;border-radius:999px;background:${this._esc(badgeColor)};display:inline-flex;align-items:center;justify-content:center;pointer-events:none;z-index:3;">
+              ${hasBadgeIcon
+      ? `<ha-icon icon="${this._esc(String(badgeIcon))}" style="color:${this._esc(badgeIconColor)};--mdc-icon-size:${iconSize}px;"></ha-icon>`
+      : `<span style="color:${this._esc(badgeIconColor)};font-size:${Math.max(7, Math.round(badgeSize * 0.52))}px;line-height:1;font-weight:700;">${this._esc(String(badgeText))}</span>`}
+            </span>`;
+        } else {
+          badgeHtml = `<span aria-hidden="true" style="position:absolute;top:3px;right:3px;width:${badgeSize}px;height:${badgeSize}px;border-radius:999px;background:${this._esc(badgeColor)};pointer-events:none;z-index:3;"></span>`;
+        }
+      }
+
       const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${visualBorderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(visualBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
             ${contentHtml}
+            ${badgeHtml}
           </span>
         </button>`;
       return { html, colSpan: safeColSpan };
@@ -1323,6 +1350,46 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     return String(state) === String(expected);
+  }
+
+  _isBadgeVisible(badgeCfg, entityRef, state) {
+    if (!badgeCfg || typeof badgeCfg !== "object") return false;
+
+    const entityId = this._primaryEntityId(entityRef);
+    const hasOwn = (k) => Object.prototype.hasOwnProperty.call(badgeCfg, k);
+    const resolve = (k, fallback) => this._resolveDynamicValue(badgeCfg[k], entityRef, state, fallback);
+
+    if (hasOwn("show")) {
+      if (!this._toBool(resolve("show", true), true)) return false;
+    }
+
+    const expected = hasOwn("show_value") ? resolve("show_value", undefined)
+      : (hasOwn("state") ? resolve("state", undefined)
+        : (hasOwn("state_value") ? resolve("state_value", undefined) : undefined));
+    if (expected !== undefined && !this._matchesValueFilter(state, expected)) return false;
+
+    const disallowed = hasOwn("show_not_value") ? resolve("show_not_value", undefined)
+      : (hasOwn("state_not_value") ? resolve("state_not_value", undefined) : undefined);
+    if (disallowed !== undefined && this._matchesValueFilter(state, disallowed)) return false;
+
+    if (hasOwn("show_above")) {
+      const nState = Number(state);
+      const nMin = Number(resolve("show_above", NaN));
+      if (!Number.isFinite(nState) || !Number.isFinite(nMin) || !(nState > nMin)) return false;
+    }
+
+    if (hasOwn("show_below")) {
+      const nState = Number(state);
+      const nMax = Number(resolve("show_below", NaN));
+      if (!Number.isFinite(nState) || !Number.isFinite(nMax) || !(nState < nMax)) return false;
+    }
+
+    if (!entityId) {
+      // badge with explicit show=true can still render for icon-only button
+      return !hasOwn("show") || this._toBool(resolve("show", true), true);
+    }
+
+    return true;
   }
 
   _toBool(value, fallback = false) {
