@@ -753,12 +753,21 @@ class SeagullRoomCard extends HTMLElement {
       const watchTimeColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.time_color, item.entity, state, "#ef4444"));
       const watchMinute = new Date().getMinutes();
       const watchIndex = Math.min(watchNotches - 1, Math.floor(watchMinute / (60 / watchNotches)));
-      const watchfaceHtml = `<span style="position:relative;z-index:1;display:block;width:100%;height:100%;">
-        ${Array.from({ length: watchNotches }, (_, i) => {
-          const angle = (i / watchNotches) * 360;
-          const c = i === watchIndex ? watchTimeColor : watchColor;
-          return `<span aria-hidden="true" style="position:absolute;left:50%;top:50%;width:2px;height:${watchLength}px;background:${this._esc(c)};transform-origin:center calc(50% + ${Math.round(btnSize * 0.5 - watchLength * 0.5)}px);transform:translate(-50%,-50%) rotate(${angle}deg);"></span>`;
-        }).join("")}
+      const watchLengthPct = Math.max(2, Math.min(40, (watchLength / Math.max(1, btnSize)) * 100));
+      const rOuter = 46;
+      const rInner = Math.max(4, rOuter - (watchLengthPct * 0.42));
+      const watchfaceHtml = `<span style="position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;">
+        <svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block;overflow:visible;">
+          ${Array.from({ length: watchNotches }, (_, i) => {
+            const angle = (i / watchNotches) * (Math.PI * 2) - Math.PI / 2;
+            const x1 = 50 + rInner * Math.cos(angle);
+            const y1 = 50 + rInner * Math.sin(angle);
+            const x2 = 50 + rOuter * Math.cos(angle);
+            const y2 = 50 + rOuter * Math.sin(angle);
+            const c = i === watchIndex ? watchTimeColor : watchColor;
+            return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${this._esc(c)}" stroke-width="2" stroke-linecap="round" />`;
+          }).join("")}
+        </svg>
       </span>`;
       const contentHtml = isNumber
         ? (numberStyle === "big"
