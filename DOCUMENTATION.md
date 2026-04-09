@@ -166,7 +166,7 @@ Shows a temporary ghost version of a button when normal button visibility has ju
 - style: `color`, `background`, `icon`
 
 Defaults when style fields are omitted:
-- based on active button style, but semi-transparent
+- gray semi-transparent ghost style with dashed border
 
 Priority rule:
 - full/normal button visibility always wins over phantom (if both conditions match)

@@ -693,17 +693,15 @@ class SeagullRoomCard extends HTMLElement {
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
       const visualBorderW = gaugeEnabled ? 0 : borderW;
       const visualBgColor = (gaugeEnabled || (isNumber && numberStyle === "big")) ? "transparent" : bgColor;
+      let finalBorderStyle = "solid";
+      let finalBorderColor = borderColor;
 
       let finalIcon = icon;
       let finalIconColor = iColor;
       let finalBgColor = visualBgColor;
       if (isPhantom) {
-        const activeBgDefault = (domain === "automation")
-          ? (autoDef?.active?.background ?? dDef?.active?.background ?? "#f59e0b")
-          : (dDef?.active?.background ?? "#f59e0b");
-        const activeFgDefault = (domain === "automation")
-          ? (autoDef?.active?.color ?? dDef?.active?.color ?? "#111827")
-          : (dDef?.active?.color ?? "#111827");
+        const activeBgDefault = "rgba(148,163,184,0.22)";
+        const activeFgDefault = "rgba(226,232,240,0.65)";
 
         const phantomBgRaw = this._resolveDynamicValue(phantomCfg?.background ?? phantomCfg?.bg, item.entity, state, null);
         const phantomColorRaw = this._resolveDynamicValue(phantomCfg?.color, item.entity, state, null);
@@ -712,9 +710,11 @@ class SeagullRoomCard extends HTMLElement {
         const activeBg = this._paletteColor(activeBgDefault);
         const activeFg = this._paletteColor(activeFgDefault);
 
-        finalBgColor = this._paletteColor(phantomBgRaw != null ? phantomBgRaw : this._toRgba(activeBg, 0.45));
-        finalIconColor = this._paletteColor(phantomColorRaw != null ? phantomColorRaw : this._toRgba(activeFg, 0.55));
+        finalBgColor = this._paletteColor(phantomBgRaw != null ? phantomBgRaw : activeBg);
+        finalIconColor = this._paletteColor(phantomColorRaw != null ? phantomColorRaw : activeFg);
         if (phantomIconRaw != null && phantomIconRaw !== "") finalIcon = phantomIconRaw;
+        finalBorderStyle = "dashed";
+        finalBorderColor = this._paletteColor("rgba(148,163,184,0.55)");
       }
       const donutHtml = gaugeEnabled
         ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
@@ -792,7 +792,7 @@ class SeagullRoomCard extends HTMLElement {
         }
       }
 
-      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${visualBorderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
+      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${Math.max(visualBorderW, isPhantom ? 1 : 0)}px ${finalBorderStyle} ${this._esc(finalBorderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
             ${contentHtml}
