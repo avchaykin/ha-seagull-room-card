@@ -86,6 +86,7 @@ Behavior defaults:
 - `use_light_color` / `light_color`
 - `invert_state`
 - `obsolete`
+- `phantom`
 
 Visibility defaults:
 
@@ -153,6 +154,31 @@ buttons:
       badge:
         show: "{{ state == 'on' }}"
         color: "#ef4444"
+```
+
+Phantom button (`phantom`):
+
+Shows a temporary ghost version of a button when normal button visibility has just turned off.
+
+- `enabled` (default: `true` when `phantom` is set)
+- `duration` (seconds)
+- conditions: `state` / `state_value`, `state_not_value` (also supports `show_value` / `show_not_value`)
+- style: `color`, `background`, `icon`
+
+Defaults when style fields are omitted:
+- based on active button style, but semi-transparent
+
+Priority rule:
+- full/normal button visibility always wins over phantom (if both conditions match)
+
+```yaml
+buttons:
+  items:
+    - entity: binary_sensor.front_door
+      show: "{{ state == 'on' }}"
+      phantom:
+        duration: 120
+        state: "off"
 ```
 
 ```yaml

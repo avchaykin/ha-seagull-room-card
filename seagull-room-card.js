@@ -549,6 +549,12 @@ class SeagullRoomCard extends HTMLElement {
         const isVisible = this._toBool(it?.empty, false) || this._isButtonItemVisible(it, buttonsCfg);
 
         if (hasEntityState && isVisible) return it;
+
+        const phantomCfg = this._resolvePhantomConfig(it, buttonsCfg, it?.entity, state);
+        if (hasEntityState && !isVisible && phantomCfg && this._isPhantomVisible(phantomCfg, it?.entity, state, st)) {
+          return { ...it, __phantom: true, __phantomCfg: phantomCfg };
+        }
+
         if (!keepSpot) return null;
 
         return { ...it, empty: true };
@@ -579,6 +585,8 @@ class SeagullRoomCard extends HTMLElement {
       const obsoleteCfg = this._resolveObsoleteConfig(item.obsolete ?? buttonsCfg.obsolete);
       const isObsolete = this._isEntityObsolete(st, obsoleteCfg?.hours);
       const isUnavailable = state === "unavailable";
+      const isPhantom = this._toBool(item?.__phantom, false);
+      const phantomCfg = item?.__phantomCfg || null;
       const themeStyle = this._resolveThemeButtonStyle(item, buttonsCfg, st, state, isObsolete);
 
       const baseIconTpl = isObsolete
@@ -685,6 +693,29 @@ class SeagullRoomCard extends HTMLElement {
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
       const visualBorderW = gaugeEnabled ? 0 : borderW;
       const visualBgColor = (gaugeEnabled || (isNumber && numberStyle === "big")) ? "transparent" : bgColor;
+
+      let finalIcon = icon;
+      let finalIconColor = iColor;
+      let finalBgColor = visualBgColor;
+      if (isPhantom) {
+        const activeBgDefault = (domain === "automation")
+          ? (autoDef?.active?.background ?? dDef?.active?.background ?? "#f59e0b")
+          : (dDef?.active?.background ?? "#f59e0b");
+        const activeFgDefault = (domain === "automation")
+          ? (autoDef?.active?.color ?? dDef?.active?.color ?? "#111827")
+          : (dDef?.active?.color ?? "#111827");
+
+        const phantomBgRaw = this._resolveDynamicValue(phantomCfg?.background ?? phantomCfg?.bg, item.entity, state, null);
+        const phantomColorRaw = this._resolveDynamicValue(phantomCfg?.color, item.entity, state, null);
+        const phantomIconRaw = this._resolveDynamicValue(phantomCfg?.icon, item.entity, state, null);
+
+        const activeBg = this._paletteColor(activeBgDefault);
+        const activeFg = this._paletteColor(activeFgDefault);
+
+        finalBgColor = this._paletteColor(phantomBgRaw != null ? phantomBgRaw : this._toRgba(activeBg, 0.45));
+        finalIconColor = this._paletteColor(phantomColorRaw != null ? phantomColorRaw : this._toRgba(activeFg, 0.55));
+        if (phantomIconRaw != null && phantomIconRaw !== "") finalIcon = phantomIconRaw;
+      }
       const donutHtml = gaugeEnabled
         ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
         : "";
@@ -733,7 +764,7 @@ class SeagullRoomCard extends HTMLElement {
                 ${gaugeSuffix ? `<span style="margin-left:0px;margin-top:0.12em;font-size:${unitFontPxBig}px;opacity:.95;line-height:1;">${this._esc(gaugeSuffix)}</span>` : ""}
               </span>
             </span>`
-        : `<ha-icon icon="${this._esc(icon)}" style="position:relative;z-index:1;color:${this._esc(iColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
+        : `<ha-icon icon="${this._esc(finalIcon)}" style="position:relative;z-index:1;color:${this._esc(finalIconColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
 
       const badgeRaw = item?.badge ?? buttonsCfg?.badge;
       const badgeCfg = this._resolveDynamicValue(badgeRaw, item.entity, state, null);
@@ -761,7 +792,7 @@ class SeagullRoomCard extends HTMLElement {
         }
       }
 
-      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${visualBorderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(visualBgColor)};${unavailablePattern}padding:0;direction:ltr;">
+      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${visualBorderW}px solid ${this._esc(borderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
             ${contentHtml}
@@ -911,6 +942,7 @@ class SeagullRoomCard extends HTMLElement {
       const index = Number(btn.getAttribute("data-index"));
       const item = this._renderedLightItems?.[index];
       if (!item) return;
+      const isPhantom = this._toBool(item?.__phantom, false);
 
       btn.style.transition = "filter 120ms ease";
       btn.addEventListener("mouseenter", () => {
@@ -921,6 +953,7 @@ class SeagullRoomCard extends HTMLElement {
       });
 
       btn.addEventListener("pointerdown", () => {
+        if (isPhantom) return;
         holdFired = false;
         clearTimeout(holdTimer);
         holdTimer = setTimeout(() => {
@@ -938,6 +971,7 @@ class SeagullRoomCard extends HTMLElement {
 
       btn.addEventListener("click", (ev) => {
         ev.preventDefault();
+        if (isPhantom) return;
         if (holdFired) return;
 
         this._showButtonPressRing(btn);
@@ -950,6 +984,7 @@ class SeagullRoomCard extends HTMLElement {
 
       btn.addEventListener("dblclick", (ev) => {
         ev.preventDefault();
+        if (isPhantom) return;
         this._showButtonPressRing(btn);
         clearTimeout(clickTimer);
         clearTimeout(holdTimer);
@@ -1388,6 +1423,42 @@ class SeagullRoomCard extends HTMLElement {
       // badge with explicit show=true can still render for icon-only button
       return !hasOwn("show") || this._toBool(resolve("show", true), true);
     }
+
+    return true;
+  }
+
+  _resolvePhantomConfig(item, buttonsCfg, entityRef, state) {
+    const raw = (item && Object.prototype.hasOwnProperty.call(item, "phantom")) ? item.phantom : buttonsCfg?.phantom;
+    const cfg = this._resolveDynamicValue(raw, entityRef, state, null);
+    if (!cfg || typeof cfg !== "object") return null;
+    const enabledRaw = Object.prototype.hasOwnProperty.call(cfg, "enabled") ? cfg.enabled : true;
+    if (!this._toBool(this._resolveDynamicValue(enabledRaw, entityRef, state, true), true)) return null;
+    return cfg;
+  }
+
+  _isPhantomVisible(cfg, entityRef, state, stObj) {
+    if (!cfg || !stObj) return false;
+
+    const durationRaw = this._resolveDynamicValue(cfg.duration, entityRef, state, 0);
+    const durationSec = Math.max(0, Number(durationRaw) || 0);
+    if (durationSec <= 0) return false;
+
+    const changedMs = Date.parse(String(stObj.last_changed || ""));
+    if (!Number.isFinite(changedMs)) return false;
+    const ageSec = (Date.now() - changedMs) / 1000;
+    if (!(ageSec >= 0 && ageSec <= durationSec)) return false;
+
+    const hasOwn = (k) => Object.prototype.hasOwnProperty.call(cfg, k);
+    const resolve = (k, fallback) => this._resolveDynamicValue(cfg[k], entityRef, state, fallback);
+
+    const expected = hasOwn("show_value") ? resolve("show_value", undefined)
+      : (hasOwn("state") ? resolve("state", undefined)
+        : (hasOwn("state_value") ? resolve("state_value", undefined) : undefined));
+    if (expected !== undefined && !this._matchesValueFilter(state, expected)) return false;
+
+    const disallowed = hasOwn("show_not_value") ? resolve("show_not_value", undefined)
+      : (hasOwn("state_not_value") ? resolve("state_not_value", undefined) : undefined);
+    if (disallowed !== undefined && this._matchesValueFilter(state, disallowed)) return false;
 
     return true;
   }
