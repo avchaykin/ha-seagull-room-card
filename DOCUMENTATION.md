@@ -278,6 +278,22 @@ view:
 
 Default style for `view.type: number` is `big`.
 
+```yaml
+view:
+  type: watchface
+  notches: 12
+  length: 10
+  color: "#111111"
+  time_color: "#ef4444"
+```
+
+Watchface mode:
+- draws notch marks in a circle
+- `notches`: number of marks (1..60)
+- `length`: notch length toward center
+- active notch based on current minute is highlighted with `time_color`
+- other notches use `color`
+
 Number mode `three-lines`:
 
 - layout: top value + bottom icon

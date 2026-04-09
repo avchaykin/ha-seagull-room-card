@@ -659,7 +659,11 @@ class SeagullRoomCard extends HTMLElement {
       const gridSpanStyle = mini ? "" : `grid-column:span ${safeColSpan};`;
       const view = this._buttonView(item, buttonsCfg);
       const isNumber = view.type === "number";
+      const isWatchface = view.type === "watchface";
       const numberStyle = view.style || "big";
+      const viewCfg = (item?.view && typeof item.view === "object")
+        ? item.view
+        : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {});
       const gaugeCfg = view.type === "gauge" ? ((item?.view && typeof item.view === "object") ? item.view : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {})) : null;
       const gaugeStyle = String(this._resolveDynamicValue(gaugeCfg?.style, item.entity, state, "donut")).toLowerCase();
       const gaugeEnabled = !!gaugeCfg && gaugeStyle === "donut";
@@ -741,6 +745,21 @@ class SeagullRoomCard extends HTMLElement {
       const gaugeShowValue = this._toBool(this._resolveDynamicValue(gaugeCfg?.show_value, item.entity, state, false), false);
       const gaugeSuffix = hasGaugeValueOverride ? this._climatSuffix(st, gaugeValueRaw, unitCfg) : climatSuffix;
       const gaugeValue = this._formatClimatValue(st, hasGaugeValueOverride ? gaugeValueRaw : state, gaugeSuffix);
+      const watchNotchesRaw = this._resolveDynamicValue(viewCfg?.notches, item.entity, state, 12);
+      const watchNotches = Math.max(1, Math.min(60, parseInt(watchNotchesRaw, 10) || 12));
+      const watchLengthRaw = this._resolveDynamicValue(viewCfg?.length, item.entity, state, Math.max(6, Math.round(btnSize * 0.22)));
+      const watchLength = Math.max(2, this._toPx(watchLengthRaw, Math.max(6, Math.round(btnSize * 0.22))));
+      const watchColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.color, item.entity, state, "#111111"));
+      const watchTimeColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.time_color, item.entity, state, "#ef4444"));
+      const watchMinute = new Date().getMinutes();
+      const watchIndex = Math.min(watchNotches - 1, Math.floor(watchMinute / (60 / watchNotches)));
+      const watchfaceHtml = `<span style="position:relative;z-index:1;display:block;width:100%;height:100%;">
+        ${Array.from({ length: watchNotches }, (_, i) => {
+          const angle = (i / watchNotches) * 360;
+          const c = i === watchIndex ? watchTimeColor : watchColor;
+          return `<span aria-hidden="true" style="position:absolute;left:50%;top:50%;width:2px;height:${watchLength}px;background:${this._esc(c)};transform-origin:center calc(50% + ${Math.round(btnSize * 0.5 - watchLength * 0.5)}px);transform:translate(-50%,-50%) rotate(${angle}deg);"></span>`;
+        }).join("")}
+      </span>`;
       const contentHtml = isNumber
         ? (numberStyle === "big"
           ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:${this._esc(String(numberFontFamily))};">
@@ -765,6 +784,8 @@ class SeagullRoomCard extends HTMLElement {
                 ${gaugeSuffix ? `<span style="margin-left:0px;margin-top:0.12em;font-size:${unitFontPxBig}px;opacity:.95;line-height:1;">${this._esc(gaugeSuffix)}</span>` : ""}
               </span>
             </span>`
+        : isWatchface
+          ? watchfaceHtml
         : `<ha-icon icon="${this._esc(finalIcon)}" style="position:relative;z-index:1;color:${this._esc(finalIconColor)};--mdc-icon-size:${Math.round(btnSize * 0.5)}px;"></ha-icon>`;
 
       const badgeRaw = item?.badge ?? buttonsCfg?.badge;
