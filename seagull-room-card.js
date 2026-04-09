@@ -1341,6 +1341,8 @@ class SeagullRoomCard extends HTMLElement {
 
     if (!entityId) return true;
 
+    // DEPRECATED COMPAT: show_value/show_not_value are legacy aliases.
+    // TODO(next major): remove show_value/show_not_value fallback and keep only show_state/show_not_state.
     if (hasOwn(item, "show_state") || hasOwn(buttonsCfg, "show_state") || hasOwn(item, "show_value") || hasOwn(buttonsCfg, "show_value")) {
       const expected = hasOwn(item, "show_state") || hasOwn(buttonsCfg, "show_state")
         ? resolve("show_state", undefined)
@@ -1403,6 +1405,8 @@ class SeagullRoomCard extends HTMLElement {
       if (!this._toBool(resolve("show", true), true)) return false;
     }
 
+    // DEPRECATED COMPAT: show_value/show_not_value are legacy aliases.
+    // TODO(next major): remove show_value/show_not_value fallback and keep only show_state/show_not_state.
     const expected = hasOwn("show_state") ? resolve("show_state", undefined)
       : (hasOwn("show_value") ? resolve("show_value", undefined)
       : (hasOwn("state") ? resolve("state", undefined)
@@ -1459,6 +1463,8 @@ class SeagullRoomCard extends HTMLElement {
     const hasOwn = (k) => Object.prototype.hasOwnProperty.call(cfg, k);
     const resolve = (k, fallback) => this._resolveDynamicValue(cfg[k], entityRef, state, fallback);
 
+    // DEPRECATED COMPAT: show_value/show_not_value are legacy aliases.
+    // TODO(next major): remove show_value/show_not_value fallback and keep only show_state/show_not_state.
     const expected = hasOwn("show_state") ? resolve("show_state", undefined)
       : (hasOwn("show_value") ? resolve("show_value", undefined)
       : (hasOwn("state") ? resolve("state", undefined)
