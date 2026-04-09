@@ -746,7 +746,7 @@ class SeagullRoomCard extends HTMLElement {
         const hasBadgeText = !hasBadgeIcon && !!String(badgeText || "").trim();
         const badgeColor = this._paletteColor(this._resolveDynamicValue(badgeCfg.color ?? badgeCfg.background, item.entity, state, "#ef4444"));
         const badgeIconColor = this._paletteColor(this._resolveDynamicValue(badgeCfg.icon_color ?? badgeCfg.text_color, item.entity, state, "#ffffff"));
-        const defaultBadgeSize = hasBadgeIcon ? Math.max(12, Math.round(btnSize * 0.34)) : Math.max(6, Math.round(btnSize * 0.13));
+        const defaultBadgeSize = hasBadgeIcon ? Math.max(12, Math.round(btnSize * 0.34)) : Math.max(4, Math.round(btnSize * 0.1));
         const badgeSize = Math.max(6, this._toPx(this._resolveDynamicValue(badgeCfg.size, item.entity, state, defaultBadgeSize), defaultBadgeSize));
 
         if (hasBadgeIcon || hasBadgeText) {
@@ -757,7 +757,7 @@ class SeagullRoomCard extends HTMLElement {
       : `<span style="color:${this._esc(badgeIconColor)};font-size:${Math.max(7, Math.round(badgeSize * 0.52))}px;line-height:1;font-weight:700;">${this._esc(String(badgeText))}</span>`}
             </span>`;
         } else {
-          badgeHtml = `<span aria-hidden="true" style="position:absolute;top:2px;right:2px;width:${badgeSize}px;height:${badgeSize}px;border-radius:999px;background:${this._esc(badgeColor)};pointer-events:none;z-index:3;"></span>`;
+          badgeHtml = `<span aria-hidden="true" style="position:absolute;top:0;right:0;width:${badgeSize}px;height:${badgeSize}px;border-radius:999px;background:${this._esc(badgeColor)};pointer-events:none;z-index:3;"></span>`;
         }
       }
 
