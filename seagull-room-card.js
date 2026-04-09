@@ -753,6 +753,7 @@ class SeagullRoomCard extends HTMLElement {
       const watchTimeColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.time_color, item.entity, state, "#ef4444"));
       const watchMinute = new Date().getMinutes();
       const watchIndex = Math.min(watchNotches - 1, Math.floor(watchMinute / (60 / watchNotches)));
+      const watchStroke = Math.max(0.7, Math.min(2, 2.2 - (watchNotches / 60) * 1.6));
       const watchLengthPct = Math.max(2, Math.min(40, (watchLength / Math.max(1, btnSize)) * 100));
       const rOuter = 46;
       const rInner = Math.max(4, rOuter - (watchLengthPct * 0.42));
@@ -765,7 +766,7 @@ class SeagullRoomCard extends HTMLElement {
             const x2 = 50 + rOuter * Math.cos(angle);
             const y2 = 50 + rOuter * Math.sin(angle);
             const c = i === watchIndex ? watchTimeColor : watchColor;
-            return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${this._esc(c)}" stroke-width="2" stroke-linecap="round" />`;
+            return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${this._esc(c)}" stroke-width="${watchStroke.toFixed(2)}" stroke-linecap="round" />`;
           }).join("")}
         </svg>
       </span>`;
