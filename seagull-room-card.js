@@ -749,6 +749,8 @@ class SeagullRoomCard extends HTMLElement {
       const watchNotches = Math.max(1, Math.min(60, parseInt(watchNotchesRaw, 10) || 12));
       const watchLengthRaw = this._resolveDynamicValue(viewCfg?.length, item.entity, state, Math.max(6, Math.round(btnSize * 0.22)));
       const watchLength = Math.max(2, this._toPx(watchLengthRaw, Math.max(6, Math.round(btnSize * 0.22))));
+      const watchTimeLengthRaw = this._resolveDynamicValue(viewCfg?.time_length, item.entity, state, Math.round(watchLength * 1.25));
+      const watchTimeLength = Math.max(2, this._toPx(watchTimeLengthRaw, Math.round(watchLength * 1.25)));
       const watchColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.color, item.entity, state, "#111111"));
       const watchTimeColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.time_color, item.entity, state, "#ef4444"));
       const watchAccentColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.accent_color, item.entity, state, "#22c55e"));
@@ -759,17 +761,21 @@ class SeagullRoomCard extends HTMLElement {
       const watchMarks = this._getWatchfaceMinuteMarks(entityId, watchShowState, watchNotches);
       const watchStroke = Math.max(0.9, Math.min(2.4, 2.5 - (watchNotches / 60) * 1.4));
       const watchLengthPct = Math.max(2, Math.min(40, (watchLength / Math.max(1, btnSize)) * 100));
+      const watchTimeLengthPct = Math.max(2, Math.min(45, (watchTimeLength / Math.max(1, btnSize)) * 100));
       const rOuter = 46;
       const rInner = Math.max(4, rOuter - (watchLengthPct * 0.42));
+      const rInnerTime = Math.max(3, rOuter - (watchTimeLengthPct * 0.42));
       const watchfaceHtml = `<span style="position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;">
         <svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block;overflow:visible;">
           ${Array.from({ length: watchNotches }, (_, i) => {
             const angle = (i / watchNotches) * (Math.PI * 2) - Math.PI / 2;
-            const x1 = 50 + rInner * Math.cos(angle);
-            const y1 = 50 + rInner * Math.sin(angle);
+            const isTime = i === watchIndex;
+            const rIn = isTime ? rInnerTime : rInner;
+            const x1 = 50 + rIn * Math.cos(angle);
+            const y1 = 50 + rIn * Math.sin(angle);
             const x2 = 50 + rOuter * Math.cos(angle);
             const y2 = 50 + rOuter * Math.sin(angle);
-            const c = i === watchIndex
+            const c = isTime
               ? watchTimeColor
               : (watchMarks && watchMarks[i] ? watchAccentColor : watchColor);
             return `<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y2.toFixed(2)}" stroke="${this._esc(c)}" stroke-width="${watchStroke.toFixed(2)}" stroke-linecap="round" />`;
