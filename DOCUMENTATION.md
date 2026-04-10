@@ -294,7 +294,7 @@ Watchface mode:
 - draws notch marks in a circle
 - `notches`: number of marks (1..60)
 - `length`: notch length toward center
-- `time_length`: current-time notch length (default: longer than `length`)
+- `time_length`: current-time notch length (default: `2 * length`)
 - active notch based on current minute is highlighted with `time_color`
 - other notches use `color`
 - optional `show_state`: marks periods in the last 60 minutes where entity was in that state

@@ -749,7 +749,7 @@ class SeagullRoomCard extends HTMLElement {
       const watchNotches = Math.max(1, Math.min(60, parseInt(watchNotchesRaw, 10) || 12));
       const watchLengthRaw = this._resolveDynamicValue(viewCfg?.length, item.entity, state, Math.max(6, Math.round(btnSize * 0.22)));
       const watchLength = Math.max(2, this._toPx(watchLengthRaw, Math.max(6, Math.round(btnSize * 0.22))));
-      const watchTimeLengthRaw = this._resolveDynamicValue(viewCfg?.time_length, item.entity, state, Math.round(watchLength * 1.25));
+      const watchTimeLengthRaw = this._resolveDynamicValue(viewCfg?.time_length, item.entity, state, Math.round(watchLength * 2));
       const watchTimeLength = Math.max(2, this._toPx(watchTimeLengthRaw, Math.round(watchLength * 1.25)));
       const watchColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.color, item.entity, state, "#111111"));
       const watchTimeColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.time_color, item.entity, state, "#ef4444"));
