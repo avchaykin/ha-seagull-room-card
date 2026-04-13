@@ -1022,6 +1022,7 @@ class SeagullRoomCard extends HTMLElement {
       let brightnessLastPct = null;
       let brightnessLastSentAt = 0;
       let prevTouchAction = "";
+      let touchLockActive = false;
       let lastTouchTapAt = 0;
       let suppressClickUntil = 0;
 
@@ -1080,10 +1081,16 @@ class SeagullRoomCard extends HTMLElement {
         this._setLightBrightnessPct(entityId, nextPct);
       };
 
+      const preventTouchScroll = (ev) => {
+        if (!touchLockActive) return;
+        ev.preventDefault?.();
+      };
+
       const clearHold = () => {
         clearTimeout(holdTimer);
-        if (brightnessDragActive) {
+        if (touchLockActive) {
           btn.style.touchAction = prevTouchAction;
+          touchLockActive = false;
         }
         hideBrightnessOverlay();
         brightnessDragActive = false;
@@ -1091,6 +1098,7 @@ class SeagullRoomCard extends HTMLElement {
         window.removeEventListener("pointermove", handleBrightnessMove, true);
         window.removeEventListener("pointerup", clearHold, true);
         window.removeEventListener("pointercancel", clearHold, true);
+        window.removeEventListener("touchmove", preventTouchScroll, true);
       };
 
       btn.style.transition = "filter 120ms ease";
@@ -1103,6 +1111,12 @@ class SeagullRoomCard extends HTMLElement {
 
       btn.addEventListener("pointerdown", (ev) => {
         if (isPhantom) return;
+        if (isBrightnessHoldCfg && ev.pointerType === "touch") {
+          prevTouchAction = btn.style.touchAction || "";
+          btn.style.touchAction = "none";
+          touchLockActive = true;
+          window.addEventListener("touchmove", preventTouchScroll, { capture: true, passive: false });
+        }
         holdFired = false;
         brightnessDragActive = false;
         brightnessDragPointerId = null;
@@ -1121,8 +1135,11 @@ class SeagullRoomCard extends HTMLElement {
             brightnessStartPct = lightState === "off" ? 1 : this._getLightBrightnessPct(entityId);
             brightnessLastPct = brightnessStartPct;
             brightnessLastSentAt = 0;
-            prevTouchAction = btn.style.touchAction || "";
-            btn.style.touchAction = "none";
+            if (!touchLockActive) {
+              prevTouchAction = btn.style.touchAction || "";
+              btn.style.touchAction = "none";
+              touchLockActive = true;
+            }
             try { btn.setPointerCapture?.(ev.pointerId); } catch (_) {}
             ev.preventDefault?.();
             ev.stopPropagation?.();
