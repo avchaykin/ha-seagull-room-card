@@ -1004,6 +1004,12 @@ class SeagullRoomCard extends HTMLElement {
       let clickTimer = null;
       let holdTimer = null;
       let holdFired = false;
+      let brightnessDragActive = false;
+      let brightnessDragPointerId = null;
+      let brightnessStartY = 0;
+      let brightnessStartPct = 50;
+      let brightnessLastPct = null;
+      let brightnessLastSentAt = 0;
 
       const index = Number(btn.getAttribute("data-index"));
       const item = this._renderedLightItems?.[index];
@@ -1018,22 +1024,60 @@ class SeagullRoomCard extends HTMLElement {
         btn.style.filter = "brightness(1)";
       });
 
-      btn.addEventListener("pointerdown", () => {
+      btn.addEventListener("pointerdown", (ev) => {
         if (isPhantom) return;
         holdFired = false;
+        brightnessDragActive = false;
+        brightnessDragPointerId = null;
         clearTimeout(holdTimer);
         holdTimer = setTimeout(() => {
           holdFired = true;
-          this._runAction(item, "hold_action", index);
+          const holdAct = this._resolveAction(item, "hold_action");
+          const holdType = String(holdAct?.action || "").toLowerCase();
+          const entityId = this._primaryEntityId(item?.entity);
+          const isBrightnessHold = holdType === "brightness" && String(entityId || "").startsWith("light.");
+          if (isBrightnessHold) {
+            brightnessDragActive = true;
+            brightnessDragPointerId = ev.pointerId;
+            brightnessStartY = ev.clientY;
+            brightnessStartPct = this._getLightBrightnessPct(entityId);
+            brightnessLastPct = brightnessStartPct;
+            brightnessLastSentAt = 0;
+            try { btn.setPointerCapture?.(ev.pointerId); } catch (_) {}
+            this._setLightBrightnessPct(entityId, brightnessStartPct);
+          } else {
+            this._runAction(item, "hold_action", index);
+          }
         }, 420);
+      });
+
+      btn.addEventListener("pointermove", (ev) => {
+        if (!brightnessDragActive) return;
+        if (brightnessDragPointerId != null && ev.pointerId !== brightnessDragPointerId) return;
+        const entityId = this._primaryEntityId(item?.entity);
+        if (!String(entityId || "").startsWith("light.")) return;
+
+        const dy = ev.clientY - brightnessStartY;
+        const deltaPct = -dy / 2;
+        const nextPct = Math.max(1, Math.min(100, Math.round(brightnessStartPct + deltaPct)));
+        if (nextPct === brightnessLastPct) return;
+
+        const now = Date.now();
+        if ((now - brightnessLastSentAt) < 70) return;
+        brightnessLastPct = nextPct;
+        brightnessLastSentAt = now;
+        this._setLightBrightnessPct(entityId, nextPct);
       });
 
       const clearHold = () => {
         clearTimeout(holdTimer);
+        brightnessDragActive = false;
+        brightnessDragPointerId = null;
       };
 
       btn.addEventListener("pointerup", clearHold);
       btn.addEventListener("pointerleave", clearHold);
+      btn.addEventListener("pointercancel", clearHold);
 
       btn.addEventListener("click", (ev) => {
         ev.preventDefault();
@@ -1163,7 +1207,30 @@ class SeagullRoomCard extends HTMLElement {
       const data = act.data ?? act.service_data ?? {};
       const target = act.target ?? {};
       hass.callService?.(domain, service, { ...data, ...target });
+      return;
     }
+
+    if (type === "brightness") {
+      if (!entityId || !String(entityId).startsWith("light.")) return;
+      const pctRaw = Number(act.brightness_pct ?? act.value ?? NaN);
+      if (!Number.isFinite(pctRaw)) return;
+      this._setLightBrightnessPct(entityId, pctRaw);
+    }
+  }
+
+  _getLightBrightnessPct(entityId) {
+    const st = this._hass?.states?.[entityId];
+    const briRaw = Number(st?.attributes?.brightness);
+    if (Number.isFinite(briRaw)) {
+      return Math.max(1, Math.min(100, Math.round((briRaw / 255) * 100)));
+    }
+    return st?.state === "on" ? 100 : 50;
+  }
+
+  _setLightBrightnessPct(entityId, pct) {
+    if (!entityId || !String(entityId).startsWith("light.")) return;
+    const value = Math.max(1, Math.min(100, Math.round(Number(pct) || 0)));
+    this._hass?.callService?.("light", "turn_on", { entity_id: entityId, brightness_pct: value });
   }
 
   async _runActionSequence(sequence, entityId) {

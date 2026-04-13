@@ -366,6 +366,7 @@ Supported action types:
 - `navigate`
 - `perform-action`
 - `sequence`
+- `brightness` (light only, mainly for hold gesture)
 
 ### 7.1 `toggle`
 
@@ -409,6 +410,20 @@ tap_action:
     - delay_ms: 300
     - action: more-info
 ```
+
+### 7.6 `brightness`
+
+For `light.*` entities, you can set:
+
+```yaml
+hold_action: brightness
+```
+
+Behavior:
+- long-press starts brightness mode
+- drag up increases brightness
+- drag down decreases brightness
+- updates are sent as `light.turn_on` with `brightness_pct`
 
 ---
 
