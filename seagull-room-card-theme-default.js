@@ -28,6 +28,16 @@ palette:
   seagull_active_purple: { day: "#a855f7", night: "#9333ea" }
   seagull_active_pink: { day: "#ec4899", night: "#db2777" }
   seagull_active_lime: { day: "#84cc16", night: "#65a30d" }
+  seagull_active_rose: { day: "#f43f5e", night: "#e11d48" }
+  seagull_active_indigo: { day: "#6366f1", night: "#4f46e5" }
+  seagull_active_emerald: { day: "#10b981", night: "#059669" }
+  seagull_active_amber: { day: "#fbbf24", night: "#f59e0b" }
+  seagull_active_orange_red: { day: "#f97316", night: "#ea580c" }
+  seagull_active_cornflower: { day: "#60a5fa", night: "#3b82f6" }
+  seagull_active_magenta: { day: "#d946ef", night: "#c026d3" }
+  seagull_active_aqua: { day: "#2dd4bf", night: "#14b8a6" }
+  seagull_active_tangerine: { day: "#fb923c", night: "#f97316" }
+  seagull_active_mint: { day: "#34d399", night: "#10b981" }
   btn_unavailable_fg: { day: "#f8fafc", night: "#cbd5e1" }
   btn_unavailable_bg: { day: "#cbd5e1", night: "#64748b" }
   btn_border: { day: "transparent", night: "transparent" }

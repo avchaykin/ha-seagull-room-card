@@ -23,6 +23,16 @@ GitHub-safe swatches (local SVG files).
 | `seagull_active_purple` | ![#a855f7](./palette-swatches/seagull_active_purple-day.svg) | ![#9333ea](./palette-swatches/seagull_active_purple-night.svg) |
 | `seagull_active_pink` | ![#ec4899](./palette-swatches/seagull_active_pink-day.svg) | ![#db2777](./palette-swatches/seagull_active_pink-night.svg) |
 | `seagull_active_lime` | ![#84cc16](./palette-swatches/seagull_active_lime-day.svg) | ![#65a30d](./palette-swatches/seagull_active_lime-night.svg) |
+| `seagull_active_rose` | ![#f43f5e](./palette-swatches/seagull_active_rose-day.svg) | ![#e11d48](./palette-swatches/seagull_active_rose-night.svg) |
+| `seagull_active_indigo` | ![#6366f1](./palette-swatches/seagull_active_indigo-day.svg) | ![#4f46e5](./palette-swatches/seagull_active_indigo-night.svg) |
+| `seagull_active_emerald` | ![#10b981](./palette-swatches/seagull_active_emerald-day.svg) | ![#059669](./palette-swatches/seagull_active_emerald-night.svg) |
+| `seagull_active_amber` | ![#fbbf24](./palette-swatches/seagull_active_amber-day.svg) | ![#f59e0b](./palette-swatches/seagull_active_amber-night.svg) |
+| `seagull_active_orange_red` | ![#f97316](./palette-swatches/seagull_active_orange_red-day.svg) | ![#ea580c](./palette-swatches/seagull_active_orange_red-night.svg) |
+| `seagull_active_cornflower` | ![#60a5fa](./palette-swatches/seagull_active_cornflower-day.svg) | ![#3b82f6](./palette-swatches/seagull_active_cornflower-night.svg) |
+| `seagull_active_magenta` | ![#d946ef](./palette-swatches/seagull_active_magenta-day.svg) | ![#c026d3](./palette-swatches/seagull_active_magenta-night.svg) |
+| `seagull_active_aqua` | ![#2dd4bf](./palette-swatches/seagull_active_aqua-day.svg) | ![#14b8a6](./palette-swatches/seagull_active_aqua-night.svg) |
+| `seagull_active_tangerine` | ![#fb923c](./palette-swatches/seagull_active_tangerine-day.svg) | ![#f97316](./palette-swatches/seagull_active_tangerine-night.svg) |
+| `seagull_active_mint` | ![#34d399](./palette-swatches/seagull_active_mint-day.svg) | ![#10b981](./palette-swatches/seagull_active_mint-night.svg) |
 | `btn_unavailable_fg` | ![#f8fafc](./palette-swatches/btn_unavailable_fg-day.svg) | ![#cbd5e1](./palette-swatches/btn_unavailable_fg-night.svg) |
 | `btn_unavailable_bg` | ![#cbd5e1](./palette-swatches/btn_unavailable_bg-day.svg) | ![#64748b](./palette-swatches/btn_unavailable_bg-night.svg) |
 | `btn_border` | ![transparent](./palette-swatches/btn_border-day.svg) | ![transparent](./palette-swatches/btn_border-night.svg) |
