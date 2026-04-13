@@ -1010,6 +1010,7 @@ class SeagullRoomCard extends HTMLElement {
       let brightnessStartPct = 50;
       let brightnessLastPct = null;
       let brightnessLastSentAt = 0;
+      let prevTouchAction = "";
 
       const index = Number(btn.getAttribute("data-index"));
       const item = this._renderedLightItems?.[index];
@@ -1043,7 +1044,11 @@ class SeagullRoomCard extends HTMLElement {
             brightnessStartPct = this._getLightBrightnessPct(entityId);
             brightnessLastPct = brightnessStartPct;
             brightnessLastSentAt = 0;
+            prevTouchAction = btn.style.touchAction || "";
+            btn.style.touchAction = "none";
             try { btn.setPointerCapture?.(ev.pointerId); } catch (_) {}
+            ev.preventDefault?.();
+            ev.stopPropagation?.();
             this._setLightBrightnessPct(entityId, brightnessStartPct);
           } else {
             this._runAction(item, "hold_action", index);
@@ -1054,6 +1059,8 @@ class SeagullRoomCard extends HTMLElement {
       btn.addEventListener("pointermove", (ev) => {
         if (!brightnessDragActive) return;
         if (brightnessDragPointerId != null && ev.pointerId !== brightnessDragPointerId) return;
+        ev.preventDefault?.();
+        ev.stopPropagation?.();
         const entityId = this._primaryEntityId(item?.entity);
         if (!String(entityId || "").startsWith("light.")) return;
 
@@ -1071,6 +1078,9 @@ class SeagullRoomCard extends HTMLElement {
 
       const clearHold = () => {
         clearTimeout(holdTimer);
+        if (brightnessDragActive) {
+          btn.style.touchAction = prevTouchAction;
+        }
         brightnessDragActive = false;
         brightnessDragPointerId = null;
       };
