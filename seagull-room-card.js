@@ -1059,6 +1059,40 @@ class SeagullRoomCard extends HTMLElement {
         });
       };
 
+      const handleBrightnessMove = (ev) => {
+        if (!brightnessDragActive) return;
+        if (brightnessDragPointerId != null && ev.pointerId != null && ev.pointerId !== brightnessDragPointerId) return;
+        ev.preventDefault?.();
+        ev.stopPropagation?.();
+        const entityId = this._primaryEntityId(item?.entity);
+        if (!String(entityId || "").startsWith("light.")) return;
+
+        const dy = ev.clientY - brightnessStartY;
+        const deltaPct = -dy / 2;
+        const nextPct = Math.max(1, Math.min(100, Math.round(brightnessStartPct + deltaPct)));
+        if (nextPct === brightnessLastPct) return;
+
+        const now = Date.now();
+        if ((now - brightnessLastSentAt) < 70) return;
+        brightnessLastPct = nextPct;
+        brightnessLastSentAt = now;
+        showBrightnessOverlay(nextPct);
+        this._setLightBrightnessPct(entityId, nextPct);
+      };
+
+      const clearHold = () => {
+        clearTimeout(holdTimer);
+        if (brightnessDragActive) {
+          btn.style.touchAction = prevTouchAction;
+        }
+        hideBrightnessOverlay();
+        brightnessDragActive = false;
+        brightnessDragPointerId = null;
+        window.removeEventListener("pointermove", handleBrightnessMove, true);
+        window.removeEventListener("pointerup", clearHold, true);
+        window.removeEventListener("pointercancel", clearHold, true);
+      };
+
       btn.style.transition = "filter 120ms ease";
       btn.addEventListener("mouseenter", () => {
         btn.style.filter = "brightness(1.08)";
@@ -1092,6 +1126,9 @@ class SeagullRoomCard extends HTMLElement {
             try { btn.setPointerCapture?.(ev.pointerId); } catch (_) {}
             ev.preventDefault?.();
             ev.stopPropagation?.();
+            window.addEventListener("pointermove", handleBrightnessMove, true);
+            window.addEventListener("pointerup", clearHold, true);
+            window.addEventListener("pointercancel", clearHold, true);
             showBrightnessOverlay(brightnessStartPct);
             this._setLightBrightnessPct(entityId, brightnessStartPct);
           } else {
@@ -1101,35 +1138,8 @@ class SeagullRoomCard extends HTMLElement {
       });
 
       btn.addEventListener("pointermove", (ev) => {
-        if (!brightnessDragActive) return;
-        if (brightnessDragPointerId != null && ev.pointerId !== brightnessDragPointerId) return;
-        ev.preventDefault?.();
-        ev.stopPropagation?.();
-        const entityId = this._primaryEntityId(item?.entity);
-        if (!String(entityId || "").startsWith("light.")) return;
-
-        const dy = ev.clientY - brightnessStartY;
-        const deltaPct = -dy / 2;
-        const nextPct = Math.max(1, Math.min(100, Math.round(brightnessStartPct + deltaPct)));
-        if (nextPct === brightnessLastPct) return;
-
-        const now = Date.now();
-        if ((now - brightnessLastSentAt) < 70) return;
-        brightnessLastPct = nextPct;
-        brightnessLastSentAt = now;
-        showBrightnessOverlay(nextPct);
-        this._setLightBrightnessPct(entityId, nextPct);
+        handleBrightnessMove(ev);
       });
-
-      const clearHold = () => {
-        clearTimeout(holdTimer);
-        if (brightnessDragActive) {
-          btn.style.touchAction = prevTouchAction;
-        }
-        hideBrightnessOverlay();
-        brightnessDragActive = false;
-        brightnessDragPointerId = null;
-      };
 
       btn.addEventListener("pointerup", clearHold);
       btn.addEventListener("pointerleave", clearHold);
