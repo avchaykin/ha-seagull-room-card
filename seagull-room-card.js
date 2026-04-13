@@ -1022,6 +1022,8 @@ class SeagullRoomCard extends HTMLElement {
       let brightnessLastPct = null;
       let brightnessLastSentAt = 0;
       let prevTouchAction = "";
+      let lastTouchTapAt = 0;
+      let suppressClickUntil = 0;
 
       const index = Number(btn.getAttribute("data-index"));
       const item = this._renderedLightItems?.[index];
@@ -1067,11 +1069,6 @@ class SeagullRoomCard extends HTMLElement {
 
       btn.addEventListener("pointerdown", (ev) => {
         if (isPhantom) return;
-        if (isBrightnessHoldCfg) {
-          ev.preventDefault?.();
-          ev.stopPropagation?.();
-          try { btn.setPointerCapture?.(ev.pointerId); } catch (_) {}
-        }
         holdFired = false;
         brightnessDragActive = false;
         brightnessDragPointerId = null;
@@ -1086,7 +1083,8 @@ class SeagullRoomCard extends HTMLElement {
             brightnessDragActive = true;
             brightnessDragPointerId = ev.pointerId;
             brightnessStartY = ev.clientY;
-            brightnessStartPct = this._getLightBrightnessPct(entityId);
+            const lightState = String(this._hass?.states?.[entityId]?.state || "");
+            brightnessStartPct = lightState === "off" ? 1 : this._getLightBrightnessPct(entityId);
             brightnessLastPct = brightnessStartPct;
             brightnessLastSentAt = 0;
             prevTouchAction = btn.style.touchAction || "";
@@ -1137,9 +1135,24 @@ class SeagullRoomCard extends HTMLElement {
       btn.addEventListener("pointerleave", clearHold);
       btn.addEventListener("pointercancel", clearHold);
 
+      btn.addEventListener("pointerup", (ev) => {
+        if (isPhantom || holdFired || brightnessDragActive) return;
+        if (ev.pointerType !== "touch") return;
+        const now = Date.now();
+        if (now - lastTouchTapAt < 320) {
+          suppressClickUntil = now + 350;
+          lastTouchTapAt = 0;
+          clearTimeout(clickTimer);
+          this._runAction(item, "double_tap_action", index);
+        } else {
+          lastTouchTapAt = now;
+        }
+      });
+
       btn.addEventListener("click", (ev) => {
         ev.preventDefault();
         if (isPhantom) return;
+        if (Date.now() < suppressClickUntil) return;
         if (holdFired) return;
 
         this._showButtonPressRing(btn);
