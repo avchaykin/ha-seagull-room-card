@@ -864,11 +864,16 @@ class SeagullRoomCard extends HTMLElement {
       const isBrightnessHoldCfg = holdType === "brightness" && String(holdEntityId || "").startsWith("light.");
       const touchActionStyle = isBrightnessHoldCfg ? "touch-action:none;-ms-touch-action:none;" : "";
 
+      const brightnessOverlayHtml = isBrightnessHoldCfg
+        ? `<span class="sg-room-brightness-overlay" style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:4;pointer-events:none;font-size:${Math.max(10, Math.round(btnSize * 0.32))}px;font-weight:600;line-height:1;color:${this._esc(finalIconColor)};">0%</span>`
+        : "";
+
       const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}${touchActionStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${Math.max(visualBorderW, isPhantom ? 1 : 0)}px ${finalBorderStyle} ${this._esc(finalBorderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
             ${contentHtml}
             ${badgeHtml}
+            ${brightnessOverlayHtml}
           </span>
         </button>`;
       return { html, colSpan: safeColSpan };
@@ -1026,6 +1031,31 @@ class SeagullRoomCard extends HTMLElement {
       const holdType = String(holdAct?.action || "").toLowerCase();
       const holdEntityId = this._primaryEntityId(item?.entity);
       const isBrightnessHoldCfg = holdType === "brightness" && String(holdEntityId || "").startsWith("light.");
+      const brightnessOverlayEl = btn.querySelector(".sg-room-brightness-overlay");
+
+      const showBrightnessOverlay = (pct) => {
+        if (!brightnessOverlayEl) return;
+        const value = Math.max(1, Math.min(100, Math.round(Number(pct) || 0)));
+        brightnessOverlayEl.textContent = `${value}%`;
+        brightnessOverlayEl.style.display = "inline-flex";
+        btn.querySelectorAll("ha-icon").forEach((el) => {
+          if (el.dataset.sgPrevOpacity == null) el.dataset.sgPrevOpacity = el.style.opacity ?? "";
+          el.style.opacity = "0";
+        });
+      };
+
+      const hideBrightnessOverlay = () => {
+        if (!brightnessOverlayEl) return;
+        brightnessOverlayEl.style.display = "none";
+        btn.querySelectorAll("ha-icon").forEach((el) => {
+          if (el.dataset.sgPrevOpacity != null) {
+            el.style.opacity = el.dataset.sgPrevOpacity;
+            delete el.dataset.sgPrevOpacity;
+          } else {
+            el.style.opacity = "";
+          }
+        });
+      };
 
       btn.style.transition = "filter 120ms ease";
       btn.addEventListener("mouseenter", () => {
@@ -1064,6 +1094,7 @@ class SeagullRoomCard extends HTMLElement {
             try { btn.setPointerCapture?.(ev.pointerId); } catch (_) {}
             ev.preventDefault?.();
             ev.stopPropagation?.();
+            showBrightnessOverlay(brightnessStartPct);
             this._setLightBrightnessPct(entityId, brightnessStartPct);
           } else {
             this._runAction(item, "hold_action", index);
@@ -1088,6 +1119,7 @@ class SeagullRoomCard extends HTMLElement {
         if ((now - brightnessLastSentAt) < 70) return;
         brightnessLastPct = nextPct;
         brightnessLastSentAt = now;
+        showBrightnessOverlay(nextPct);
         this._setLightBrightnessPct(entityId, nextPct);
       });
 
@@ -1096,6 +1128,7 @@ class SeagullRoomCard extends HTMLElement {
         if (brightnessDragActive) {
           btn.style.touchAction = prevTouchAction;
         }
+        hideBrightnessOverlay();
         brightnessDragActive = false;
         brightnessDragPointerId = null;
       };
