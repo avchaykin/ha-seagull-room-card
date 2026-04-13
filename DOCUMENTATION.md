@@ -281,6 +281,8 @@ Default style for `view.type: number` is `big`.
 ```yaml
 view:
   type: watchface
+  style: solid
+  scale: hour
   notches: 12
   length: 10
   time_length: 14
@@ -291,13 +293,14 @@ view:
 ```
 
 Watchface mode:
-- draws notch marks in a circle
+- `style`: `solid` (default donut ring) or `notches` (legacy tick marks)
+- `scale`: `hour` (default, full circle = 60 min) or `day` (full circle = 12h)
 - `notches`: number of marks (1..60)
 - `length`: notch length toward center
 - `time_length`: current-time notch length (default: `2 * length`)
-- active notch based on current minute is highlighted with `time_color`
+- active segment is highlighted with `time_color`
 - other notches use `color`
-- optional `show_state`: marks periods in the last 60 minutes where entity was in that state
+- optional `show_state`: marks periods in the selected scale window where entity was in that state
 - `accent_color`: color for such historical marks
 
 Number mode `three-lines`:

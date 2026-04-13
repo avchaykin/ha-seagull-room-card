@@ -745,6 +745,10 @@ class SeagullRoomCard extends HTMLElement {
       const gaugeShowValue = this._toBool(this._resolveDynamicValue(gaugeCfg?.show_value, item.entity, state, false), false);
       const gaugeSuffix = hasGaugeValueOverride ? this._climatSuffix(st, gaugeValueRaw, unitCfg) : climatSuffix;
       const gaugeValue = this._formatClimatValue(st, hasGaugeValueOverride ? gaugeValueRaw : state, gaugeSuffix);
+      const watchStyle = String(this._resolveDynamicValue(viewCfg?.style, item.entity, state, "solid") || "solid").toLowerCase();
+      const watchScaleRaw = String(this._resolveDynamicValue(viewCfg?.scale, item.entity, state, "hour") || "hour").toLowerCase();
+      const watchScale = watchScaleRaw === "day" ? "day" : "hour";
+      const watchWindowMs = watchScale === "day" ? (12 * 60 * 60 * 1000) : (60 * 60 * 1000);
       const watchNotchesRaw = this._resolveDynamicValue(viewCfg?.notches, item.entity, state, 12);
       const watchNotches = Math.max(1, Math.min(60, parseInt(watchNotchesRaw, 10) || 12));
       const watchLengthRaw = this._resolveDynamicValue(viewCfg?.length, item.entity, state, Math.max(6, Math.round(btnSize * 0.22)));
@@ -755,17 +759,20 @@ class SeagullRoomCard extends HTMLElement {
       const watchTimeColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.time_color, item.entity, state, "#ef4444"));
       const watchAccentColor = this._paletteColor(this._resolveDynamicValue(viewCfg?.accent_color, item.entity, state, "#22c55e"));
       const watchShowState = this._resolveDynamicValue(viewCfg?.show_state, item.entity, state, "");
-      const watchMinute = new Date().getMinutes();
-      const watchIndex = Math.min(watchNotches - 1, Math.floor(watchMinute / (60 / watchNotches)));
-      this._ensureWatchfaceHistory(entityId, watchShowState, watchNotches);
-      const watchMarks = this._getWatchfaceMinuteMarks(entityId, watchShowState, watchNotches);
+      const nowDate = new Date();
+      const watchProgress = watchScale === "day"
+        ? (((nowDate.getHours() % 12) * 60) + nowDate.getMinutes()) / (12 * 60)
+        : nowDate.getMinutes() / 60;
+      const watchIndex = Math.min(watchNotches - 1, Math.max(0, Math.floor(watchProgress * watchNotches)));
+      this._ensureWatchfaceHistory(entityId, watchShowState, watchNotches, watchWindowMs);
+      const watchMarks = this._getWatchfaceMinuteMarks(entityId, watchShowState, watchNotches, watchWindowMs);
       const watchStroke = Math.max(0.9, Math.min(2.4, 2.5 - (watchNotches / 60) * 1.4));
       const watchLengthPct = Math.max(2, Math.min(40, (watchLength / Math.max(1, btnSize)) * 100));
       const watchTimeLengthPct = Math.max(2, Math.min(45, (watchTimeLength / Math.max(1, btnSize)) * 100));
       const rOuter = 46;
       const rInner = Math.max(4, rOuter - (watchLengthPct * 0.42));
       const rInnerTime = Math.max(3, rOuter - (watchTimeLengthPct * 0.42));
-      const watchfaceHtml = `<span style="position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;">
+      const watchfaceNotchesHtml = `<span style="position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;">
         <svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block;overflow:visible;">
           ${Array.from({ length: watchNotches }, (_, i) => {
             const angle = (i / watchNotches) * (Math.PI * 2) - Math.PI / 2;
@@ -782,6 +789,21 @@ class SeagullRoomCard extends HTMLElement {
           }).join("")}
         </svg>
       </span>`;
+      const watchSegDeg = 360 / Math.max(1, watchNotches);
+      const watchSolidAccentStops = Array.from({ length: watchNotches }, (_, i) => {
+        const from = (i * watchSegDeg).toFixed(3);
+        const to = ((i + 1) * watchSegDeg).toFixed(3);
+        const c = watchMarks && watchMarks[i] ? watchAccentColor : "transparent";
+        return `${this._esc(c)} ${from}deg ${to}deg`;
+      }).join(", ");
+      const watchSolidTimeFrom = (watchIndex * watchSegDeg).toFixed(3);
+      const watchSolidTimeTo = ((watchIndex + 1) * watchSegDeg).toFixed(3);
+      const watchfaceSolidHtml = `<span style="position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;">
+        <span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:${this._esc(watchColor)};-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${watchLength}px),#000 calc(100% - ${watchLength}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${watchLength}px),#000 calc(100% - ${watchLength}px));pointer-events:none;"></span>
+        <span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from -90deg, ${watchSolidAccentStops});-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${watchLength}px),#000 calc(100% - ${watchLength}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${watchLength}px),#000 calc(100% - ${watchLength}px));pointer-events:none;"></span>
+        <span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from -90deg, transparent 0deg ${watchSolidTimeFrom}deg, ${this._esc(watchTimeColor)} ${watchSolidTimeFrom}deg ${watchSolidTimeTo}deg, transparent ${watchSolidTimeTo}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${watchTimeLength}px),#000 calc(100% - ${watchTimeLength}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${watchTimeLength}px),#000 calc(100% - ${watchTimeLength}px));pointer-events:none;"></span>
+      </span>`;
+      const watchfaceHtml = watchStyle === "notches" ? watchfaceNotchesHtml : watchfaceSolidHtml;
       const contentHtml = isNumber
         ? (numberStyle === "big"
           ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:${this._esc(String(numberFontFamily))};">
@@ -1491,23 +1513,24 @@ class SeagullRoomCard extends HTMLElement {
     return cfg;
   }
 
-  _watchfaceCacheKey(entityId, showState) {
-    return `${entityId}::${String(showState)}`;
+  _watchfaceCacheKey(entityId, showState, windowMs = 60 * 60 * 1000) {
+    return `${entityId}::${String(showState)}::${Math.max(1, Number(windowMs) || (60 * 60 * 1000))}`;
   }
 
-  _getWatchfaceMinuteMarks(entityId, showState, notches) {
+  _getWatchfaceMinuteMarks(entityId, showState, notches, windowMs = 60 * 60 * 1000) {
     if (!entityId || showState == null || showState === "") return null;
-    const key = this._watchfaceCacheKey(entityId, showState);
+    const key = this._watchfaceCacheKey(entityId, showState, windowMs);
     const rec = this._watchfaceHistoryCache?.[key];
     if (!rec || !Array.isArray(rec.marks)) return null;
     return rec.marks.slice(0, Math.max(1, notches));
   }
 
-  _ensureWatchfaceHistory(entityId, showState, notches) {
+  _ensureWatchfaceHistory(entityId, showState, notches, windowMs = 60 * 60 * 1000) {
     if (!entityId || showState == null || showState === "") return;
     if (!this._watchfaceHistoryCache) this._watchfaceHistoryCache = {};
 
-    const key = this._watchfaceCacheKey(entityId, showState);
+    const rangeMs = Math.max(60 * 1000, Number(windowMs) || (60 * 60 * 1000));
+    const key = this._watchfaceCacheKey(entityId, showState, rangeMs);
     const now = Date.now();
     const minuteBucket = Math.floor(now / 60000);
     const cached = this._watchfaceHistoryCache[key];
@@ -1517,14 +1540,14 @@ class SeagullRoomCard extends HTMLElement {
     this._watchfaceHistoryCache[key] = { ...(cached || {}), loading: true, bucket: minuteBucket };
 
     const end = new Date(now);
-    const start = new Date(now - 60 * 60 * 1000);
+    const start = new Date(now - rangeMs);
     const path = `history/period/${encodeURIComponent(start.toISOString())}?filter_entity_id=${encodeURIComponent(entityId)}&end_time=${encodeURIComponent(end.toISOString())}`;
 
     this._hass.callApi("GET", path)
       .then((resp) => {
         const rows = Array.isArray(resp) && Array.isArray(resp[0]) ? resp[0] : [];
         const target = String(showState);
-        const stepMs = (60 * 60 * 1000) / Math.max(1, notches);
+        const stepMs = rangeMs / Math.max(1, notches);
         const marks = Array.from({ length: Math.max(1, notches) }, () => false);
 
         if (!rows.length) {
