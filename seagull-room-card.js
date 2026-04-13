@@ -858,7 +858,13 @@ class SeagullRoomCard extends HTMLElement {
         }
       }
 
-      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${Math.max(visualBorderW, isPhantom ? 1 : 0)}px ${finalBorderStyle} ${this._esc(finalBorderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
+      const holdAct = this._resolveAction(item, "hold_action");
+      const holdType = String(holdAct?.action || "").toLowerCase();
+      const holdEntityId = this._primaryEntityId(item?.entity);
+      const isBrightnessHoldCfg = holdType === "brightness" && String(holdEntityId || "").startsWith("light.");
+      const touchActionStyle = isBrightnessHoldCfg ? "touch-action:none;-ms-touch-action:none;" : "";
+
+      const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}${touchActionStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${Math.max(visualBorderW, isPhantom ? 1 : 0)}px ${finalBorderStyle} ${this._esc(finalBorderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
             ${contentHtml}
@@ -1016,6 +1022,10 @@ class SeagullRoomCard extends HTMLElement {
       const item = this._renderedLightItems?.[index];
       if (!item) return;
       const isPhantom = this._toBool(item?.__phantom, false);
+      const holdAct = this._resolveAction(item, "hold_action");
+      const holdType = String(holdAct?.action || "").toLowerCase();
+      const holdEntityId = this._primaryEntityId(item?.entity);
+      const isBrightnessHoldCfg = holdType === "brightness" && String(holdEntityId || "").startsWith("light.");
 
       btn.style.transition = "filter 120ms ease";
       btn.addEventListener("mouseenter", () => {
@@ -1027,6 +1037,11 @@ class SeagullRoomCard extends HTMLElement {
 
       btn.addEventListener("pointerdown", (ev) => {
         if (isPhantom) return;
+        if (isBrightnessHoldCfg) {
+          ev.preventDefault?.();
+          ev.stopPropagation?.();
+          try { btn.setPointerCapture?.(ev.pointerId); } catch (_) {}
+        }
         holdFired = false;
         brightnessDragActive = false;
         brightnessDragPointerId = null;
