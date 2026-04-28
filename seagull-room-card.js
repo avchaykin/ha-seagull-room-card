@@ -710,7 +710,7 @@ class SeagullRoomCard extends HTMLElement {
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
       const progressShowCfg = this._resolveDynamicValue(progressCfg?.show, item.entity, state, null);
-      const progressActive = progressEnabled ? this._isShowVisible(progressShowCfg, item.entity, state) : false;
+      const progressActive = progressEnabled ? this._isProgressVisible(progressShowCfg, item.entity, state) : false;
       const progressColorDefault = this._paletteColor(dDef?.active?.background ?? "#f59e0b");
       const progressColor = this._paletteColor(this._resolveDynamicValue(progressCfg?.color, item.entity, state, progressColorDefault));
       const progressBg = this._paletteColor(this._resolveDynamicValue(progressCfg?.background, item.entity, state, "transparent"));
@@ -721,8 +721,8 @@ class SeagullRoomCard extends HTMLElement {
       const progressSpeed = Number.isFinite(progressSpeedRaw) ? Math.max(0.05, progressSpeedRaw) : 1;
       const progressDurSec = 1 / progressSpeed;
       const progressSegDeg = Math.round(progressLength * 360);
-      const visualBorderW = (gaugeEnabled || progressEnabled) ? 0 : borderW;
-      const visualBgColor = (gaugeEnabled || progressEnabled || (isNumber && numberStyle === "big")) ? "transparent" : bgColor;
+      const visualBorderW = gaugeEnabled ? 0 : borderW;
+      const visualBgColor = (gaugeEnabled || (isNumber && numberStyle === "big")) ? "transparent" : bgColor;
       let finalBorderStyle = "solid";
       let finalBorderColor = borderColor;
 
@@ -1701,45 +1701,11 @@ class SeagullRoomCard extends HTMLElement {
     return true;
   }
 
-  _isShowVisible(showCfg, entityRef, state) {
+  _isProgressVisible(showCfg, entityRef, state) {
     if (showCfg == null) return false;
-    if (typeof showCfg !== "object") {
-      return this._toBool(this._resolveDynamicValue(showCfg, entityRef, state, false), false);
-    }
-
-    const hasOwn = (k) => Object.prototype.hasOwnProperty.call(showCfg, k);
-    const resolve = (k, fallback) => this._resolveDynamicValue(showCfg[k], entityRef, state, fallback);
-
-    const expected = hasOwn("show_state") ? resolve("show_state", undefined)
-      : (hasOwn("show_value") ? resolve("show_value", undefined)
-      : (hasOwn("state") ? resolve("state", undefined) : undefined));
-    if (expected !== undefined && !this._matchesValueFilter(state, expected)) return false;
-
-    const disallowed = hasOwn("show_not_state") ? resolve("show_not_state", undefined)
-      : (hasOwn("show_not_value") ? resolve("show_not_value", undefined)
-      : (hasOwn("state_not") ? resolve("state_not", undefined) : undefined));
-    if (disallowed !== undefined && this._matchesValueFilter(state, disallowed)) return false;
-
-    if (hasOwn("show_above")) {
-      const nState = Number(state);
-      const nMin = Number(resolve("show_above", NaN));
-      if (!Number.isFinite(nState) || !Number.isFinite(nMin) || !(nState > nMin)) return false;
-    }
-    if (hasOwn("show_below")) {
-      const nState = Number(state);
-      const nMax = Number(resolve("show_below", NaN));
-      if (!Number.isFinite(nState) || !Number.isFinite(nMax) || !(nState < nMax)) return false;
-    }
-
-    if (hasOwn("enabled")) {
-      if (!this._toBool(resolve("enabled", true), true)) return false;
-    }
-
-    if (!(hasOwn("show_state") || hasOwn("show_not_state") || hasOwn("show_value") || hasOwn("show_not_value") || hasOwn("state") || hasOwn("state_not") || hasOwn("show_above") || hasOwn("show_below") || hasOwn("enabled"))) {
-      return this._toBool(this._resolveDynamicValue(showCfg, entityRef, state, false), false);
-    }
-
-    return true;
+    const cfg = (typeof showCfg === "object") ? showCfg : { show_state: showCfg };
+    const stObj = this._hass?.states?.[entityRef];
+    return this._isItemVisible(cfg, {}, entityRef, state, stObj);
   }
 
   _resolvePhantomConfig(item, buttonsCfg, entityRef, state) {
