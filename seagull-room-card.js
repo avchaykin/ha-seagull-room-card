@@ -1713,8 +1713,38 @@ class SeagullRoomCard extends HTMLElement {
       const hasAnyVisibilityKey = ["show", "show_state", "show_not_state", "show_value", "show_not_value", "show_above", "show_below"].some((k) => Object.prototype.hasOwnProperty.call(cfg, k));
       if (!hasAnyVisibilityKey) return true;
     }
-    const stObj = this._hass?.states?.[entityRef];
-    return this._isItemVisible(cfg, {}, entityRef, state, stObj);
+    const hasOwn = (obj, key) => !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+    const resolve = (key, fallback) => {
+      const raw = hasOwn(cfg, key) ? cfg[key] : fallback;
+      return this._resolveDynamicValue(raw, entityRef, state, fallback);
+    };
+
+    const showRaw = resolve("show", true);
+    if (!this._toBool(showRaw, true)) return false;
+
+    const entityId = this._primaryEntityId(entityRef);
+    if (!entityId) return true;
+
+    if (hasOwn(cfg, "show_state") || hasOwn(cfg, "show_value")) {
+      const expected = hasOwn(cfg, "show_state") ? resolve("show_state", undefined) : resolve("show_value", undefined);
+      if (!this._matchesValueFilter(state, expected)) return false;
+    }
+    if (hasOwn(cfg, "show_not_state") || hasOwn(cfg, "show_not_value")) {
+      const disallowed = hasOwn(cfg, "show_not_state") ? resolve("show_not_state", undefined) : resolve("show_not_value", undefined);
+      if (this._matchesValueFilter(state, disallowed)) return false;
+    }
+    if (hasOwn(cfg, "show_above")) {
+      const nState = Number(state);
+      const nMin = Number(resolve("show_above", NaN));
+      if (!Number.isFinite(nState) || !Number.isFinite(nMin) || !(nState > nMin)) return false;
+    }
+    if (hasOwn(cfg, "show_below")) {
+      const nState = Number(state);
+      const nMax = Number(resolve("show_below", NaN));
+      if (!Number.isFinite(nState) || !Number.isFinite(nMax) || !(nState < nMax)) return false;
+    }
+
+    return true;
   }
 
   _resolvePhantomConfig(item, buttonsCfg, entityRef, state) {
