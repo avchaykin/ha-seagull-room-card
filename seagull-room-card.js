@@ -713,7 +713,7 @@ class SeagullRoomCard extends HTMLElement {
       const progressColorDefault = this._paletteColor(dDef?.active?.background ?? "#f59e0b");
       const progressColor = this._paletteColor(this._resolveDynamicValue(progressCfg?.color, item.entity, state, progressColorDefault));
       const progressBg = this._paletteColor(this._resolveDynamicValue(progressCfg?.background, item.entity, state, "transparent"));
-      const progressWidth = Math.max(1, this._toPx(this._resolveDynamicValue(progressCfg?.width, item.entity, state, Math.max(2, Math.round(btnSize * 0.12))), Math.max(2, Math.round(btnSize * 0.12))));
+      const progressWidth = Math.max(1, this._toPx(this._resolveDynamicValue(progressCfg?.width, item.entity, state, 6), 6));
       const progressLengthRaw = Number(this._resolveDynamicValue(progressCfg?.length, item.entity, state, 0.25));
       const progressLength = Number.isFinite(progressLengthRaw) ? Math.max(0.01, Math.min(1, progressLengthRaw)) : 0.25;
       const progressSpeedRaw = Number(this._resolveDynamicValue(progressCfg?.speed, item.entity, state, 1));
