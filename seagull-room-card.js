@@ -710,13 +710,13 @@ class SeagullRoomCard extends HTMLElement {
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
       const progressActive = progressEnabled ? this._isProgressVisible(progressCfg, item.entity, state) : false;
-      const progressColorDefault = this._paletteColor("$seagull_active") || this._paletteColor(dDef?.active?.background ?? "#f59e0b");
+      const progressColorDefault = this._paletteColor("$seagull_primary") || this._paletteColor(dDef?.active?.background ?? "#f59e0b");
       const progressColor = this._paletteColor(this._resolveDynamicValue(progressCfg?.color, item.entity, state, progressColorDefault));
       const progressBg = this._paletteColor(this._resolveDynamicValue(progressCfg?.background, item.entity, state, "transparent"));
       const progressWidth = Math.max(1, this._toPx(this._resolveDynamicValue(progressCfg?.width, item.entity, state, 6), 6));
       const progressLengthRaw = Number(this._resolveDynamicValue(progressCfg?.length, item.entity, state, 0.25));
       const progressLength = Number.isFinite(progressLengthRaw) ? Math.max(0.01, Math.min(1, progressLengthRaw)) : 0.25;
-      const progressSpeedRaw = Number(this._resolveDynamicValue(progressCfg?.speed, item.entity, state, 1));
+      const progressSpeedRaw = Number(this._resolveDynamicValue(progressCfg?.speed, item.entity, state, 0.5));
       const progressSpeed = Number.isFinite(progressSpeedRaw) ? Math.max(0.05, progressSpeedRaw) : 1;
       const progressDurSec = 1 / progressSpeed;
       const progressSegDeg = Math.round(progressLength * 360);
@@ -750,8 +750,8 @@ class SeagullRoomCard extends HTMLElement {
         ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
         : "";
       const progressHtml = progressEnabled
-        ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:${this._esc(progressBg)};-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));pointer-events:none;"></span>
-           <span aria-hidden="true" style="position:absolute;inset:1px;display:block;border-radius:inherit;z-index:2;opacity:${progressActive ? "1" : "0"};background:conic-gradient(from 0deg, ${this._esc(progressColor)} 0deg ${progressSegDeg}deg, transparent ${progressSegDeg}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));pointer-events:none;animation:sg-runner-${index} ${progressDurSec}s linear infinite;"></span>
+        ? `<span aria-hidden="true" style="position:absolute;inset:0;border-radius:inherit;background:${this._esc(progressBg)};-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));pointer-events:none;"></span>
+           <span aria-hidden="true" style="position:absolute;inset:0;display:block;border-radius:inherit;z-index:2;opacity:${progressActive ? "1" : "0"};background:conic-gradient(from 0deg, ${this._esc(progressColor)} 0deg ${progressSegDeg}deg, transparent ${progressSegDeg}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));pointer-events:none;animation:sg-runner-${index} ${progressDurSec}s linear infinite;"></span>
            <style>@keyframes sg-runner-${index}{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>`
         : "";
 

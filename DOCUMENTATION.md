@@ -286,8 +286,8 @@ Progress mode (`view.type: progress`, `style: runner`):
 - active state renders a rotating segment
 - `width`: ring thickness (default: `6`)
 - `length`: segment length, `1` means full circle (default: `0.25`)
-- `speed`: turns per second, `1` means one full rotation per second (default: `1`)
-- `color`: active segment color
+- `speed`: turns per second, `1` means one full rotation per second (default: `0.5`)
+- `color`: active segment color (default: `$seagull_primary`)
 - `background`: base ring color (default: `transparent`)
 - `color`, `background`, `width`, `position`
 - `show_value`: show value text over gauge (number-like)
