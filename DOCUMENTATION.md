@@ -281,7 +281,8 @@ view:
 ```
 
 Progress mode (`view.type: progress`, `style: runner`):
-- `show`: visibility condition block (same style as `show_state`/`show_not_state`/`show_above`/`show_below`)
+- visibility uses the same syntax as buttons (`show`, `show_state`, `show_not_state`, `show_value`, `show_not_value`, `show_above`, `show_below`)
+- you can use either top-level keys in `view` or nested `show:` block
 - active state renders a rotating segment
 - `width`: ring thickness
 - `length`: segment length, `1` means full circle

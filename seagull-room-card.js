@@ -709,8 +709,7 @@ class SeagullRoomCard extends HTMLElement {
       const gaugeWidth = Math.max(1, this._toPx(this._resolveDynamicValue(gaugeCfg?.width, item.entity, state, Math.max(2, Math.round(btnSize * 0.12))), Math.max(2, Math.round(btnSize * 0.12))));
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
-      const progressShowCfg = this._resolveDynamicValue(progressCfg?.show, item.entity, state, null);
-      const progressActive = progressEnabled ? this._isProgressVisible(progressShowCfg, item.entity, state) : false;
+      const progressActive = progressEnabled ? this._isProgressVisible(progressCfg, item.entity, state) : false;
       const progressColorDefault = this._paletteColor(dDef?.active?.background ?? "#f59e0b");
       const progressColor = this._paletteColor(this._resolveDynamicValue(progressCfg?.color, item.entity, state, progressColorDefault));
       const progressBg = this._paletteColor(this._resolveDynamicValue(progressCfg?.background, item.entity, state, "transparent"));
@@ -1701,9 +1700,14 @@ class SeagullRoomCard extends HTMLElement {
     return true;
   }
 
-  _isProgressVisible(showCfg, entityRef, state) {
-    if (showCfg == null) return false;
-    const cfg = (typeof showCfg === "object") ? showCfg : { show_state: showCfg };
+  _isProgressVisible(progressCfg, entityRef, state) {
+    if (progressCfg == null) return false;
+    let cfg = progressCfg;
+    if (typeof progressCfg === "object" && Object.prototype.hasOwnProperty.call(progressCfg, "show")) {
+      const rawShow = this._resolveDynamicValue(progressCfg.show, entityRef, state, null);
+      if (rawShow == null) return false;
+      cfg = (typeof rawShow === "object") ? rawShow : { show_state: rawShow };
+    }
     const stObj = this._hass?.states?.[entityRef];
     return this._isItemVisible(cfg, {}, entityRef, state, stObj);
   }
