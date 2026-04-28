@@ -266,6 +266,28 @@ Gauge options:
 - `style`: `donut` (default)
 - `value` (default entity state)
 - `scale` number or `{min,max}`
+
+```yaml
+view:
+  type: progress
+  style: runner
+  show:
+    show_state: "on"
+  width: 6
+  length: 0.25
+  speed: 1
+  color: "$seagull_active_blue"
+  background: "transparent"
+```
+
+Progress mode (`view.type: progress`, `style: runner`):
+- `show`: visibility condition block (same style as `show_state`/`show_not_state`/`show_above`/`show_below`)
+- active state renders a rotating segment
+- `width`: ring thickness
+- `length`: segment length, `1` means full circle
+- `speed`: turns per second, `1` means one full rotation per second
+- `color`: active segment color
+- `background`: base ring color (default: `transparent`)
 - `color`, `background`, `width`, `position`
 - `show_value`: show value text over gauge (number-like)
 - `icon` can be an array aligned with `entity` order

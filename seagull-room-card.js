@@ -670,6 +670,7 @@ class SeagullRoomCard extends HTMLElement {
       const view = this._buttonView(item, buttonsCfg);
       const isNumber = view.type === "number";
       const isWatchface = view.type === "watchface";
+      const isProgress = view.type === "progress";
       const numberStyle = view.style || "big";
       const viewCfg = (item?.view && typeof item.view === "object")
         ? item.view
@@ -677,6 +678,9 @@ class SeagullRoomCard extends HTMLElement {
       const gaugeCfg = view.type === "gauge" ? ((item?.view && typeof item.view === "object") ? item.view : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {})) : null;
       const gaugeStyle = String(this._resolveDynamicValue(gaugeCfg?.style, item.entity, state, "donut")).toLowerCase();
       const gaugeEnabled = !!gaugeCfg && gaugeStyle === "donut";
+      const progressCfg = isProgress ? ((item?.view && typeof item.view === "object") ? item.view : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {})) : null;
+      const progressStyle = String(this._resolveDynamicValue(progressCfg?.style, item.entity, state, "runner")).toLowerCase();
+      const progressEnabled = !!progressCfg && progressStyle === "runner";
 
       const toScaleMinMax = (scale) => {
         if (scale && typeof scale === "object") {
@@ -705,8 +709,20 @@ class SeagullRoomCard extends HTMLElement {
       const gaugeWidth = Math.max(1, this._toPx(this._resolveDynamicValue(gaugeCfg?.width, item.entity, state, Math.max(2, Math.round(btnSize * 0.12))), Math.max(2, Math.round(btnSize * 0.12))));
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
-      const visualBorderW = gaugeEnabled ? 0 : borderW;
-      const visualBgColor = (gaugeEnabled || (isNumber && numberStyle === "big")) ? "transparent" : bgColor;
+      const progressShowCfg = this._resolveDynamicValue(progressCfg?.show, item.entity, state, null);
+      const progressActive = progressEnabled ? this._isShowVisible(progressShowCfg, item.entity, state) : false;
+      const progressColorDefault = this._paletteColor(dDef?.active?.background ?? "#f59e0b");
+      const progressColor = this._paletteColor(this._resolveDynamicValue(progressCfg?.color, item.entity, state, progressColorDefault));
+      const progressBg = this._paletteColor(this._resolveDynamicValue(progressCfg?.background, item.entity, state, "transparent"));
+      const progressWidth = Math.max(1, this._toPx(this._resolveDynamicValue(progressCfg?.width, item.entity, state, Math.max(2, Math.round(btnSize * 0.12))), Math.max(2, Math.round(btnSize * 0.12))));
+      const progressLengthRaw = Number(this._resolveDynamicValue(progressCfg?.length, item.entity, state, 0.25));
+      const progressLength = Number.isFinite(progressLengthRaw) ? Math.max(0.01, Math.min(1, progressLengthRaw)) : 0.25;
+      const progressSpeedRaw = Number(this._resolveDynamicValue(progressCfg?.speed, item.entity, state, 1));
+      const progressSpeed = Number.isFinite(progressSpeedRaw) ? Math.max(0.05, progressSpeedRaw) : 1;
+      const progressDurSec = 1 / progressSpeed;
+      const progressSegDeg = Math.round(progressLength * 360);
+      const visualBorderW = (gaugeEnabled || progressEnabled) ? 0 : borderW;
+      const visualBgColor = (gaugeEnabled || progressEnabled || (isNumber && numberStyle === "big")) ? "transparent" : bgColor;
       let finalBorderStyle = "solid";
       let finalBorderColor = borderColor;
 
@@ -733,6 +749,11 @@ class SeagullRoomCard extends HTMLElement {
       }
       const donutHtml = gaugeEnabled
         ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
+        : "";
+      const progressHtml = progressEnabled
+        ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:${this._esc(progressBg)};-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));pointer-events:none;"></span>
+           <span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;opacity:${progressActive ? "1" : "0"};background:conic-gradient(from 0deg, ${this._esc(progressColor)} 0deg ${progressSegDeg}deg, transparent ${progressSegDeg}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));pointer-events:none;animation:sg-runner-${index} ${progressDurSec}s linear infinite;"></span>
+           <style>@keyframes sg-runner-${index}{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>`
         : "";
 
       const unitCfg = this._resolveDynamicValue((item?.view && typeof item.view === "object" ? item.view.unit_of_measurement : undefined)
@@ -881,6 +902,7 @@ class SeagullRoomCard extends HTMLElement {
       const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}${touchActionStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${Math.max(visualBorderW, isPhantom ? 1 : 0)}px ${finalBorderStyle} ${this._esc(finalBorderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
+            ${progressHtml}
             ${contentHtml}
             ${badgeHtml}
             ${brightnessOverlayHtml}
@@ -1674,6 +1696,47 @@ class SeagullRoomCard extends HTMLElement {
     if (!entityId) {
       // badge with explicit show=true can still render for icon-only button
       return !hasOwn("show") || this._toBool(resolve("show", true), true);
+    }
+
+    return true;
+  }
+
+  _isShowVisible(showCfg, entityRef, state) {
+    if (showCfg == null) return false;
+    if (typeof showCfg !== "object") {
+      return this._toBool(this._resolveDynamicValue(showCfg, entityRef, state, false), false);
+    }
+
+    const hasOwn = (k) => Object.prototype.hasOwnProperty.call(showCfg, k);
+    const resolve = (k, fallback) => this._resolveDynamicValue(showCfg[k], entityRef, state, fallback);
+
+    const expected = hasOwn("show_state") ? resolve("show_state", undefined)
+      : (hasOwn("show_value") ? resolve("show_value", undefined)
+      : (hasOwn("state") ? resolve("state", undefined) : undefined));
+    if (expected !== undefined && !this._matchesValueFilter(state, expected)) return false;
+
+    const disallowed = hasOwn("show_not_state") ? resolve("show_not_state", undefined)
+      : (hasOwn("show_not_value") ? resolve("show_not_value", undefined)
+      : (hasOwn("state_not") ? resolve("state_not", undefined) : undefined));
+    if (disallowed !== undefined && this._matchesValueFilter(state, disallowed)) return false;
+
+    if (hasOwn("show_above")) {
+      const nState = Number(state);
+      const nMin = Number(resolve("show_above", NaN));
+      if (!Number.isFinite(nState) || !Number.isFinite(nMin) || !(nState > nMin)) return false;
+    }
+    if (hasOwn("show_below")) {
+      const nState = Number(state);
+      const nMax = Number(resolve("show_below", NaN));
+      if (!Number.isFinite(nState) || !Number.isFinite(nMax) || !(nState < nMax)) return false;
+    }
+
+    if (hasOwn("enabled")) {
+      if (!this._toBool(resolve("enabled", true), true)) return false;
+    }
+
+    if (!(hasOwn("show_state") || hasOwn("show_not_state") || hasOwn("show_value") || hasOwn("show_not_value") || hasOwn("state") || hasOwn("state_not") || hasOwn("show_above") || hasOwn("show_below") || hasOwn("enabled"))) {
+      return this._toBool(this._resolveDynamicValue(showCfg, entityRef, state, false), false);
     }
 
     return true;
