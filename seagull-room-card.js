@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "1.2.0";
+const SEAGULL_ROOM_CARD_VERSION = "1.2.1";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 const SEAGULL_ROOM_THEME_DEFAULT = {
@@ -705,10 +705,98 @@ class SeagullRoomCard extends HTMLElement {
         : 0;
       const gaugeDefaultColor = this._paletteColor(dDef?.active?.background ?? "#f59e0b");
       const gaugeColor = this._paletteColor(this._resolveDynamicValue(gaugeCfg?.color, item.entity, state, gaugeDefaultColor));
-      const gaugeBg = this._paletteColor(this._resolveDynamicValue(gaugeCfg?.background, item.entity, state, bgColor));
+      const gaugeBgDefault = this._paletteColor(dDef?.inactive?.background ?? "rgba(148,163,184,0.25)");
+      const gaugeBg = this._paletteColor(this._resolveDynamicValue(gaugeCfg?.background, item.entity, state, gaugeBgDefault));
+      const gaugeGradientCfgRaw = gaugeCfg?.gradient;
+      const gaugeGradientCfg = (gaugeGradientCfgRaw && typeof gaugeGradientCfgRaw === "object") ? gaugeGradientCfgRaw : null;
+      const gaugeGradientEnabled = this._toBool(this._resolveDynamicValue(gaugeGradientCfg?.enabled, item.entity, state, !!gaugeGradientCfg), !!gaugeGradientCfg);
+      const gaugeGradientSolid = this._toBool(this._resolveDynamicValue(gaugeGradientCfg?.solid, item.entity, state, false), false);
+      const gaugeGradientReverse = this._toBool(this._resolveDynamicValue(gaugeGradientCfg?.reverse, item.entity, state, false), false);
+      const gaugeGradientStepsRaw = Number(this._resolveDynamicValue(gaugeGradientCfg?.steps, item.entity, state, 0));
+      const gaugeGradientSteps = Number.isFinite(gaugeGradientStepsRaw) ? Math.max(0, Math.floor(gaugeGradientStepsRaw)) : 0;
+      const gaugeGradientPreset = String(this._resolveDynamicValue(gaugeGradientCfg?.preset, item.entity, state, "default") || "default").toLowerCase();
+      const gaugeGradientStopsRaw = Array.isArray(gaugeGradientCfg?.stops) ? gaugeGradientCfg.stops : null;
+      const gaugeDefaultStops = gaugeGradientPreset === "royg"
+        ? [
+            { at: 0.00, color: "#22c55e" },
+            { at: 0.28, color: "#84cc16" },
+            { at: 0.52, color: "#facc15" },
+            { at: 0.74, color: "#fb923c" },
+            { at: 1.00, color: "#ef4444" },
+          ]
+        : gaugeGradientPreset === "default"
+          ? [
+              { at: 0.00, color: "$btn_inactive_bg" },
+              { at: 1.00, color: "$btn_active_bg" },
+            ]
+          : [
+              { at: 0, color: "#22c55e" },
+              { at: 1, color: "#ef4444" },
+            ];
+      const gaugeGradientStopsBase = (gaugeGradientStopsRaw || gaugeDefaultStops)
+        .map((s) => {
+          const at = Number(s?.at);
+          const color = this._paletteColor(s?.color);
+          if (!Number.isFinite(at) || !color) return null;
+          return { at: Math.max(0, Math.min(1, at)), color };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.at - b.at);
+      const gaugeGradientStops = gaugeGradientReverse
+        ? gaugeGradientStopsBase.map((s) => ({ at: 1 - s.at, color: s.color })).sort((a, b) => a.at - b.at)
+        : gaugeGradientStopsBase;
       const gaugeWidth = Math.max(1, this._toPx(this._resolveDynamicValue(gaugeCfg?.width, item.entity, state, Math.max(2, Math.round(btnSize * 0.12))), Math.max(2, Math.round(btnSize * 0.12))));
+      const gaugeInnerBgRaw = this._resolveDynamicValue(gaugeCfg?.inner_background ?? gaugeCfg?.["inner-background"], item.entity, state, null);
+      const gaugeInnerBg = gaugeInnerBgRaw == null || gaugeInnerBgRaw === "" ? null : this._paletteColor(gaugeInnerBgRaw);
       const gaugePosRaw = Number(this._resolveDynamicValue(gaugeCfg?.position, item.entity, state, 0));
       const gaugePos = Number.isFinite(gaugePosRaw) ? Math.max(0, Math.min(1, gaugePosRaw)) : 0;
+      const gaugeColorAt = (t) => {
+        const tt = Math.max(0, Math.min(1, t));
+        if (!gaugeGradientEnabled || gaugeGradientStops.length < 2) return gaugeColor;
+        let left = gaugeGradientStops[0];
+        let right = gaugeGradientStops[gaugeGradientStops.length - 1];
+        for (let i = 0; i < gaugeGradientStops.length - 1; i += 1) {
+          const a = gaugeGradientStops[i];
+          const b = gaugeGradientStops[i + 1];
+          if (tt >= a.at && tt <= b.at) { left = a; right = b; break; }
+        }
+        const parseHex = (hex) => {
+          const h = String(hex || "").trim();
+          const m = h.match(/^#([0-9a-f]{6})$/i);
+          if (!m) return null;
+          const v = m[1];
+          return { r: parseInt(v.slice(0, 2), 16), g: parseInt(v.slice(2, 4), 16), b: parseInt(v.slice(4, 6), 16) };
+        };
+        const l = parseHex(left.color);
+        const r = parseHex(right.color);
+        if (!l || !r) return right?.color || left?.color || gaugeColor;
+        const span = Math.max(0.000001, right.at - left.at);
+        const k = Math.max(0, Math.min(1, (tt - left.at) / span));
+        const mix = (a, b) => Math.round(a + (b - a) * k);
+        return `#${mix(l.r, r.r).toString(16).padStart(2, "0")}${mix(l.g, r.g).toString(16).padStart(2, "0")}${mix(l.b, r.b).toString(16).padStart(2, "0")}`;
+      };
+      const gaugePeakCfgRaw = gaugeCfg?.peak;
+      const gaugePeakListRaw = Array.isArray(gaugePeakCfgRaw) ? gaugePeakCfgRaw : (gaugePeakCfgRaw && typeof gaugePeakCfgRaw === "object" ? [gaugePeakCfgRaw] : []);
+      const gaugePeaks = gaugePeakListRaw.map((peakCfg) => {
+        const enabled = this._toBool(this._resolveDynamicValue(peakCfg?.enabled, item.entity, state, true), true);
+        if (!enabled) return null;
+        const peakEntity = String(this._resolveDynamicValue(peakCfg?.entity, item.entity, state, "") || "").trim();
+        const peakStateObj = peakEntity ? this._hass?.states?.[peakEntity] : null;
+        const peakValueRaw = this._resolveDynamicValue(peakCfg?.value, item.entity, state, peakStateObj?.state ?? null);
+        const peakNumericValue = Number(peakValueRaw);
+        const peakProgress = Number.isFinite(peakNumericValue) && Number.isFinite(denom) && denom !== 0
+          ? Math.max(0, Math.min(1, (peakNumericValue - scale.min) / denom))
+          : null;
+        if (!Number.isFinite(peakProgress)) return null;
+        const peakColorDefault = gaugeColorAt(peakProgress);
+        const peakColor = this._paletteColor(this._resolveDynamicValue(peakCfg?.color, item.entity, state, peakColorDefault));
+        const peakBackgroundRaw = this._resolveDynamicValue(peakCfg?.background, item.entity, state, null);
+        const peakBackground = peakBackgroundRaw == null || peakBackgroundRaw === "" ? null : this._paletteColor(peakBackgroundRaw);
+        const peakNoMark = this._toBool(this._resolveDynamicValue(peakCfg?.no_mark ?? peakCfg?.["no-mark"], item.entity, state, false), false);
+        const peakWidth = Math.max(1, this._toPx(this._resolveDynamicValue(peakCfg?.width, item.entity, state, 10), 10));
+        const peakThickness = Math.max(1, this._toPx(this._resolveDynamicValue(peakCfg?.thickness, item.entity, state, 4), 4));
+        return { peakProgress, peakColor, peakBackground, peakNoMark, peakWidth, peakThickness };
+      }).filter(Boolean);
       const progressActive = progressEnabled ? this._isProgressVisible(progressCfg, item.entity, state) : false;
       const progressColorDefault = this._paletteColor("$seagull_primary") || this._paletteColor(dDef?.active?.background ?? "#f59e0b");
       const progressColor = this._paletteColor(this._resolveDynamicValue(progressCfg?.color, item.entity, state, progressColorDefault));
@@ -746,8 +834,168 @@ class SeagullRoomCard extends HTMLElement {
         finalBorderColor = this._paletteColor("rgba(148,163,184,0.55)");
         if (phantomColorRaw == null) finalIconColor = finalBorderColor;
       }
+      const gaugeProgressDeg = Math.round(gaugeProgress * 360);
+      const gaugeGradientFullCircle = (() => {
+        if (!gaugeGradientEnabled || gaugeGradientStops.length < 2) return null;
+        const colorAt = (t) => {
+          const tt = Math.max(0, Math.min(1, t));
+          let left = gaugeGradientStops[0];
+          let right = gaugeGradientStops[gaugeGradientStops.length - 1];
+          for (let i = 0; i < gaugeGradientStops.length - 1; i += 1) {
+            const a = gaugeGradientStops[i];
+            const b = gaugeGradientStops[i + 1];
+            if (tt >= a.at && tt <= b.at) { left = a; right = b; break; }
+          }
+          const parseHex = (hex) => {
+            const h = String(hex || "").trim();
+            const m = h.match(/^#([0-9a-f]{6})$/i);
+            if (!m) return null;
+            const v = m[1];
+            return { r: parseInt(v.slice(0, 2), 16), g: parseInt(v.slice(2, 4), 16), b: parseInt(v.slice(4, 6), 16) };
+          };
+          const l = parseHex(left.color);
+          const r = parseHex(right.color);
+          if (!l || !r) return right?.color || left?.color || gaugeColor;
+          const span = Math.max(0.000001, right.at - left.at);
+          const k = Math.max(0, Math.min(1, (tt - left.at) / span));
+          const mix = (a, b) => Math.round(a + (b - a) * k);
+          return `#${mix(l.r, r.r).toString(16).padStart(2, "0")}${mix(l.g, r.g).toString(16).padStart(2, "0")}${mix(l.b, r.b).toString(16).padStart(2, "0")}`;
+        };
+        if (gaugeGradientSteps >= 2) {
+          const parts = [];
+          for (let i = 0; i < gaugeGradientSteps; i += 1) {
+            const fromT = i / gaugeGradientSteps;
+            const toT = (i + 1) / gaugeGradientSteps;
+            const fromDeg = Math.round(fromT * 360);
+            const toDeg = Math.round(toT * 360);
+            const c = this._esc(colorAt((fromT + toT) / 2));
+            parts.push(`${c} ${fromDeg}deg ${toDeg}deg`);
+          }
+          return parts.join(", ");
+        }
+        const parts = [];
+        for (let i = 0; i < gaugeGradientStops.length - 1; i += 1) {
+          const a = gaugeGradientStops[i];
+          const b = gaugeGradientStops[i + 1];
+          const fromDeg = Math.round(a.at * 360);
+          const toDeg = Math.round(b.at * 360);
+          if (toDeg <= fromDeg) continue;
+          parts.push(`${this._esc(a.color)} ${fromDeg}deg, ${this._esc(b.color)} ${toDeg}deg`);
+        }
+        return parts.length ? parts.join(", ") : null;
+      })();
+      const gaugeGradientSolidColor = (() => {
+        if (!gaugeGradientEnabled || !gaugeGradientSolid || gaugeGradientStops.length < 2) return null;
+        const t = Math.max(0, Math.min(1, gaugeProgress));
+        let left = gaugeGradientStops[0];
+        let right = gaugeGradientStops[gaugeGradientStops.length - 1];
+        for (let i = 0; i < gaugeGradientStops.length - 1; i += 1) {
+          const a = gaugeGradientStops[i];
+          const b = gaugeGradientStops[i + 1];
+          if (t >= a.at && t <= b.at) { left = a; right = b; break; }
+        }
+        const parseHex = (hex) => {
+          const h = String(hex || "").trim();
+          const m = h.match(/^#([0-9a-f]{6})$/i);
+          if (!m) return null;
+          const v = m[1];
+          return {
+            r: parseInt(v.slice(0, 2), 16),
+            g: parseInt(v.slice(2, 4), 16),
+            b: parseInt(v.slice(4, 6), 16),
+          };
+        };
+        const l = parseHex(left.color);
+        const r = parseHex(right.color);
+        if (!l || !r) return this._esc(right?.color || left?.color || gaugeColor);
+        const span = Math.max(0.000001, right.at - left.at);
+        const k = Math.max(0, Math.min(1, (t - left.at) / span));
+        const mix = (a, b) => Math.round(a + (b - a) * k);
+        const rr = mix(l.r, r.r).toString(16).padStart(2, "0");
+        const gg = mix(l.g, r.g).toString(16).padStart(2, "0");
+        const bb = mix(l.b, r.b).toString(16).padStart(2, "0");
+        return `#${rr}${gg}${bb}`;
+      })();
+      const gaugeGradientActiveArc = (() => {
+        if (!gaugeGradientEnabled || gaugeGradientStops.length < 2) return null;
+        if (gaugeProgressDeg <= 0) return `transparent 0deg 360deg`;
+        const colorAt = (t) => {
+          const tt = Math.max(0, Math.min(1, t));
+          let left = gaugeGradientStops[0];
+          let right = gaugeGradientStops[gaugeGradientStops.length - 1];
+          for (let i = 0; i < gaugeGradientStops.length - 1; i += 1) {
+            const a = gaugeGradientStops[i];
+            const b = gaugeGradientStops[i + 1];
+            if (tt >= a.at && tt <= b.at) { left = a; right = b; break; }
+          }
+          const parseHex = (hex) => {
+            const h = String(hex || "").trim();
+            const m = h.match(/^#([0-9a-f]{6})$/i);
+            if (!m) return null;
+            const v = m[1];
+            return { r: parseInt(v.slice(0, 2), 16), g: parseInt(v.slice(2, 4), 16), b: parseInt(v.slice(4, 6), 16) };
+          };
+          const l = parseHex(left.color);
+          const r = parseHex(right.color);
+          if (!l || !r) return right?.color || left?.color || gaugeColor;
+          const span = Math.max(0.000001, right.at - left.at);
+          const k = Math.max(0, Math.min(1, (tt - left.at) / span));
+          const mix = (a, b) => Math.round(a + (b - a) * k);
+          return `#${mix(l.r, r.r).toString(16).padStart(2, "0")}${mix(l.g, r.g).toString(16).padStart(2, "0")}${mix(l.b, r.b).toString(16).padStart(2, "0")}`;
+        };
+        if (gaugeGradientSteps >= 2) {
+          const parts = [];
+          for (let i = 0; i < gaugeGradientSteps; i += 1) {
+            const fromT = i / gaugeGradientSteps;
+            const toT = (i + 1) / gaugeGradientSteps;
+            const segFrom = Math.round(fromT * 360);
+            const segTo = Math.round(toT * 360);
+            const from = Math.max(0, segFrom);
+            const to = Math.min(gaugeProgressDeg, segTo);
+            if (to <= from) continue;
+            const c = this._esc(colorAt((fromT + toT) / 2));
+            parts.push(`${c} ${from}deg ${to}deg`);
+          }
+          return parts.length ? `${parts.join(", ")}, transparent ${gaugeProgressDeg}deg 360deg` : `transparent 0deg 360deg`;
+        }
+        const activeParts = [];
+        for (let i = 0; i < gaugeGradientStops.length - 1; i += 1) {
+          const a = gaugeGradientStops[i];
+          const b = gaugeGradientStops[i + 1];
+          const segFrom = Math.round(a.at * 360);
+          const segTo = Math.round(b.at * 360);
+          if (segTo <= segFrom) continue;
+          const from = Math.max(0, segFrom);
+          const to = Math.min(gaugeProgressDeg, segTo);
+          if (to <= from) continue;
+          activeParts.push(`${this._esc(a.color)} ${from}deg, ${this._esc(b.color)} ${to}deg`);
+        }
+        if (!activeParts.length) return `transparent 0deg 360deg`;
+        return `${activeParts.join(", ")}, transparent ${gaugeProgressDeg}deg 360deg`;
+      })();
       const donutHtml = gaugeEnabled
-        ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${Math.round(gaugeProgress * 360)}deg, ${this._esc(gaugeBg)} ${Math.round(gaugeProgress * 360)}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;"></span>`
+        ? (gaugeGradientFullCircle
+          ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeBg)} 0deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;z-index:1;"></span>
+             <span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${gaugeGradientSolid && gaugeGradientSolidColor ? `${this._esc(gaugeGradientSolidColor)} 0deg ${gaugeProgressDeg}deg, transparent ${gaugeProgressDeg}deg 360deg` : gaugeGradientActiveArc});-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;z-index:3;"></span>`
+          : `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(gaugeColor)} 0deg ${gaugeProgressDeg}deg, ${this._esc(gaugeBg)} ${gaugeProgressDeg}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;z-index:3;"></span>`)
+        : "";
+      const gaugePeakHtml = (gaugeEnabled && gaugePeaks.length)
+        ? gaugePeaks.filter((p) => !p.peakNoMark).map((p) => {
+            const peakDeg = Math.round(p.peakProgress * 360);
+            const fromDeg = Math.max(0, peakDeg - p.peakThickness);
+            return `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, transparent 0deg ${fromDeg}deg, ${this._esc(p.peakColor)} ${fromDeg}deg ${peakDeg}deg, transparent ${peakDeg}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${p.peakWidth}px),#000 calc(100% - ${p.peakWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${p.peakWidth}px),#000 calc(100% - ${p.peakWidth}px));pointer-events:none;z-index:2;"></span>`;
+          }).join("")
+        : "";
+      const gaugePeakBackgroundHtml = (gaugeEnabled && gaugePeaks.length)
+        ? gaugePeaks
+          .filter((p) => !!p.peakBackground)
+          .map((p) => {
+            const peakDeg = Math.round(p.peakProgress * 360);
+            return `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(p.peakBackground)} 0deg ${peakDeg}deg, transparent ${peakDeg}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;z-index:2;"></span>`;
+          }).join("")
+        : "";
+      const gaugeInnerBgHtml = (gaugeEnabled && gaugeInnerBg)
+        ? `<span aria-hidden="true" style="position:absolute;inset:${Math.max(1, gaugeWidth - 1)}px;border-radius:inherit;background:${this._esc(gaugeInnerBg)};pointer-events:none;z-index:0.5;"></span>`
         : "";
       const progressHtml = progressEnabled
         ? `<span aria-hidden="true" style="position:absolute;inset:0;border-radius:inherit;background:${this._esc(progressBg)};-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${progressWidth}px),#000 calc(100% - ${progressWidth}px));pointer-events:none;"></span>
@@ -901,6 +1149,9 @@ class SeagullRoomCard extends HTMLElement {
       const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}${touchActionStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${Math.max(visualBorderW, isPhantom ? 1 : 0)}px ${finalBorderStyle} ${this._esc(finalBorderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
+            ${gaugeInnerBgHtml}
+            ${gaugePeakBackgroundHtml}
+            ${gaugePeakHtml}
             ${progressHtml}
             ${contentHtml}
             ${badgeHtml}

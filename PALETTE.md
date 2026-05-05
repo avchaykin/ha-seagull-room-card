@@ -42,6 +42,8 @@ GitHub-safe swatches (local SVG files).
 | `btn_auto_inactive_bg` | ![#d1d5db](./palette-swatches/btn_auto_inactive_bg-day.svg) | ![#94a3b8](./palette-swatches/btn_auto_inactive_bg-night.svg) |
 | `btn_empty_inactive_fg` | ![#111827](./palette-swatches/btn_empty_inactive_fg-day.svg) | ![#e2e8f0](./palette-swatches/btn_empty_inactive_fg-night.svg) |
 | `btn_empty_inactive_bg` | ![#e5e7eb](./palette-swatches/btn_empty_inactive_bg-day.svg) | ![#334155](./palette-swatches/btn_empty_inactive_bg-night.svg) |
+| `seagull_primary_bg` | ![#e5e7eb](./palette-swatches/btn_empty_inactive_bg-day.svg) | ![#334155](./palette-swatches/btn_empty_inactive_bg-night.svg) |
+| `seagull_primary_fg` | ![#334155](./palette-swatches/btn_empty_inactive_bg-night.svg) | ![#e5e7eb](./palette-swatches/btn_empty_inactive_bg-day.svg) |
 | `btn_alert_active_fg` | ![#fffafa](./palette-swatches/btn_alert_active_fg-day.svg) | ![#ffe4e6](./palette-swatches/btn_alert_active_fg-night.svg) |
 | `btn_alert_active_bg` | ![#f63b3b](./palette-swatches/btn_alert_active_bg-day.svg) | ![#b91c1c](./palette-swatches/btn_alert_active_bg-night.svg) |
 | `obsolete_border` | ![#d1d5db](./palette-swatches/obsolete_border-day.svg) | ![#94a3b8](./palette-swatches/obsolete_border-night.svg) |
@@ -63,3 +65,16 @@ GitHub-safe swatches (local SVG files).
 | `seagull_steel` | ![#44779944](./palette-swatches/seagull_steel-day.svg) | ![#44779966](./palette-swatches/seagull_steel-night.svg) |
 | `seagull_copper` | ![#aa664444](./palette-swatches/seagull_copper-day.svg) | ![#aa664466](./palette-swatches/seagull_copper-night.svg) |
 | `seagull_mint` | ![#44aa6644](./palette-swatches/seagull_mint-day.svg) | ![#44aa6666](./palette-swatches/seagull_mint-night.svg) |
+
+## Gauge Gradient Presets (preview)
+
+| Preset | Preview | Stops |
+|---|---|---|
+| `default` (current default) | <img alt="default gradient" src="https://dummyimage.com/320x18/e5e7eb/f59e0b.png&text=%20" /> | `0.00: $btn_inactive_bg` → `1.00: $btn_active_bg` |
+| `royg` | <img alt="royg gradient" src="https://dummyimage.com/320x18/22c55e-84cc16-facc15-fb923c-ef4444/ffffff.png&text=%20" /> | `0.00:#22c55e, 0.28:#84cc16, 0.52:#facc15, 0.74:#fb923c, 1.00:#ef4444` |
+
+Notes:
+- `reverse: true` flips preset direction.
+- `steps: N` renders the gradient as discrete color bands.
+- `solid: true` paints active arc with a single color sampled from the gradient at current value.
+

@@ -1,19 +1,35 @@
-# Seagull Room Card — Full Documentation
+# Seagull Room Card — User Guide
 
-## 1) Card overview
-
-`custom:seagull-room-card` is a compact room card for Home Assistant with:
-
-- card icon
-- optional text layer
-- configurable button grid
-- dynamic templates and visibility
-- per-domain defaults and actions
-- day/night palette theme
+`custom:seagull-room-card` — карточка Home Assistant для управления комнатой через текстовый блок + сетку кнопок.
 
 ---
 
-## 2) Minimal example
+## 1. Установка
+
+### Вариант A (рекомендуется): HACS
+
+1. HACS → **Frontend** → **⋮** → **Custom repositories**
+2. Добавьте: `https://github.com/avchaykin/ha-seagull-room-card`
+3. Category: **Dashboard**
+4. Установите **Seagull Room Card**
+5. В Lovelace Resources добавьте:
+   - URL: `/hacsfiles/ha-seagull-room-card/seagull-room-card.js`
+   - Type: `JavaScript Module`
+
+### Вариант B: вручную
+
+1. Скопируйте в HA:
+   - `/config/www/seagull-room-card.js`
+   - `/config/www/seagull-room-card-loader.js`
+2. В Resources добавьте:
+   - URL: `/local/seagull-room-card-loader.js`
+   - Type: `JavaScript Module`
+
+---
+
+## 2. Первый запуск за 3 минуты
+
+### Шаг 1. Добавьте минимальную карточку
 
 ```yaml
 type: custom:seagull-room-card
@@ -22,37 +38,57 @@ buttons:
     - entity: light.living_room
 ```
 
+### Шаг 2. Добавьте вторую кнопку
+
+```yaml
+type: custom:seagull-room-card
+buttons:
+  entities:
+    - entity: light.living_room
+    - entity: switch.tv
+```
+
+### Шаг 3. Добавьте верхний текст
+
+```yaml
+type: custom:seagull-room-card
+text:
+  value: "{{ states('sensor.living_room_temperature')|round(1) }}°C"
+buttons:
+  entities:
+    - entity: light.living_room
+    - entity: switch.tv
+```
+
 ---
 
-## 3) Top-level config
+## 3. Базовая структура конфигурации
 
-- `type` (required): `custom:seagull-room-card`
-- `entity` (optional): default entity used by templates/actions
-- `icon`, `icon_color`, `icon_size`
-- `background_color`, `background_opacity`, `border_radius`, `border_width`, `border_color`
-- `font_family`, `font_weight`, `font_size`, `font_url` (card-level defaults)
-- `tap_action`, `double_tap_action`, `hold_action` (card-level actions)
-- `variables` (custom template variables)
-- `text` (text layer block)
-- `buttons` (button layout/logic)
-- `lights` (alias for `buttons`)
-- `theme` (palette + style defaults)
+```yaml
+type: custom:seagull-room-card
+entity: climate.living_room # optional
+text: ...                    # optional
+buttons: ...                 # основной блок
+theme: ...                   # optional
+```
+
+Главные блоки:
+- `text` — верхняя текстовая плашка
+- `buttons` (или alias `lights`) — сетка кнопок
+- `theme` — визуальные токены/палитра
 
 ---
 
-## 4) Text block (`text`)
+## 4. Настройка блока `text`
 
-Fields:
+Часто используемые поля:
+- `value` (поддерживает шаблоны)
+- `color`, `background_color`
+- `size`, `halign`, `valign`
+- `padding` и side-specific padding
+- `tap_action` / `hold_action` / `double_tap_action`
 
-- `text.entity` (optional)
-- `text.value` (supports templates)
-- `text.color`, `text.background_color` (or `text.background`)
-- `text.border_radius`, `text.border_width`, `text.border_color`
-- `text.size`, `text.halign`, `text.valign`
-- `text.padding`, `text.padding_top`, `text.padding_right`, `text.padding_bottom`, `text.padding_left`
-- `text.tap_action`, `text.double_tap_action`, `text.hold_action`
-
-Example:
+Пример:
 
 ```yaml
 text:
@@ -65,88 +101,96 @@ text:
 
 ---
 
-## 5) Buttons block (`buttons` / `lights`)
+## 5. Настройка блока `buttons`
 
-### 5.1 Layout + defaults
+### 5.1 Layout
 
 - `cols` / `columns`
-- `rows` (minimum row height reservation)
-- `size`, `gap`
-- `padding`, `padding_top`, `padding_right`, `padding_bottom`, `padding_left`
+- `rows`
+- `size`
+- `gap`
 - `align`: `left | center | right | justified`
 
-Style defaults:
+Пример:
 
-- `icon`, `color`, `background`, `bg`
-- `border`, `border_color`, `border_radius`
-- `font_family`, `font_weight`, `font_size` (button text)
+```yaml
+buttons:
+  cols: 4
+  gap: 8
+  align: justified
+  entities:
+    - entity: light.living_room
+    - entity: switch.tv
+```
 
-Behavior defaults:
+### 5.2 Где описывать кнопки
 
-- `use_light_color` / `light_color`
-- `invert_state`
-- `obsolete`
-- `phantom`
-
-Visibility defaults:
-
-- `show`
-- `show_value`, `show_not_value`
-- `show_above`, `show_below`
-- `keep_spot`
-
-Action defaults:
-
-- `tap_action`, `double_tap_action`, `hold_action`
-
-### 5.2 Button collections
-
-Supported keys (array or object where relevant):
-
+Поддерживаются:
 - `buttons.entities`
 - `buttons.items`
 - `buttons.button`
 - `buttons.buttons`
 - `buttons.light`
 
-`lights` works as alias of `buttons`.
+Рекомендуется для новых конфигов: **`buttons.items`** (наиболее универсально).
 
 ---
 
-## 6) Per-button fields
+## 6. Конфигурация одной кнопки
 
-Each item may include:
-
-- `entity` (optional for icon/text-only button)
-  - can be a single entity string
-  - or an array of entities
-- `width` (column span)
+Поддерживаемые поля (основные):
+- `entity`
 - `icon`
-- `text` or `label`
-- `color`, `background`, `border`, `border_color`, `border_radius`
-- `font_family`, `font_weight`, `font_size`
-- `mini` (render as mini button)
-- `view` (button presentation mode)
-- `badge` (top-right indicator)
-- `empty` (render blank slot)
-- `tap_action`, `double_tap_action`, `hold_action`
-- `show`, `show_value`, `show_not_value`, `show_above`, `show_below`
+- `text` / `label`
+- `width` (span по колонкам)
+- `color`, `background`, `border`, `border_radius`
+- `tap_action`, `hold_action`, `double_tap_action`
 - `show`, `show_state`, `show_not_state`, `show_above`, `show_below`
-- `keep_spot`
-- `invert_state`
-- `obsolete`
+- `badge`
+- `mini`
+- `view`
 
-Badge (`badge`) supports condition keys compatible with button visibility (`show`, `show_value`/`state`, `show_not_value`, `show_above`, `show_below`) and display keys:
-- `color` / `background`
-- `icon`, `icon_color`
-- `text`
-- `size`
+Пример:
 
-Behavior:
-- without `icon`/`text`: small dot in top-right corner of button bounding box (inside the box)
-- with `icon` (or `text`): larger badge center placed on button circumference in top-right sector
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      icon: mdi:lightbulb
+      text: Kitchen
+      width: 2
+      show_state: "on"
+```
 
-Example:
+---
+
+## 7. Visibility и условная логика
+
+### 7.1 Показывать кнопку по состоянию
+
+```yaml
+buttons:
+  items:
+    - entity: binary_sensor.window
+      show_state: "on"
+```
+
+### 7.2 Показывать по шаблону
+
+```yaml
+buttons:
+  items:
+    - entity: sensor.energy_price
+      show: "{{ states(entity)|float(0) > 0.20 }}"
+```
+
+> `show_value` / `show_not_value` поддерживаются, но предпочтительнее `show_state` / `show_not_state`.
+
+---
+
+## 8. Badge-индикаторы
+
+Пример dot-badge если свет включён:
 
 ```yaml
 buttons:
@@ -157,30 +201,7 @@ buttons:
         color: "#ef4444"
 ```
 
-Phantom button (`phantom`):
-
-Shows a temporary ghost version of a button when normal button visibility has just turned off.
-
-- `enabled` (default: `true` when `phantom` is set)
-- `duration` (seconds)
-- conditions: `state` / `state_value`, `state_not_value` (also supports `show_value` / `show_not_value`)
-- style: `color`, `background`, `icon`
-
-Defaults when style fields are omitted:
-- gray semi-transparent ghost style with dashed border
-
-Priority rule:
-- full/normal button visibility always wins over phantom (if both conditions match)
-
-```yaml
-buttons:
-  items:
-    - entity: binary_sensor.front_door
-      show: "{{ state == 'on' }}"
-      phantom:
-        duration: 120
-        state: "off"
-```
+Пример icon-badge:
 
 ```yaml
 buttons:
@@ -191,40 +212,13 @@ buttons:
         icon: mdi:shield-lock
         color: "#22c55e"
         icon_color: "#ffffff"
-        size: 16
 ```
 
-If `entity` is an array:
+---
 
-- first entity is the primary one (state/domain/actions)
-- all entities are available in templates as shortcuts:
-  - `e[0]`, `e[1]`, ... for entity ids
-  - `s[0]`, `s[1]`, ... for states (`states(e[i])`)
-  - `a[0]['attr']`, `a[1]['attr']`, ... for attributes
+## 9. Mini-кнопки
 
-Example:
-
-```yaml
-buttons:
-  items:
-    - entity:
-        - input_select.alarm_mode
-        - input_boolean.alarm_pause
-        - timer.alarm_pause_timer
-      color:
-        - state_template: "{{ s[0] == 'away' || s[1] == 'on' }}"
-          value: goldenrod
-        - value: dimgrey
-```
-
-Visibility naming:
-- Preferred: `show_state`, `show_not_state`
-- Deprecated (still supported): `show_value`, `show_not_value`
-
-Mini buttons:
-
-- `mini: true` makes button 4x smaller (2x2 packing)
-- consecutive mini buttons are grouped 4 per normal slot, then continue into next slot
+`mini: true` включает packed-режим (4 mini в слот обычной кнопки).
 
 ```yaml
 buttons:
@@ -237,429 +231,194 @@ buttons:
       mini: true
     - entity: light.d
       mini: true
-    - entity: light.e
-      mini: true
 ```
 
-View modes (`view`):
+---
+
+## 10. Расширенные view-режимы
+
+### Default button view
 
 ```yaml
 view:
   type: button
 ```
 
-Default button mode (can be omitted).
+### Gauge
 
 ```yaml
 view:
   type: gauge
   style: donut
-  color: ...
-  background: ...
   scale: { min: 0, max: 100 }
-  value: ...
-  width: 4
-  position: 0.75
+  gradient:
+    enabled: true
+    preset: default
+    solid: false
+    # optional custom stops
+    # stops:
+    #   - at: 0
+    #     color: "#22c55e"
+    #   - at: 0.5
+    #     color: "#eab308"
+    #   - at: 1
+    #     color: "#ef4444"
+  peak:
+    - entity: sensor.living_room_power_peak
+      width: 10
+      thickness: 5
+    - entity: sensor.living_room_power_warning
+      thickness: 6
 ```
 
-Gauge options:
-- `style`: `donut` (default)
-- `value` (default entity state)
-- `scale` number or `{min,max}`
+`peak` для gauge:
+- поддерживает объект **или массив объектов** (несколько рисок)
+- `entity` — сенсор, из которого берётся пиковое значение
+- `value` — альтернативно можно передать значение напрямую/шаблоном (если не указан `entity`)
+- `enabled` (default `true`)
+- `color` — цвет риски (по умолчанию берётся из градиента в точке значения peak; если градиент выключен — цвет gauge)
+- `background` — если задан, этим цветом закрашивается фон gauge от 0 до значения peak
+- `no_mark` (или `no-mark`) — скрыть риску peak (default: `false`), оставить только background
+- `width` — толщина кольца peak (default: `10`)
+- `thickness` — угловая толщина риски (в градусах дуги, default: `4`)
+
+`gradient` для gauge:
+- `enabled` — включить градиентную раскраску дуги
+- `preset` — `default` (по умолчанию: `$btn_inactive_bg` → `$btn_active_bg`) или `royg` (зелёный → жёлтый → оранжевый → красный)
+- `stops` — кастомные точки градиента (`at` от `0..1`, `color`)
+- `steps` — количество дискретных шагов градиента (если задано, градиент рисуется ступенчато)
+- `reverse` (default: `false`) — реверсирует порядок градиента
+- `solid` (default: `false`) — если `true`, активная дуга красится в один цвет, вычисленный по позиции текущего значения в градиенте
+
+По умолчанию peak рисуется как риска поверх gauge, немного шире основного кольца.
+
+### Progress
 
 ```yaml
 view:
   type: progress
   style: runner
-  show:
-    show_state: "on"
-  width: 6
   length: 0.25
   speed: 1
-  color: "$seagull_active_blue"
-  background: "transparent"
 ```
-
-Progress mode (`view.type: progress`, `style: runner`):
-- visibility uses the same syntax as buttons (`show`, `show_state`, `show_not_state`, `show_value`, `show_not_value`, `show_above`, `show_below`)
-- you can use either top-level keys in `view` or nested `show:` block
-- active state renders a rotating segment
-- `width`: ring thickness (default: `6`)
-- `length`: segment length, `1` means full circle (default: `0.25`)
-- `speed`: turns per second, `1` means one full rotation per second (default: `0.5`)
-- `color`: active segment color (default: `$seagull_primary`)
-- `background`: base ring color (default: `transparent`)
-- `color`, `background`, `width`, `position`
-- `show_value`: show value text over gauge (number-like)
-- `icon` can be an array aligned with `entity` order
-
-```yaml
-view:
-  type: number
-  style: big
-```
-
-Default style for `view.type: number` is `big`.
-
-```yaml
-view:
-  type: watchface
-  style: solid
-  scale: hour
-  notches: 12
-  length: 10
-  time_length: 14
-  color: "#111111"
-  time_color: "#ef4444"
-  show_state: "on"
-  accent_color: "#22c55e"
-```
-
-Watchface mode:
-- `style`: `solid` (default donut ring) or `notches` (legacy tick marks)
-- `scale`: `hour` (default, full circle = 60 min) or `day` (full circle = 12h)
-- `notches`: number of marks (1..60)
-- `length`: notch length toward center
-- `time_length`: current-time notch length (default: `2 * length`)
-- active segment is highlighted with `time_color`
-- other notches use `color`
-- optional `show_state`: marks periods in the selected scale window where entity was in that state
-- `accent_color`: color for such historical marks
-
-Number mode `three-lines`:
-
-- layout: top value + bottom icon
-- value area ~60% of button height
-- supports one or multiple entities (`entity` can be array)
-- tap action: rotates visible entity/value/icon
-- hold action: always opens `more-info` for currently shown entity
-- for temperature/humidity/percent values, shows small suffix on the right (`°` or `%`)
-- uses condensed font (`Oswald`)
-- `unit_of_measurement`: `true | false | <string>`
-- `value_font_size`, `unit_font_size`
-- `font_familly` (or `font_family`) to override number-view font; default is HA/Lovelace standard (`inherit`)
-- `font_weight` to control number-view text weight (default: `400`)
-
-Example:
-
-```yaml
-buttons:
-  items:
-    - view:
-        type: number
-        style: three-lines
-      entity:
-        - sensor.living_temperature
-        - sensor.living_humidity
-```
-
-Number mode `big`:
-
-- button background is hidden
-- large icon is rendered as background (icon color uses button `background` color)
-- value text is larger, lower and left-aligned
-- unit (`%`, `°C`, `°F`) is shown on the right of value, top-aligned
-
-```yaml
-buttons:
-  items:
-    - view:
-        type: number
-        style: big
-      entity:
-        - sensor.living_temperature
-        - sensor.living_humidity
-```
-
-Button text behavior:
-
-- If text exists, icon is shown on the left.
-- For `width: 1`, if icon + text do not fit, icon is hidden and text remains.
-- If `icon: false` or `icon: null`, icon is explicitly hidden and only text is shown.
-- Overflow text is clipped (no ellipsis).
 
 ---
 
-## 7) Actions
+## 11. Примеры «под задачу»
 
-Supported action types:
-
-- `toggle`
-- `more-info`
-- `navigate`
-- `perform-action`
-- `sequence`
-- `brightness` (light only, mainly for hold gesture)
-
-### 7.1 `toggle`
-
-- Generic domains: `homeassistant.toggle`
-- `lock.*`: switches between `lock.lock` and `lock.unlock`
-- `media_player.*`: switches between `media_play` and `media_pause`
-
-### 7.2 `more-info`
-
-Opens Home Assistant more-info dialog for target entity.
-
-### 7.3 `navigate`
-
-Uses `navigation_path` / `url_path` / `path`.
-
-### 7.4 `perform-action`
-
-- `perform_action` (or `service`) as `domain.service`
-- optional `data` / `service_data`
-- optional `target`
-
-### 7.5 `sequence`
-
-Run actions in order.
-
-Supports delay steps:
-
-- object with `delay_ms` or `delay`
-- plain number (milliseconds)
-
-Example:
-
-```yaml
-tap_action:
-  action: sequence
-  sequence:
-    - action: perform-action
-      perform_action: light.turn_on
-      target:
-        entity_id: light.kitchen
-    - delay_ms: 300
-    - action: more-info
-```
-
-### 7.6 `brightness`
-
-For `light.*` entities, you can set:
-
-```yaml
-hold_action: brightness
-```
-
-Behavior:
-- long-press starts brightness mode
-- drag up increases brightness
-- drag down decreases brightness
-- updates are sent as `light.turn_on` with `brightness_pct`
-
----
-
-## 8) Templates and variables
-
-Dynamic fields support:
-
-- plain values
-- rules arrays (`[{ state: ..., value: ... }]`)
-- template strings
-
-Supported template forms:
-
-- full expression: `{{ ... }}`
-- inline expression in text: `Temp {{ states(entity)|round }}°C`
-- simple Jinja-style condition blocks: `{% if ... %}...{% else %}...{% endif %}`
-
-Built-ins available in template context include:
-
-- `hass`
-- `entity`
-- `state`
-- `states(entity_id)` helper
-- `state_attr(entity_id, attr)` helper
-- `time_rest(entity_id, attr?, unit)` helper
-- `timer_progress(timer_entity_id)` helper
-- `all_states`
-- `attributes`
-- `e` (entity array shortcut)
-- `s` (states array shortcut aligned with `e`)
-- `a` (attributes array shortcut aligned with `e`)
-- `is_on`
-- `vars` + flattened `variables`
-- filters/helpers: `round`, `upper`, `lower`, `trim`, `capitalize`, `title`
-
-Top-level `variables` can be reused in templates.
-
-Shortcuts examples:
-
-```yaml
-color:
-  - state_template: "{{ state_attr('schedule.dechets', 'trash') == 'ordures' }}"
-    value: dimgrey
-  - value: red
-```
-
-```yaml
-variables:
-  e:
-    - sensor.temp_living
-    - sensor.temp_bedroom
-
-text:
-  value: "Living: {{ s[0] }} / Bedroom attr: {{ a[1]['unit_of_measurement'] }}"
-```
-
-`time_rest` examples:
-
-```yaml
-text:
-  value: "До старта: {{ time_rest('timer.wakeup', 'finishes_at', 'min') }} мин"
-```
-
-```yaml
-text:
-  value: "До события: {{ time_rest('sensor.next_event', '', 'hour') }} ч"
-```
-
-`timer_progress` example:
-
-```yaml
-buttons:
-  items:
-    - entity: timer.kitchen
-      view:
-        type: gauge
-        show_value: true
-        value: "{{ timer_progress('timer.kitchen') }}"
-        scale: 100
-```
-
-Rules arrays with `state` / `state_template`:
-
-```yaml
-icon:
-  - state: "on"
-    value: mdi:lightbulb
-  - value: mdi:lightbulb-off
-```
-
-```yaml
-color:
-  - state_template: "{{ s[0] == 'HOME' && s[1] == 'off' }}"
-    value: dimgrey
-  - state_template: "{{ s[0] == 'AWAY' }}"
-    value: goldenrod
-  - value: red
-```
-
-Notes:
-- `state` compares against the primary entity state.
-- `state_template` lets you use full expression logic.
-- in rules arrays, use `value` (not `icon`/`color`) for the resolved output.
-
----
-
-## 9) Visibility rules
-
-Per-button (or default in `buttons`):
-
-- `show` (boolean)
-- `show_value` / `show_not_value`
-- `show_above` / `show_below` (numeric state checks)
-
-If entity is unavailable/missing and `keep_spot` is true, blank placeholder can preserve grid shape.
-
----
-
-## 10) Obsolete state styling
-
-`obsolete` can mark stale entities based on update age.
-
-Accepted forms:
-
-- `obsolete: <hours>`
-- `obsolete:` object with options (`hours`, `color`, `background`, `border`, `border_color`, `icon`)
-
----
-
-## 11) Theme system
-
-`theme` supports:
-
-- `theme.palette_mode`: `auto | day | night`
-- `theme.palette`: custom named colors (`string` or `{ day, night }`)
-- `theme.card`, `theme.text`, `theme.button`
-
-Palette references use `$name` syntax.
-
-Example:
-
-```yaml
-buttons:
-  background: "$seagull_rose"
-```
-
-Default theme schema is provided in `seagull-room-card-theme-default.js`.
-
----
-
-## 12) Domain defaults
-
-Active-state mapping:
-
-- regular domains: `state == on`
-- `lock.*`: active when `state == unlocked`
-- `media_player.*`: active when `state == playing`
-
-Default action mapping:
-
-- `sensor.*` and `binary_sensor.*`: tap / hold / double_tap default to `more-info`
-- other domains: tap defaults to `toggle`, hold/double to `more-info`
-
----
-
-## 13) Interaction feedback
-
-Button press feedback uses a temporary translucent outer ring (`box-shadow`) based on current button color.
-
-- does not change button size
-- does not move layout
-- intended to provide instant response before entity state updates
-
----
-
-## 14) Advanced example
+### 11.1 Свет + шторы + температура
 
 ```yaml
 type: custom:seagull-room-card
-entity: climate.living_room
-icon: mdi:sofa
-font_family: "Oswald, sans-serif"
-
 text:
-  value: "{{ states('sensor.living_room_temperature')|round }}°C"
-  size: 16
-
+  value: "Living room · {{ states('sensor.living_room_temperature')|round(1) }}°C"
 buttons:
-  cols: 3
-  size: 48
-  gap: 6
-  font_weight: 700
-
+  cols: 4
   items:
     - entity: light.living_room
-      text: "Main"
-      width: 1
+      text: Main
+    - entity: light.floor_lamp
+      text: Floor
+    - entity: cover.living_room_blinds
+      text: Blinds
+    - entity: climate.living_room
+      text: Climate
+```
 
-    - entity: switch.floor_lamp
-      text: "Floor"
-      icon: false
+### 11.2 Кнопка только при активном датчике
 
-    - entity: lock.front_door
-      text: "Door"
-      show: "{{ states(entity) != 'unavailable' }}"
-
-    - empty: true
-      width: 2
+```yaml
+buttons:
+  items:
+    - entity: binary_sensor.motion_living_room
+      icon: mdi:motion-sensor
+      color: "#ef4444"
+      show_state: "on"
 ```
 
 ---
 
-## 15) Version/debug notes
+## 12. Troubleshooting
 
-- Card logs version information in browser console.
-- Version badge is shown in editor context.
+1. Карточка не отображается:
+   - проверьте resource URL;
+   - сделайте hard refresh браузера;
+   - проверьте, что файл реально в `/www` или в HACS пути.
+
+2. Шаблон не работает:
+   - проверьте entity id;
+   - проверьте синтаксис Jinja;
+   - попробуйте простой шаблон без фильтров.
+
+3. Кнопка не видна:
+   - временно уберите `show*` условия;
+   - проверьте текущее состояние entity в Developer Tools.
+
+---
+
+## 13. Анализ текущей структуры конфига + предложения
+
+### Что уже хорошо
+
+1. Очень гибкая система кнопок (подходит для реальных сложных комнат).
+2. Мощные visibility-правила и шаблоны.
+3. Поддержка alias-ключей упрощает совместимость старых конфигов.
+
+### Что сейчас создаёт путаницу
+
+1. **Слишком много синонимов** (`entities/items/button/buttons/light`, `cols/columns`, `background/bg`).
+2. **Смешение уровней абстракции** (layout + style + behavior + visibility в одном плоском слое).
+3. **Частично устаревший нейминг** (`show_value` vs `show_state`).
+4. **Сложно понять «рекомендуемый путь»** для новых пользователей.
+
+### Практичные улучшения без ломки
+
+1. Зафиксировать «канон» для новых конфигов:
+   - `buttons.items`
+   - `columns` (вместо `cols`)
+   - `show_state` / `show_not_state`
+   - `background` (вместо `bg`)
+
+2. Ввести мягкую нормализацию в редакторе/доке:
+   - автоматически конвертировать alias в canonical-поля при сохранении (опционально).
+
+3. Подсветить deprecated-поля в документации:
+   - но не удалять их из рантайма сразу.
+
+4. Для v2 (дальше) перейти к вложенной структуре:
+
+```yaml
+buttons:
+  layout:
+    columns: 4
+    gap: 8
+    align: justified
+  defaults:
+    style:
+      background: "#1f2937"
+      border_radius: 10
+    behavior:
+      invert_state: false
+  items:
+    - entity: light.kitchen
+      label: Kitchen
+```
+
+### Рекомендованный план миграции
+
+- Этап 1: документация + canonical-примеры (сейчас)
+- Этап 2: предупреждения в editor UI для legacy-ключей
+- Этап 3: optional auto-migrate при сохранении
+- Этап 4: только после этого обсуждать «hard deprecations»
+
+---
+
+## 14. Короткая памятка (TL;DR)
+
+Для новых конфигов используйте:
+- `buttons.items`
+- `columns`
+- `show_state` / `show_not_state`
+- явные `tap_action` для нестандартных сценариев
+
+И начинайте с малого: 2–4 кнопки, потом усложняйте.

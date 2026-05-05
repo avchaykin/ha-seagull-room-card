@@ -49,6 +49,8 @@ palette:
 
   btn_empty_inactive_fg: { day: "#111827", night: "#e2e8f0" }
   btn_empty_inactive_bg: { day: "#e5e7eb", night: "#334155" }
+  seagull_primary_bg: { day: "#e5e7eb", night: "#334155" }
+  seagull_primary_fg: { day: "#334155", night: "#e5e7eb" }
 
   btn_alert_active_fg: { day: "#fffafa", night: "#ffe4e6" }
   btn_alert_active_bg: { day: "#f63b3b", night: "#b91c1c" }
