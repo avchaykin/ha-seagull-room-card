@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "1.2.3";
+const SEAGULL_ROOM_CARD_VERSION = "1.2.4";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 const SEAGULL_ROOM_THEME_DEFAULT = {
@@ -1362,6 +1362,10 @@ class SeagullRoomCard extends HTMLElement {
 
     const sizeDefault = 12;
     const gap = Math.max(0, this._toPx(labelsCfg.gap ?? 6, 6));
+    const padTop = Math.max(0, this._toPx(labelsCfg.padding_top ?? labelsCfg.offset_top ?? 10, 10));
+    const padSide = Math.max(0, this._toPx(labelsCfg.padding_side ?? labelsCfg.padding_x ?? labelsCfg.offset_side ?? 10, 10));
+    const padLeft = Math.max(0, this._toPx(labelsCfg.padding_left ?? padSide, padSide));
+    const padRight = Math.max(0, this._toPx(labelsCfg.padding_right ?? padSide, padSide));
     const wrap = this._toBool(labelsCfg.wrap ?? false, false);
     const buttonsCfg = this._config?.buttons || this._config?.lights || {};
     const btnAlignRaw = String(buttonsCfg.align ?? "right").toLowerCase();
@@ -1398,7 +1402,7 @@ class SeagullRoomCard extends HTMLElement {
     }).filter(Boolean).join("");
 
     if (!html) return "";
-    return `<div class="sg-room-labels-layer" style="position:absolute;inset:0;z-index:3;pointer-events:none;display:flex;flex-direction:column;flex-wrap:${wrap ? "wrap" : "nowrap"};align-items:${alignItemsCss};align-content:flex-start;gap:${gap}px;padding:${gap}px;box-sizing:border-box;">${html}</div>`;
+    return `<div class="sg-room-labels-layer" style="position:absolute;inset:0;z-index:3;pointer-events:none;display:flex;flex-direction:column;flex-wrap:${wrap ? "wrap" : "nowrap"};align-items:${alignItemsCss};align-content:flex-start;gap:${gap}px;padding:${padTop}px ${padRight}px 0 ${padLeft}px;box-sizing:border-box;">${html}</div>`;
   }
 
   _collectGenericItems(cfg, keys = ["items"]) {
