@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "1.2.1";
+const SEAGULL_ROOM_CARD_VERSION = "1.2.2";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 const SEAGULL_ROOM_THEME_DEFAULT = {
@@ -20,7 +20,7 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     default_light_inactive_fg: { day: "#111827", night: "#f8fafc" },
     default_light_inactive_bg: { day: "#cbd5e1", night: "#374151" },
     default_light_auto_inactive_fg: { day: "#111827", night: "#f8fafc" },
-    seagull_primary: { day: "#4b5563", night: "#2f3a4b" },
+    seagull_primary: { day: "#4b5563", night: "#334155" },
     seagull_active: { day: "#f59e0b", night: "#f59e0b" },
     seagull_active_red: { day: "#ef4444", night: "#dc2626" },
     seagull_active_blue: { day: "#3b82f6", night: "#2563eb" },
@@ -50,32 +50,32 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
 
     btn_empty_inactive_fg: { day: "#111827", night: "#e2e8f0" },
     btn_empty_inactive_bg: { day: "#e5e7eb", night: "#334155" },
-    seagull_b: { day: "#e5e7eb", night: "#2b3647" },
-    seagull_a: { day: "#334155", night: "#d1d8e2" },
+    seagull_b: { day: "#e5e7eb", night: "#334155" },
+    seagull_a: { day: "#334155", night: "#cbd5e1" },
 
     btn_alert_active_fg: { day: "#fffafa", night: "#ffe4e6" },
     btn_alert_active_bg: { day: "#f63b3b", night: "#b91c1c" },
 
     obsolete_border: { day: "#d1d5db", night: "#94a3b8" },
 
-    seagull_rose: { day: "#aa332244", night: "#aa332255" },
-    seagull_indigo: { day: "#2233aa44", night: "#2233aa55" },
-    seagull_emerald: { day: "#22aa3344", night: "#22aa3355" },
-    seagull_amber: { day: "#cc992244", night: "#cc992255" },
-    seagull_violet: { day: "#8844cc44", night: "#8844cc55" },
-    seagull_cyan: { day: "#22aacc44", night: "#22aacc55" },
-    seagull_orange_red: { day: "#cc552244", night: "#cc552255" },
-    seagull_lime: { day: "#55aa2244", night: "#55aa2255" },
-    seagull_cornflower: { day: "#4466cc44", night: "#4466cc55" },
-    seagull_magenta: { day: "#cc44aa44", night: "#cc44aa55" },
-    seagull_aqua: { day: "#22ccaa44", night: "#22ccaa55" },
-    seagull_tangerine: { day: "#cc772244", night: "#cc772255" },
-    seagull_slate_blue: { day: "#6677aa44", night: "#6677aa55" },
-    seagull_olive: { day: "#77994444", night: "#77994455" },
-    seagull_plum: { day: "#99447744", night: "#99447755" },
-    seagull_steel: { day: "#44779944", night: "#44779955" },
-    seagull_copper: { day: "#aa664444", night: "#aa664455" },
-    seagull_mint: { day: "#44aa6644", night: "#44aa6655" },
+    seagull_rose: { day: "#aa332244", night: "#7b463e33" },
+    seagull_indigo: { day: "#2233aa44", night: "#30386d33" },
+    seagull_emerald: { day: "#22aa3344", night: "#4f8c5733" },
+    seagull_amber: { day: "#cc992244", night: "#b19a6433" },
+    seagull_violet: { day: "#8844cc44", night: "#76589533" },
+    seagull_cyan: { day: "#22aacc44", night: "#5996a533" },
+    seagull_orange_red: { day: "#cc552244", night: "#9b654e33" },
+    seagull_lime: { day: "#55aa2244", night: "#6d935633" },
+    seagull_cornflower: { day: "#4466cc44", night: "#58679533" },
+    seagull_magenta: { day: "#cc44aa44", night: "#9e618f33" },
+    seagull_aqua: { day: "#22ccaa44", night: "#61ae9f33" },
+    seagull_tangerine: { day: "#cc772244", night: "#a6805933" },
+    seagull_slate_blue: { day: "#6677aa44", night: "#70778e33" },
+    seagull_olive: { day: "#77994444", night: "#7f8e6833" },
+    seagull_plum: { day: "#99447744", night: "#7b556c33" },
+    seagull_steel: { day: "#44779944", night: "#5a718033" },
+    seagull_copper: { day: "#aa664444", night: "#8e6f6033" },
+    seagull_mint: { day: "#44aa6644", night: "#67957633" },
   },
   card: {
     border_radius: 16,
@@ -326,11 +326,13 @@ class SeagullRoomCard extends HTMLElement {
     this._variablesContext = this._buildVariablesContext();
 
     const textHtml = this._buildTextHtml();
+    const labelsHtml = this._buildLabelsHtml();
     const { html, items } = this._buildLightsHtmlAndItems();
     this._renderedLightItems = items;
 
     const combinedHtml = `
       ${textHtml}
+      ${labelsHtml}
       <div class="sg-room-buttons-layer" style="position:relative;z-index:3;">${html}</div>
     `;
     if (this._lastLightsHtml !== combinedHtml) {
@@ -340,6 +342,7 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     this._wireTextActions();
+    this._wireLabelActions();
     this._wireCardIconActions();
   }
 
@@ -679,7 +682,8 @@ class SeagullRoomCard extends HTMLElement {
         : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {});
       const gaugeCfg = view.type === "gauge" ? ((item?.view && typeof item.view === "object") ? item.view : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {})) : null;
       const gaugeStyle = String(this._resolveDynamicValue(gaugeCfg?.style, item.entity, state, "donut")).toLowerCase();
-      const gaugeEnabled = !!gaugeCfg && gaugeStyle === "donut";
+      const gaugeEnabled = !!gaugeCfg && (gaugeStyle === "donut" || gaugeStyle === "meter");
+      const gaugeMeterEnabled = !!gaugeCfg && gaugeStyle === "meter";
       const progressCfg = isProgress ? ((item?.view && typeof item.view === "object") ? item.view : ((buttonsCfg?.view && typeof buttonsCfg.view === "object") ? buttonsCfg.view : {})) : null;
       const progressStyle = String(this._resolveDynamicValue(progressCfg?.style, item.entity, state, "runner")).toLowerCase();
       const progressEnabled = !!progressCfg && progressStyle === "runner";
@@ -837,6 +841,23 @@ class SeagullRoomCard extends HTMLElement {
         if (phantomColorRaw == null) finalIconColor = finalBorderColor;
       }
       const gaugeProgressDeg = Math.round(gaugeProgress * 360);
+      const meterStartDeg = 140;
+      const meterSpanDeg = 260;
+      const meterEndDeg = meterStartDeg + meterSpanDeg;
+      const meterProgressEndDeg = meterStartDeg + Math.round(meterSpanDeg * gaugeProgress);
+      const meterRadius = 44;
+      const meterCx = 50;
+      const meterCy = 54;
+      const meterStroke = Math.max(2, gaugeWidth);
+      const meterPeakArc = (pDeg, strokeW, color) => {
+        const a1 = (pDeg - 2) * Math.PI / 180;
+        const a2 = pDeg * Math.PI / 180;
+        const x1 = meterCx + meterRadius * Math.cos(a1);
+        const y1 = meterCy + meterRadius * Math.sin(a1);
+        const x2 = meterCx + meterRadius * Math.cos(a2);
+        const y2 = meterCy + meterRadius * Math.sin(a2);
+        return `<path d="M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${meterRadius} ${meterRadius} 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}" stroke="${this._esc(color)}" stroke-width="${strokeW}" fill="none" stroke-linecap="round"/>`;
+      };
       const gaugeGradientFullCircle = (() => {
         if (!gaugeGradientEnabled || gaugeGradientStops.length < 2) return null;
         const colorAt = (t) => {
@@ -983,8 +1004,17 @@ class SeagullRoomCard extends HTMLElement {
         : "";
       const gaugePeakHtml = (gaugeEnabled && gaugePeaks.length)
         ? gaugePeaks.filter((p) => !p.peakNoMark).map((p) => {
-            const peakDeg = Math.round(p.peakProgress * 360);
+            const peakDeg = gaugeMeterEnabled
+              ? (meterStartDeg + Math.round(meterSpanDeg * p.peakProgress))
+              : Math.round(p.peakProgress * 360);
             const fromDeg = Math.max(0, peakDeg - p.peakThickness);
+            if (gaugeMeterEnabled) {
+              return `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;pointer-events:none;z-index:2;">
+                <svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block;overflow:visible;">
+                  ${meterPeakArc(peakDeg, p.peakWidth, p.peakColor)}
+                </svg>
+              </span>`;
+            }
             return `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, transparent 0deg ${fromDeg}deg, ${this._esc(p.peakColor)} ${fromDeg}deg ${peakDeg}deg, transparent ${peakDeg}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${p.peakWidth}px),#000 calc(100% - ${p.peakWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${p.peakWidth}px),#000 calc(100% - ${p.peakWidth}px));pointer-events:none;z-index:2;"></span>`;
           }).join("")
         : "";
@@ -992,9 +1022,26 @@ class SeagullRoomCard extends HTMLElement {
         ? gaugePeaks
           .filter((p) => !!p.peakBackground)
           .map((p) => {
-            const peakDeg = Math.round(p.peakProgress * 360);
+            const peakDeg = gaugeMeterEnabled
+              ? (meterStartDeg + Math.round(meterSpanDeg * p.peakProgress))
+              : Math.round(p.peakProgress * 360);
+            if (gaugeMeterEnabled) {
+              return `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;pointer-events:none;z-index:2;">
+                <svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block;overflow:visible;">
+                  <path d="M ${ (meterCx + meterRadius * Math.cos(meterStartDeg * Math.PI/180)).toFixed(2)} ${ (meterCy + meterRadius * Math.sin(meterStartDeg * Math.PI/180)).toFixed(2)} A ${meterRadius} ${meterRadius} 0 ${((peakDeg - meterStartDeg) > 180) ? 1 : 0} 1 ${ (meterCx + meterRadius * Math.cos(peakDeg * Math.PI/180)).toFixed(2)} ${ (meterCy + meterRadius * Math.sin(peakDeg * Math.PI/180)).toFixed(2)}" stroke="${this._esc(p.peakBackground)}" stroke-width="${meterStroke}" fill="none" stroke-linecap="round"/>
+                </svg>
+              </span>`;
+            }
             return `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;background:conic-gradient(from ${gaugePos}turn, ${this._esc(p.peakBackground)} 0deg ${peakDeg}deg, transparent ${peakDeg}deg 360deg);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));mask:radial-gradient(farthest-side,transparent calc(100% - ${gaugeWidth}px),#000 calc(100% - ${gaugeWidth}px));pointer-events:none;z-index:2;"></span>`;
           }).join("")
+        : "";
+      const meterHtml = gaugeMeterEnabled
+        ? `<span aria-hidden="true" style="position:absolute;inset:1px;border-radius:inherit;pointer-events:none;z-index:1;">
+            <svg viewBox="0 0 100 100" width="100%" height="100%" style="display:block;overflow:visible;">
+              <path d="M ${(meterCx + meterRadius * Math.cos(meterStartDeg * Math.PI/180)).toFixed(2)} ${(meterCy + meterRadius * Math.sin(meterStartDeg * Math.PI/180)).toFixed(2)} A ${meterRadius} ${meterRadius} 0 1 1 ${(meterCx + meterRadius * Math.cos(meterEndDeg * Math.PI/180)).toFixed(2)} ${(meterCy + meterRadius * Math.sin(meterEndDeg * Math.PI/180)).toFixed(2)}" stroke="${this._esc(gaugeBg)}" stroke-width="${meterStroke}" fill="none" stroke-linecap="round"/>
+              <path d="M ${(meterCx + meterRadius * Math.cos(meterStartDeg * Math.PI/180)).toFixed(2)} ${(meterCy + meterRadius * Math.sin(meterStartDeg * Math.PI/180)).toFixed(2)} A ${meterRadius} ${meterRadius} 0 ${((meterProgressEndDeg - meterStartDeg) > 180) ? 1 : 0} 1 ${(meterCx + meterRadius * Math.cos(meterProgressEndDeg * Math.PI/180)).toFixed(2)} ${(meterCy + meterRadius * Math.sin(meterProgressEndDeg * Math.PI/180)).toFixed(2)}" stroke="${this._esc(gaugeColor)}" stroke-width="${meterStroke}" fill="none" stroke-linecap="round"/>
+            </svg>
+          </span>`
         : "";
       const gaugeInnerBgHtml = (gaugeEnabled && gaugeInnerBg)
         ? `<span aria-hidden="true" style="position:absolute;inset:${Math.max(1, gaugeWidth - 1)}px;border-radius:inherit;background:${this._esc(gaugeInnerBg)};pointer-events:none;z-index:0.5;"></span>`
@@ -1100,6 +1147,14 @@ class SeagullRoomCard extends HTMLElement {
               </span>` : `<span style="height:60%;"></span>`}
               <ha-icon icon="${this._esc(icon)}" style="position:relative;top:${showClimatValue ? "-2" : "0"}px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(10, Math.round(btnSize * (showClimatValue ? 0.24 : 0.34)))}px;"></ha-icon>
             </span>`)
+        : (gaugeMeterEnabled && gaugeShowValue)
+          ? `<span style="position:relative;z-index:4;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 0 4px 0;font-family:${this._esc(String(numberFontFamily))};">
+              <span style="height:62%;display:flex;align-items:flex-end;justify-content:center;line-height:1;color:${this._esc(iColor)};font-size:${Math.max(valueFontPxBig + 2, Math.round(btnSize*0.38))}px;font-weight:${this._esc(String(numberFontWeight))};position:relative;">
+                <span>${this._esc(gaugeValue)}</span>
+                ${gaugeSuffix ? `<span style="margin-left:0px;margin-top:0.1em;font-size:${unitFontPxBig}px;opacity:.95;line-height:1;">${this._esc(gaugeSuffix)}</span>` : ""}
+              </span>
+              <ha-icon icon="${this._esc(icon)}" style="position:relative;top:0px;color:${this._esc(iColor)};--mdc-icon-size:${Math.max(12, Math.round(btnSize * 0.24))}px;"></ha-icon>
+            </span>`
         : (gaugeEnabled && gaugeShowValue)
           ? `<span style="position:relative;z-index:1;width:100%;height:100%;display:block;font-family:${this._esc(String(numberFontFamily))};">
               <ha-icon icon="${this._esc(icon)}" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:${this._esc(this._toRgba(iColor, 0.2))};opacity:1;--mdc-icon-size:${Math.max(12, Math.round(btnSize * 0.5))}px;"></ha-icon>
@@ -1151,6 +1206,7 @@ class SeagullRoomCard extends HTMLElement {
       const html = `<button class="sg-room-light-btn" data-index="${index}" style="${gridSpanStyle}${touchActionStyle}width:${btnWidth}px;height:${btnSize}px;border-radius:${borderRadiusCss};border:${Math.max(visualBorderW, isPhantom ? 1 : 0)}px ${finalBorderStyle} ${this._esc(finalBorderColor)};cursor:pointer;display:inline-flex;align-items:center;justify-content:center;align-self:start;background:${this._esc(finalBgColor)};${unavailablePattern}padding:0;direction:ltr;">
           <span style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:inherit;">
             ${donutHtml}
+            ${meterHtml}
             ${gaugeInnerBgHtml}
             ${gaugePeakBackgroundHtml}
             ${gaugePeakHtml}
@@ -1290,6 +1346,118 @@ class SeagullRoomCard extends HTMLElement {
         </div>
       `,
     };
+  }
+
+  _buildLabelsHtml() {
+    const labelsCfg = this._config?.labels;
+    if (!labelsCfg) return "";
+
+    const items = this._collectGenericItems(labelsCfg, ["labels", "entities", "label"])
+      .filter((it) => !it.hidden)
+      .filter((it) => this._isGenericItemVisible(it, labelsCfg));
+    if (!items.length) return "";
+
+    const sizeDefault = 12;
+    const gap = Math.max(0, this._toPx(labelsCfg.gap ?? 6, 6));
+    const wrap = this._toBool(labelsCfg.wrap ?? false, false);
+    const buttonsCfg = this._config?.buttons || this._config?.lights || {};
+    const btnAlignRaw = String(buttonsCfg.align ?? "right").toLowerCase();
+    const oppositeDefault = btnAlignRaw === "left" ? "right" : "left";
+    const align = ["left", "center", "right"].includes(String(labelsCfg.align || oppositeDefault).toLowerCase())
+      ? String(labelsCfg.align || oppositeDefault).toLowerCase()
+      : oppositeDefault;
+    const alignItemsCss = align === "right" ? "flex-end" : align === "center" ? "center" : "flex-start";
+
+    const html = items.map((it, idx) => {
+      const entityId = this._primaryEntityId(it.entity);
+      const st = entityId ? this._hass?.states?.[entityId] : null;
+      const state = st?.state ?? "";
+      const textRaw = this._resolveDynamicValue(it.text ?? labelsCfg.text, it.entity, state, state);
+      const text = String(textRaw ?? "").trim();
+      if (!text) return "";
+
+      const textSize = Math.max(8, this._toPx(it.text_size ?? it.size ?? labelsCfg.text_size ?? labelsCfg.size ?? sizeDefault, sizeDefault));
+      const padX = Math.max(0, this._toPx(it.padding_x ?? labelsCfg.padding_x ?? Math.round(textSize * 0.7), Math.round(textSize * 0.7)));
+      const padY = Math.max(0, this._toPx(it.padding_y ?? labelsCfg.padding_y ?? Math.max(1, Math.round(textSize * 0.2)), Math.max(1, Math.round(textSize * 0.2))));
+      const height = Math.max(10, Math.round(textSize + padY * 2));
+      const radius = Math.max(0, this._toPx(it.border_radius ?? labelsCfg.border_radius ?? height, height));
+      const borderW = Math.max(0, this._toPx(it.border ?? labelsCfg.border ?? 0, 0));
+      const textColor = this._paletteColor(this._resolveDynamicValue(it.color ?? it.text_color ?? labelsCfg.color ?? labelsCfg.text_color, it.entity, state, "inherit"));
+      const iconColor = this._paletteColor(this._resolveDynamicValue(it.icon_color ?? labelsCfg.icon_color, it.entity, state, textColor));
+      const bg = this._paletteColor(this._resolveDynamicValue(it.background ?? it.bg ?? labelsCfg.background ?? labelsCfg.bg, it.entity, state, "transparent"));
+      const borderColor = this._paletteColor(this._resolveDynamicValue(it.border_color ?? labelsCfg.border_color, it.entity, state, "transparent"));
+
+      const iconRaw = this._resolveDynamicValue(it.icon ?? labelsCfg.icon, it.entity, state, st?.attributes?.icon || null);
+      const showIcon = !(iconRaw === false || iconRaw == null || String(iconRaw).trim() === "");
+      const iconHtml = showIcon ? `<ha-icon icon="${this._esc(iconRaw)}" style="--mdc-icon-size:${Math.max(10, Math.round(textSize * 1.1))}px;color:${this._esc(iconColor)};"></ha-icon>` : "";
+
+      return `<button class="sg-room-label" data-label-index="${idx}" style="display:inline-flex;align-items:center;gap:6px;height:${height}px;border:${borderW}px solid ${this._esc(borderColor)};border-radius:${radius}px;padding:0 ${padX}px;background:${this._esc(bg)};color:${this._esc(textColor)};font-size:${textSize}px;line-height:1;cursor:pointer;white-space:nowrap;">${iconHtml}<span>${this._esc(text)}</span></button>`;
+    }).filter(Boolean).join("");
+
+    if (!html) return "";
+    return `<div class="sg-room-labels-layer" style="position:relative;z-index:3;display:flex;flex-direction:column;flex-wrap:${wrap ? "wrap" : "nowrap"};align-items:${alignItemsCss};gap:${gap}px;margin-bottom:${gap}px;">${html}</div>`;
+  }
+
+  _collectGenericItems(cfg, keys = ["items"]) {
+    const out = [];
+    const fromArray = (arr) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((item) => {
+        if (typeof item === "string") out.push({ entity: item });
+        else if (item && typeof item === "object") out.push({ ...item });
+      });
+    };
+    const fromObject = (obj) => {
+      if (!obj || Array.isArray(obj) || typeof obj !== "object") return;
+      Object.entries(obj).forEach(([entityId, value]) => {
+        if (value === false) out.push({ entity: entityId, hidden: true });
+        else if (value === true) out.push({ entity: entityId });
+        else if (value && typeof value === "object") out.push({ entity: entityId, ...value });
+      });
+    };
+    keys.forEach((k) => {
+      fromArray(cfg?.[k]);
+      fromObject(cfg?.[k]);
+    });
+    return out;
+  }
+
+  _isGenericItemVisible(item, cfg = {}) {
+    const entityId = this._primaryEntityId(item?.entity);
+    const state = entityId ? (this._hass?.states?.[entityId]?.state ?? "") : "";
+    const hasOwn = (obj, key) => !!obj && Object.prototype.hasOwnProperty.call(obj, key);
+    const resolve = (key, fallback) => this._resolveDynamicValue(hasOwn(item, key) ? item[key] : (hasOwn(cfg, key) ? cfg[key] : fallback), item?.entity, state, fallback);
+    if (!this._toBool(resolve("show", true), true)) return false;
+    if (hasOwn(item, "show_state") || hasOwn(cfg, "show_state")) if (!this._matchesValueFilter(state, resolve("show_state", undefined))) return false;
+    if (hasOwn(item, "show_not_state") || hasOwn(cfg, "show_not_state")) if (this._matchesValueFilter(state, resolve("show_not_state", undefined))) return false;
+    if (hasOwn(item, "show_above") || hasOwn(cfg, "show_above")) { const s = Number(state); const n = Number(resolve("show_above", NaN)); if (!Number.isFinite(s) || !Number.isFinite(n) || !(s > n)) return false; }
+    if (hasOwn(item, "show_below") || hasOwn(cfg, "show_below")) { const s = Number(state); const n = Number(resolve("show_below", NaN)); if (!Number.isFinite(s) || !Number.isFinite(n) || !(s < n)) return false; }
+    return true;
+  }
+
+  _wireLabelActions() {
+    const nodes = this._inner?.querySelectorAll?.('.sg-room-label');
+    if (!nodes?.length) return;
+    const labelsCfg = this._config?.labels || {};
+    const items = this._collectGenericItems(labelsCfg, ["labels", "entities", "label"]).filter((it) => !it.hidden).filter((it) => this._isGenericItemVisible(it, labelsCfg));
+    nodes.forEach((el) => {
+      const idx = Number(el.getAttribute("data-label-index"));
+      const item = items[idx] || {};
+      const entityId = this._primaryEntityId(item.entity) || this._config?.entity;
+      let clickTimer = null; let holdTimer = null; let holdFired = false;
+      const resolve = (key) => {
+        const raw = item?.[key] ?? labelsCfg?.[key] ?? "more-info";
+        if (!raw) return null;
+        if (typeof raw === "string") return { action: raw };
+        if (typeof raw === "object") return { ...raw, action: raw.action ?? raw.type };
+        return null;
+      };
+      el.onpointerdown = () => { holdFired = false; clearTimeout(holdTimer); holdTimer = setTimeout(() => { holdFired = true; this._runGenericAction(resolve("hold_action"), entityId); }, 420); };
+      const clear = () => clearTimeout(holdTimer);
+      el.onpointerup = clear; el.onpointerleave = clear;
+      el.onclick = (ev) => { ev.preventDefault(); if (holdFired) return; clearTimeout(clickTimer); clickTimer = setTimeout(() => this._runGenericAction(resolve("tap_action"), entityId), 210); };
+      el.ondblclick = (ev) => { ev.preventDefault(); clearTimeout(clickTimer); clearTimeout(holdTimer); this._runGenericAction(resolve("double_tap_action"), entityId); };
+    });
   }
 
   _wireLightButtons() {
