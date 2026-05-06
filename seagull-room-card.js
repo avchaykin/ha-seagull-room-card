@@ -1,4 +1,4 @@
-const SEAGULL_ROOM_CARD_VERSION = "1.2.2";
+const SEAGULL_ROOM_CARD_VERSION = "1.2.3";
 const SEAGULL_ROOM_CARD_COMMIT = "dev";
 
 const SEAGULL_ROOM_THEME_DEFAULT = {
@@ -11,6 +11,9 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     text_color: { day: "inherit", night: "#e2e8f0" },
     text_bg: { day: "transparent", night: "transparent" },
     text_border: { day: "transparent", night: "transparent" },
+    label_bg: { day: "#e5e7eb", night: "#374151" },
+    label_fg: { day: "#374151", night: "#e5e7eb" },
+    label_icon: { day: "#374151", night: "#e5e7eb" },
 
     btn_active_fg: { day: "#111827", night: "#111827" },
     btn_active_bg: { day: "#f59e0b", night: "#f59e0b" },
@@ -1352,7 +1355,7 @@ class SeagullRoomCard extends HTMLElement {
     const labelsCfg = this._config?.labels;
     if (!labelsCfg) return "";
 
-    const items = this._collectGenericItems(labelsCfg, ["labels", "entities", "label"])
+    const items = this._collectGenericItems(labelsCfg, ["labels", "entities", "items", "label"])
       .filter((it) => !it.hidden)
       .filter((it) => this._isGenericItemVisible(it, labelsCfg));
     if (!items.length) return "";
@@ -1382,20 +1385,20 @@ class SeagullRoomCard extends HTMLElement {
       const height = Math.max(10, Math.round(textSize + padY * 2));
       const radius = Math.max(0, this._toPx(it.border_radius ?? labelsCfg.border_radius ?? height, height));
       const borderW = Math.max(0, this._toPx(it.border ?? labelsCfg.border ?? 0, 0));
-      const textColor = this._paletteColor(this._resolveDynamicValue(it.color ?? it.text_color ?? labelsCfg.color ?? labelsCfg.text_color, it.entity, state, "inherit"));
-      const iconColor = this._paletteColor(this._resolveDynamicValue(it.icon_color ?? labelsCfg.icon_color, it.entity, state, textColor));
-      const bg = this._paletteColor(this._resolveDynamicValue(it.background ?? it.bg ?? labelsCfg.background ?? labelsCfg.bg, it.entity, state, "transparent"));
+      const textColor = this._paletteColor(this._resolveDynamicValue(it.color ?? it.text_color ?? labelsCfg.color ?? labelsCfg.text_color, it.entity, state, "$label_fg"));
+      const iconColor = this._paletteColor(this._resolveDynamicValue(it.icon_color ?? labelsCfg.icon_color, it.entity, state, "$label_icon"));
+      const bg = this._paletteColor(this._resolveDynamicValue(it.background ?? it.bg ?? labelsCfg.background ?? labelsCfg.bg, it.entity, state, "$label_bg"));
       const borderColor = this._paletteColor(this._resolveDynamicValue(it.border_color ?? labelsCfg.border_color, it.entity, state, "transparent"));
 
       const iconRaw = this._resolveDynamicValue(it.icon ?? labelsCfg.icon, it.entity, state, st?.attributes?.icon || null);
       const showIcon = !(iconRaw === false || iconRaw == null || String(iconRaw).trim() === "");
       const iconHtml = showIcon ? `<ha-icon icon="${this._esc(iconRaw)}" style="--mdc-icon-size:${Math.max(10, Math.round(textSize * 1.1))}px;color:${this._esc(iconColor)};"></ha-icon>` : "";
 
-      return `<button class="sg-room-label" data-label-index="${idx}" style="display:inline-flex;align-items:center;gap:6px;height:${height}px;border:${borderW}px solid ${this._esc(borderColor)};border-radius:${radius}px;padding:0 ${padX}px;background:${this._esc(bg)};color:${this._esc(textColor)};font-size:${textSize}px;line-height:1;cursor:pointer;white-space:nowrap;">${iconHtml}<span>${this._esc(text)}</span></button>`;
+      return `<button class="sg-room-label" data-label-index="${idx}" style="display:inline-flex;align-items:center;gap:6px;height:${height}px;border:${borderW}px solid ${this._esc(borderColor)};border-radius:${radius}px;padding:0 ${padX}px;background:${this._esc(bg)};color:${this._esc(textColor)};font-size:${textSize}px;line-height:1;cursor:pointer;white-space:nowrap;pointer-events:auto;">${iconHtml}<span>${this._esc(text)}</span></button>`;
     }).filter(Boolean).join("");
 
     if (!html) return "";
-    return `<div class="sg-room-labels-layer" style="position:relative;z-index:3;display:flex;flex-direction:column;flex-wrap:${wrap ? "wrap" : "nowrap"};align-items:${alignItemsCss};gap:${gap}px;margin-bottom:${gap}px;">${html}</div>`;
+    return `<div class="sg-room-labels-layer" style="position:absolute;inset:0;z-index:3;pointer-events:none;display:flex;flex-direction:column;flex-wrap:${wrap ? "wrap" : "nowrap"};align-items:${alignItemsCss};align-content:flex-start;gap:${gap}px;padding:${gap}px;box-sizing:border-box;">${html}</div>`;
   }
 
   _collectGenericItems(cfg, keys = ["items"]) {
@@ -1439,7 +1442,7 @@ class SeagullRoomCard extends HTMLElement {
     const nodes = this._inner?.querySelectorAll?.('.sg-room-label');
     if (!nodes?.length) return;
     const labelsCfg = this._config?.labels || {};
-    const items = this._collectGenericItems(labelsCfg, ["labels", "entities", "label"]).filter((it) => !it.hidden).filter((it) => this._isGenericItemVisible(it, labelsCfg));
+    const items = this._collectGenericItems(labelsCfg, ["labels", "entities", "items", "label"]).filter((it) => !it.hidden).filter((it) => this._isGenericItemVisible(it, labelsCfg));
     nodes.forEach((el) => {
       const idx = Number(el.getAttribute("data-label-index"));
       const item = items[idx] || {};
