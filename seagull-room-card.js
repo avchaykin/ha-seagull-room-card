@@ -346,6 +346,7 @@ class SeagullRoomCard extends HTMLElement {
 
     this._wireTextActions();
     this._wireLabelActions();
+    this._wireCardActions();
     this._wireCardIconActions();
   }
 
@@ -1956,6 +1957,55 @@ class SeagullRoomCard extends HTMLElement {
     };
 
     el.ondblclick = (ev) => {
+      ev.preventDefault();
+      clearTimeout(clickTimer);
+      clearTimeout(holdTimer);
+      const act = this._resolveCardAction("double_tap_action");
+      this._runGenericAction(act, this._config?.entity);
+    };
+  }
+
+  _wireCardActions() {
+    const el = this._card;
+    if (!el) return;
+
+    let clickTimer = null;
+    let holdTimer = null;
+    let holdFired = false;
+
+    const isInteractiveTarget = (target) => {
+      if (!target || typeof target.closest !== "function") return false;
+      return !!target.closest(".sg-room-light-btn, .sg-room-label, .sg-room-text-layer, .seagull-room-card-icon");
+    };
+
+    el.onpointerdown = (ev) => {
+      if (isInteractiveTarget(ev?.target)) return;
+      holdFired = false;
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => {
+        holdFired = true;
+        const act = this._resolveCardAction("hold_action");
+        this._runGenericAction(act, this._config?.entity);
+      }, 420);
+    };
+
+    const clearHold = () => clearTimeout(holdTimer);
+    el.onpointerup = clearHold;
+    el.onpointerleave = clearHold;
+
+    el.onclick = (ev) => {
+      if (isInteractiveTarget(ev?.target)) return;
+      ev.preventDefault();
+      if (holdFired) return;
+      clearTimeout(clickTimer);
+      clickTimer = setTimeout(() => {
+        const act = this._resolveCardAction("tap_action");
+        this._runGenericAction(act, this._config?.entity);
+      }, 210);
+    };
+
+    el.ondblclick = (ev) => {
+      if (isInteractiveTarget(ev?.target)) return;
       ev.preventDefault();
       clearTimeout(clickTimer);
       clearTimeout(holdTimer);
