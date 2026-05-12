@@ -11,7 +11,7 @@ const SEAGULL_ROOM_THEME_DEFAULT = {
     text_color: { day: "inherit", night: "#e2e8f0" },
     text_bg: { day: "transparent", night: "transparent" },
     text_border: { day: "transparent", night: "transparent" },
-    label_bg: { day: "#e5e7eb", night: "#374151" },
+    label_bg: { day: "#e5e7ebcc", night: "#374151cc" },
     label_fg: { day: "#374151", night: "#e5e7eb" },
     label_icon: { day: "#374151", night: "#e5e7eb" },
 
@@ -1362,7 +1362,7 @@ class SeagullRoomCard extends HTMLElement {
     if (!items.length) return "";
 
     const sizeDefault = 12;
-    const gap = Math.max(0, this._toPx(labelsCfg.gap ?? 6, 6));
+    const gap = Math.max(0, this._toPx(labelsCfg.gap ?? 4, 4));
     const padTop = Math.max(0, this._toPx(labelsCfg.padding_top ?? labelsCfg.offset_top ?? 10, 10));
     const padSide = Math.max(0, this._toPx(labelsCfg.padding_side ?? labelsCfg.padding_x ?? labelsCfg.offset_side ?? 10, 10));
     const padLeft = Math.max(0, this._toPx(labelsCfg.padding_left ?? padSide, padSide));

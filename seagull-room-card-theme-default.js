@@ -10,7 +10,7 @@ palette:
   text_color: { day: "inherit", night: "#e2e8f0" }
   text_bg: { day: "transparent", night: "transparent" }
   text_border: { day: "transparent", night: "transparent" }
-  label_bg: { day: "#e5e7eb", night: "#374151" }
+  label_bg: { day: "#e5e7ebcc", night: "#374151cc" }
   label_fg: { day: "#374151", night: "#e5e7eb" }
   label_icon: { day: "#374151", night: "#e5e7eb" }
 
