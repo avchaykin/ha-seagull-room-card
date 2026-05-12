@@ -2594,7 +2594,7 @@ class SeagullRoomCard extends HTMLElement {
         });
       };
 
-      const parts = String(expr).split("|").map((x) => x.trim()).filter(Boolean);
+      const parts = this._splitTemplateFilters(String(expr));
       let out = evalInCtx(parts[0] || expr);
 
       if (parts.length > 1) {
@@ -2608,6 +2608,65 @@ class SeagullRoomCard extends HTMLElement {
       console.warn("[seagull-room-card] template eval error", err, expr);
       return fallback;
     }
+  }
+
+  _splitTemplateFilters(expr) {
+    const src = String(expr || "");
+    const out = [];
+    let cur = "";
+    let quote = null;
+    let esc = false;
+    let paren = 0;
+    let bracket = 0;
+    let brace = 0;
+
+    for (let i = 0; i < src.length; i += 1) {
+      const ch = src[i];
+      const prev = i > 0 ? src[i - 1] : "";
+      const next = i + 1 < src.length ? src[i + 1] : "";
+
+      if (quote) {
+        cur += ch;
+        if (esc) {
+          esc = false;
+          continue;
+        }
+        if (ch === "\\") {
+          esc = true;
+          continue;
+        }
+        if (ch === quote) quote = null;
+        continue;
+      }
+
+      if (ch === "\"" || ch === "'" || ch === "`") {
+        quote = ch;
+        cur += ch;
+        continue;
+      }
+
+      if (ch === "(") paren += 1;
+      else if (ch === ")") paren = Math.max(0, paren - 1);
+      else if (ch === "[") bracket += 1;
+      else if (ch === "]") bracket = Math.max(0, bracket - 1);
+      else if (ch === "{") brace += 1;
+      else if (ch === "}") brace = Math.max(0, brace - 1);
+
+      const topLevel = paren === 0 && bracket === 0 && brace === 0;
+      const singlePipe = ch === "|" && prev !== "|" && next !== "|";
+      if (topLevel && singlePipe) {
+        const part = cur.trim();
+        if (part) out.push(part);
+        cur = "";
+        continue;
+      }
+
+      cur += ch;
+    }
+
+    const tail = cur.trim();
+    if (tail) out.push(tail);
+    return out;
   }
 
   _applyTemplateFilter(value, filterSpec) {
