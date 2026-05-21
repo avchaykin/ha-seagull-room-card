@@ -338,7 +338,51 @@ buttons:
 
 ---
 
-## 12. Troubleshooting
+## 12. Шаблоны: доступные helper-переменные и функции
+
+В `{{ ... }}` выражениях карточка поддерживает JS-выражения и helpers.
+
+### Базовые переменные
+- `entity` — текущая entity (или массив entity для multi-entity кнопки)
+- `state` — состояние основной entity
+- `attributes` — атрибуты основной entity
+- `all_states` — все состояния HA (`hass.states`)
+- `vars` — переменные из `variables`
+
+### Multi-entity helpers
+- `e` — массив entity id (`e[0]`, `e[1]`, ...)
+- `s` — массив state по этим entity (`s[0]`, `s[1]`, ...)
+- `a` — массив attributes по этим entity (`a[0]`, `a[1]`, ...)
+
+Новый shorthand для атрибутов:
+- `a[0][<attribute>]`
+- пример: `{{ a[0][<brightness>] }}`
+
+(обычный JS-вариант тоже работает: `a[0]?.brightness`)
+
+### Функции
+- `states(entity_id)`
+- `state_attr(entity_id, attr)`
+- `time_rest(entity_id, [attr], [unit])`
+- `timer_progress(entity_id)`
+
+### Текстовые/числовые helpers
+- `round(value, digits)`
+- `upper(value)`
+- `lower(value)`
+- `trim(value)`
+- `capitalize(value)`
+- `title(value)`
+
+### Пример
+```yaml
+text:
+  value: "{{ s[0] === 'on' ? title(a[0][<friendly_name>]) : 'Off' }}"
+```
+
+---
+
+## 13. Troubleshooting
 
 1. Карточка не отображается:
    - проверьте resource URL;
@@ -356,7 +400,7 @@ buttons:
 
 ---
 
-## 13. Анализ текущей структуры конфига + предложения
+## 14. Анализ текущей структуры конфига + предложения
 
 ### Что уже хорошо
 
@@ -413,7 +457,7 @@ buttons:
 
 ---
 
-## 14. Короткая памятка (TL;DR)
+## 15. Короткая памятка (TL;DR)
 
 Для новых конфигов используйте:
 - `buttons.items`

@@ -2446,6 +2446,7 @@ class SeagullRoomCard extends HTMLElement {
 
   _evalJsTemplateExpr(expr, entityId, state, fallback, varsCtx = null) {
     try {
+      const preparedExpr = this._normalizeTemplateHelpersExpr(expr);
       const st = this._hass?.states?.[entityId];
       const statesFn = (eid) => this._hass?.states?.[eid]?.state;
       const stateAttrFn = (eid, attr) => this._hass?.states?.[eid]?.attributes?.[attr];
@@ -2594,8 +2595,8 @@ class SeagullRoomCard extends HTMLElement {
         });
       };
 
-      const parts = this._splitTemplateFilters(String(expr));
-      let out = evalInCtx(parts[0] || expr);
+      const parts = this._splitTemplateFilters(String(preparedExpr));
+      let out = evalInCtx(parts[0] || preparedExpr);
 
       if (parts.length > 1) {
         for (let i = 1; i < parts.length; i += 1) {
@@ -2608,6 +2609,12 @@ class SeagullRoomCard extends HTMLElement {
       console.warn("[seagull-room-card] template eval error", err, expr);
       return fallback;
     }
+  }
+
+  _normalizeTemplateHelpersExpr(expr) {
+    const src = String(expr || "");
+    // Helper syntax: a[0][<attr_name>] -> (a?.[0] || {})["attr_name"]
+    return src.replace(/\ba\s*\[\s*(\d+)\s*\]\s*\[\s*<\s*([a-zA-Z0-9_\-:.]+)\s*>\s*\]/g, "(a?.[$1] || {})[\"$2\"]");
   }
 
   _splitTemplateFilters(expr) {
@@ -3445,22 +3452,32 @@ class SeagullRoomCardEditor extends HTMLElement {
         const entitiesHtml = entities.map((entityValue, entityIndex) => `
           <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:6px;">
             <div data-entity-selector-host="${index}-${entityIndex}" style="min-width:0;"></div>
-            <div style="display:grid;grid-template-rows:auto auto auto;gap:4px;justify-items:center;">
-              <button type="button" data-action="move-entity-up" data-index="${index}" data-entity-index="${entityIndex}" ${entityIndex === 0 ? "disabled" : ""} title="Move up" style="border:none;background:transparent;font-size:16px;line-height:1;cursor:pointer;padding:4px 4px;">✓</button>
-              <button type="button" data-action="move-entity-down" data-index="${index}" data-entity-index="${entityIndex}" ${entityIndex === entities.length - 1 ? "disabled" : ""} title="Move down" style="border:none;background:transparent;font-size:16px;line-height:1;cursor:pointer;padding:4px 4px;">✓</button>
-              <button type="button" data-action="remove-entity" data-index="${index}" data-entity-index="${entityIndex}" title="Delete entity" style="border:none;background:transparent;font-size:16px;line-height:1;cursor:pointer;padding:4px 4px;">✕</button>
+            <div style="display:grid;grid-template-columns:auto auto auto;gap:4px;justify-items:center;align-items:center;">
+              <button type="button" data-action="move-entity-up" data-index="${index}" data-entity-index="${entityIndex}" ${entityIndex === 0 ? "disabled" : ""} title="Move up" style="border:none;background:transparent;line-height:1;cursor:pointer;padding:4px 4px;display:grid;place-items:center;">
+                <ha-icon icon="mdi:chevron-up" style="width:16px;height:16px;"></ha-icon>
+              </button>
+              <button type="button" data-action="move-entity-down" data-index="${index}" data-entity-index="${entityIndex}" ${entityIndex === entities.length - 1 ? "disabled" : ""} title="Move down" style="border:none;background:transparent;line-height:1;cursor:pointer;padding:4px 4px;display:grid;place-items:center;">
+                <ha-icon icon="mdi:chevron-down" style="width:16px;height:16px;"></ha-icon>
+              </button>
+              <button type="button" data-action="remove-entity" data-index="${index}" data-entity-index="${entityIndex}" title="Delete entity" style="border:none;background:transparent;line-height:1;cursor:pointer;padding:4px 4px;display:grid;place-items:center;">
+                <ha-icon icon="mdi:close" style="width:16px;height:16px;"></ha-icon>
+              </button>
             </div>
           </div>
         `).join("");
         return `
-          <div data-button-row data-index="${index}" draggable="true" style="position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px;border:1px solid var(--divider-color,#d1d5db);border-radius:12px;padding:8px 10px;background:var(--card-background-color,#fff);cursor:grab;overflow:visible;">
+          <div data-button-row data-index="${index}" draggable="true" style="position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;gap:8px;border:1px solid var(--divider-color,#d1d5db);border-radius:12px;padding:8px 10px;background:var(--card-background-color,#fff);cursor:grab;overflow:visible;">
             <div style="display:grid;gap:6px;min-width:0;">
               ${entitiesHtml}
               <button type="button" data-action="add-entity" data-index="${index}" style="justify-self:start;border:1px dashed var(--divider-color,#d1d5db);border-radius:10px;background:transparent;padding:4px 8px;font-size:16px;line-height:1;cursor:pointer;">+</button>
             </div>
-            <div style="display:grid;grid-template-rows:auto auto;gap:6px;justify-items:center;align-self:start;">
-              <div title="Drag to sort button" aria-label="Drag to sort button" style="cursor:grab;user-select:none;font-size:18px;line-height:1;padding:4px 6px;">⋮⋮</div>
-              <button type="button" data-action="remove" data-index="${index}" title="Delete button" aria-label="Delete button" style="border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;">✕</button>
+            <div style="position:relative;align-self:stretch;justify-self:stretch;background:#4b5563;color:#e5e7eb;border-radius:10px;padding:8px 4px;box-sizing:border-box;width:34px;min-width:34px;">
+              <button type="button" title="Drag to sort button" aria-label="Drag to sort button" style="position:absolute;top:8px;left:0;right:0;border:none;background:transparent;cursor:grab;user-select:none;line-height:1;color:inherit;display:flex;align-items:center;justify-content:center;padding:0;margin:0;text-align:center;">
+                <ha-icon icon="mdi:menu" style="--mdc-icon-size:18px;color:inherit;"></ha-icon>
+              </button>
+              <button type="button" data-action="remove" data-index="${index}" title="Delete button" aria-label="Delete button" style="position:absolute;bottom:8px;left:0;right:0;border:none;background:transparent;line-height:1;cursor:pointer;color:inherit;display:flex;align-items:center;justify-content:center;padding:0;margin:0;text-align:center;">
+                <ha-icon icon="mdi:close" style="--mdc-icon-size:18px;color:inherit;"></ha-icon>
+              </button>
             </div>
           </div>
         `;
