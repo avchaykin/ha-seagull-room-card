@@ -354,9 +354,9 @@ buttons:
 - `s` — массив state по этим entity (`s[0]`, `s[1]`, ...)
 - `a` — массив attributes по этим entity (`a[0]`, `a[1]`, ...)
 
-Новый shorthand для атрибутов:
-- `a[0][<attribute>]`
-- пример: `{{ a[0][<brightness>] }}`
+Shorthand для атрибутов:
+- `a[0]['attribute']` или `a[0]["attribute"]`
+- пример: `{{ a[0]['brightness'] }}`
 
 (обычный JS-вариант тоже работает: `a[0]?.brightness`)
 
@@ -377,7 +377,7 @@ buttons:
 ### Пример
 ```yaml
 text:
-  value: "{{ s[0] === 'on' ? title(a[0][<friendly_name>]) : 'Off' }}"
+  value: "{{ s[0] === 'on' ? title(a[0]['friendly_name']) : 'Off' }}"
 ```
 
 ---

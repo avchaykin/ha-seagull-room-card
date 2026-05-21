@@ -2613,8 +2613,8 @@ class SeagullRoomCard extends HTMLElement {
 
   _normalizeTemplateHelpersExpr(expr) {
     const src = String(expr || "");
-    // Helper syntax: a[0][<attr_name>] -> (a?.[0] || {})["attr_name"]
-    return src.replace(/\ba\s*\[\s*(\d+)\s*\]\s*\[\s*<\s*([a-zA-Z0-9_\-:.]+)\s*>\s*\]/g, "(a?.[$1] || {})[\"$2\"]");
+    // Helper syntax sugar: a[0]['attr_name'] / a[0]["attr_name"] -> (a?.[0] || {})["attr_name"]
+    return src.replace(/\ba\s*\[\s*(\d+)\s*\]\s*\[\s*['\"]([a-zA-Z0-9_\-:.]+)['\"]\s*\]/g, "(a?.[$1] || {})[\"$2\"]");
   }
 
   _splitTemplateFilters(expr) {
