@@ -3083,8 +3083,337 @@ class SeagullRoomCard extends HTMLElement {
 }
 
 class SeagullRoomCardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this._boundInput = (ev) => this._onEditorInput(ev);
+    this._boundClick = (ev) => this._onEditorClick(ev);
+    this._boundDragStart = (ev) => this._onDragStart(ev);
+    this._boundDragOver = (ev) => this._onDragOver(ev);
+    this._boundDrop = (ev) => this._onDrop(ev);
+    this._boundDragEnd = () => this._onDragEnd();
+    this._boundKeydown = (ev) => this._onEditorKeydown(ev);
+  }
+
+  connectedCallback() {
+    this.addEventListener("input", this._boundInput);
+    this.addEventListener("change", this._boundInput);
+    this.addEventListener("click", this._boundClick);
+    this.addEventListener("dragstart", this._boundDragStart);
+    this.addEventListener("dragover", this._boundDragOver);
+    this.addEventListener("drop", this._boundDrop);
+    this.addEventListener("dragend", this._boundDragEnd);
+    this.addEventListener("keydown", this._boundKeydown);
+  }
+
+  disconnectedCallback() {
+    this.removeEventListener("input", this._boundInput);
+    this.removeEventListener("change", this._boundInput);
+    this.removeEventListener("click", this._boundClick);
+    this.removeEventListener("dragstart", this._boundDragStart);
+    this.removeEventListener("dragover", this._boundDragOver);
+    this.removeEventListener("drop", this._boundDrop);
+    this.removeEventListener("dragend", this._boundDragEnd);
+    this.removeEventListener("keydown", this._boundKeydown);
+  }
+
   setConfig(_config) {
     this._config = _config || {};
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._render();
+  }
+
+  _emitConfigChanged(config) {
+    this._config = config;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      bubbles: true,
+      composed: true,
+      detail: { config },
+    }));
+  }
+
+  _clone(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  _buttonItems() {
+    const buttonsCfg = this._config?.buttons || this._config?.lights || {};
+    const from = (v) => Array.isArray(v)
+      ? v.map((item) => (typeof item === "string" ? { entity: item } : { ...(item || {}) }))
+      : [];
+    return from(buttonsCfg.items)
+      .concat(from(buttonsCfg.entities))
+      .concat(from(buttonsCfg.button))
+      .concat(from(buttonsCfg.buttons))
+      .concat(from(buttonsCfg.light));
+  }
+
+  _nextConfigWithItems(items) {
+    const config = this._clone(this._config || {});
+    const buttons = { ...((config.buttons && typeof config.buttons === "object") ? config.buttons : {}) };
+    delete buttons.entities;
+    delete buttons.button;
+    delete buttons.buttons;
+    delete buttons.light;
+    buttons.items = items;
+    config.buttons = buttons;
+    if (config.lights && config.lights === config.buttons) delete config.lights;
+    return config;
+  }
+
+  _nextConfigWithButtonsPatch(patch = {}) {
+    const config = this._clone(this._config || {});
+    const source = (config.buttons && typeof config.buttons === "object") ? config.buttons : ((config.lights && typeof config.lights === "object") ? config.lights : {});
+    const buttons = { ...source, ...patch };
+    config.buttons = buttons;
+    delete config.lights;
+    return config;
+  }
+
+  _updateButtonField(index, field, value) {
+    const items = this._buttonItems();
+    if (!items[index]) return;
+    const next = { ...items[index] };
+    const trimmed = typeof value === "string" ? value.trim() : value;
+    if (trimmed === "") delete next[field];
+    else if (field === "width") next[field] = Number(trimmed);
+    else next[field] = trimmed;
+    items[index] = next;
+    this._emitConfigChanged(this._nextConfigWithItems(items));
+  }
+
+  _buttonEntityList(index) {
+    const item = this._buttonItems()[index] || {};
+    const raw = item.entity;
+    if (Array.isArray(raw)) return raw.map((x) => String(x || "").trim());
+    if (raw == null) return [""];
+    return [String(raw).trim()];
+  }
+
+  _setButtonEntityList(index, entities) {
+    const items = this._buttonItems();
+    if (!items[index]) return;
+    const next = { ...items[index] };
+    const clean = (Array.isArray(entities) ? entities : []).map((x) => String(x || "").trim());
+    if (clean.length <= 1) {
+      if (!clean[0]) delete next.entity;
+      else next.entity = clean[0];
+    } else {
+      next.entity = clean;
+    }
+    items[index] = next;
+    this._emitConfigChanged(this._nextConfigWithItems(items));
+  }
+
+  _updateButtonEntity(index, entityIndex, value) {
+    const entities = this._buttonEntityList(index);
+    while (entities.length <= entityIndex) entities.push("");
+    entities[entityIndex] = String(value || "").trim();
+    this._setButtonEntityList(index, entities);
+  }
+
+  _addButtonEntity(index) {
+    const entities = this._buttonEntityList(index);
+    entities.push("");
+    this._setButtonEntityList(index, entities);
+    this._render();
+  }
+
+  _removeButtonEntity(index, entityIndex) {
+    const entities = this._buttonEntityList(index);
+    if (entityIndex < 0 || entityIndex >= entities.length) return;
+    entities.splice(entityIndex, 1);
+    if (!entities.length) entities.push("");
+    this._setButtonEntityList(index, entities);
+    this._render();
+  }
+
+  _moveButtonEntity(index, fromIndex, toIndex) {
+    const entities = this._buttonEntityList(index);
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= entities.length || toIndex >= entities.length) return;
+    const [entity] = entities.splice(fromIndex, 1);
+    entities.splice(toIndex, 0, entity);
+    this._setButtonEntityList(index, entities);
+    this._render();
+  }
+
+  _moveButton(index, delta) {
+    const items = this._buttonItems();
+    const nextIndex = index + delta;
+    if (index < 0 || index >= items.length || nextIndex < 0 || nextIndex >= items.length) return;
+    const [item] = items.splice(index, 1);
+    items.splice(nextIndex, 0, item);
+    this._emitConfigChanged(this._nextConfigWithItems(items));
+  }
+
+  _moveButtonTo(fromIndex, toIndex) {
+    const items = this._buttonItems();
+    if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= items.length || toIndex >= items.length) return;
+    const [item] = items.splice(fromIndex, 1);
+    items.splice(toIndex, 0, item);
+    this._emitConfigChanged(this._nextConfigWithItems(items));
+  }
+
+  _removeButton(index) {
+    const items = this._buttonItems();
+    items.splice(index, 1);
+    this._emitConfigChanged(this._nextConfigWithItems(items));
+  }
+
+  _addButton() {
+    const items = this._buttonItems();
+    items.push({ entity: "" });
+    this._emitConfigChanged(this._nextConfigWithItems(items));
+    this._render();
+  }
+
+  _entityMeta(entityId) {
+    const st = entityId ? this._hass?.states?.[entityId] : null;
+    const domain = String(entityId || "").split(".")[0];
+    const fallbackIconByDomain = {
+      light: "mdi:lightbulb",
+      switch: "mdi:toggle-switch-variant",
+      sensor: "mdi:meter-electric",
+      binary_sensor: "mdi:radiobox-marked",
+      climate: "mdi:thermostat",
+      cover: "mdi:window-shutter",
+      fan: "mdi:fan",
+      lock: "mdi:lock",
+      media_player: "mdi:speaker",
+    };
+    return {
+      id: entityId || "",
+      name: st?.attributes?.friendly_name || entityId || "Choose entity",
+      icon: st?.attributes?.icon || fallbackIconByDomain[domain] || "mdi:help-circle-outline",
+    };
+  }
+
+  _selectEntity(index, entityId) {
+    this._updateButtonField(index, "entity", entityId);
+    this._render();
+  }
+
+  _ensureInlineEntitySelector(index, entityIndex, value) {
+    const host = this.querySelector(`[data-entity-selector-host=\"${index}-${entityIndex}\"]`);
+    if (!host || !this._hass) return;
+    host.innerHTML = "";
+
+    const tag = customElements.get("ha-selector") ? "ha-selector" : (customElements.get("ha-entity-picker") ? "ha-entity-picker" : null);
+    if (!tag) {
+      const input = document.createElement("input");
+      input.value = value || "";
+      input.placeholder = "light.kitchen";
+      input.style.width = "100%";
+      input.addEventListener("change", () => this._updateButtonEntity(index, entityIndex, input.value || ""));
+      host.appendChild(input);
+      return;
+    }
+
+    const el = document.createElement(tag);
+    el.hass = this._hass;
+    if (tag === "ha-selector") {
+      el.selector = { entity: {} };
+      el.value = value || "";
+    } else {
+      el.value = value || "";
+      el.allowCustomEntity = true;
+    }
+    el.style.display = "block";
+    el.style.width = "100%";
+    el.addEventListener("value-changed", (ev) => {
+      const next = ev.detail?.value;
+      if (next != null) this._updateButtonEntity(index, entityIndex, next);
+    });
+    host.appendChild(el);
+  }
+
+  _onEditorInput(ev) {
+    const target = ev.target;
+    const topField = target?.dataset?.buttonsField;
+    if (topField) {
+      const raw = String(target.value || "").trim();
+      const value = raw === "" ? undefined : Math.max(1, parseInt(raw, 10) || 1);
+      const patch = {};
+      if (value == null) delete patch[topField];
+      else patch[topField] = value;
+      const config = this._nextConfigWithButtonsPatch(patch);
+      if (value == null) delete config.buttons[topField];
+      this._emitConfigChanged(config);
+      return;
+    }
+    const index = Number(target?.dataset?.index);
+    const field = target?.dataset?.field;
+    if (!Number.isInteger(index) || !field) return;
+    const value = target?.value ?? ev?.detail?.value;
+    this._updateButtonField(index, field, value);
+  }
+
+  _onEditorClick(ev) {
+    const btn = ev.target?.closest?.("button[data-action]");
+    if (!btn) return;
+    ev.preventDefault();
+    const action = btn.dataset.action;
+    const index = Number(btn.dataset.index);
+    const entityIndex = Number(btn.dataset.entityIndex);
+    if (action === "add") this._addButton();
+    else if (action === "remove") {
+      if (window.confirm("Delete this button?")) this._removeButton(index);
+    }
+    else if (action === "up") this._moveButton(index, -1);
+    else if (action === "down") this._moveButton(index, 1);
+    else if (action === "select-entity") this._selectEntity(index, btn.dataset.entityId || "");
+    else if (action === "add-entity") this._addButtonEntity(index);
+    else if (action === "remove-entity") {
+      if (window.confirm("Delete this entity from button?")) this._removeButtonEntity(index, entityIndex);
+    }
+    else if (action === "move-entity-up") this._moveButtonEntity(index, entityIndex, entityIndex - 1);
+    else if (action === "move-entity-down") this._moveButtonEntity(index, entityIndex, entityIndex + 1);
+  }
+
+  _onEditorKeydown(_ev) {}
+
+  _onDragStart(ev) {
+    const row = ev.target?.closest?.("[data-button-row]");
+    if (!row) {
+      ev.preventDefault();
+      return;
+    }
+    this._dragIndex = Number(row.dataset.index);
+    row.style.opacity = "0.5";
+    if (ev.dataTransfer) {
+      ev.dataTransfer.effectAllowed = "move";
+      ev.dataTransfer.setData("text/plain", String(this._dragIndex));
+    }
+  }
+
+  _onDragOver(ev) {
+    const row = ev.target?.closest?.("[data-button-row]");
+    if (!row || this._dragIndex == null) return;
+    ev.preventDefault();
+    if (ev.dataTransfer) ev.dataTransfer.dropEffect = "move";
+    for (const el of this.querySelectorAll("[data-button-row]")) el.style.outline = "";
+    row.style.outline = "2px solid var(--primary-color,#03a9f4)";
+  }
+
+  _onDrop(ev) {
+    const row = ev.target?.closest?.("[data-button-row]");
+    if (!row || this._dragIndex == null) return;
+    ev.preventDefault();
+    const toIndex = Number(row.dataset.index);
+    this._moveButtonTo(this._dragIndex, toIndex);
+    this._dragIndex = null;
+    this._render();
+  }
+
+  _onDragEnd() {
+    this._dragIndex = null;
+    for (const el of this.querySelectorAll("[data-button-row]")) {
+      el.style.opacity = "";
+      el.style.outline = "";
+    }
     this._render();
   }
 
@@ -3106,6 +3435,37 @@ class SeagullRoomCardEditor extends HTMLElement {
 
   _render() {
     const deprecated = this._findDeprecatedVisibilityKeys(this._config || {});
+    const items = this._buttonItems();
+    const buttonsCfg = this._config?.buttons || this._config?.lights || {};
+    const cols = this._esc(buttonsCfg.cols ?? buttonsCfg.columns ?? "");
+    const rows = this._esc(buttonsCfg.rows ?? "");
+    const buttonsHtml = items.length
+      ? items.map((_item, index) => {
+        const entities = this._buttonEntityList(index);
+        const entitiesHtml = entities.map((entityValue, entityIndex) => `
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:6px;">
+            <div data-entity-selector-host="${index}-${entityIndex}" style="min-width:0;"></div>
+            <div style="display:grid;grid-template-rows:auto auto auto;gap:4px;justify-items:center;">
+              <button type="button" data-action="move-entity-up" data-index="${index}" data-entity-index="${entityIndex}" ${entityIndex === 0 ? "disabled" : ""} title="Move up" style="border:none;background:transparent;font-size:16px;line-height:1;cursor:pointer;padding:4px 4px;">✓</button>
+              <button type="button" data-action="move-entity-down" data-index="${index}" data-entity-index="${entityIndex}" ${entityIndex === entities.length - 1 ? "disabled" : ""} title="Move down" style="border:none;background:transparent;font-size:16px;line-height:1;cursor:pointer;padding:4px 4px;">✓</button>
+              <button type="button" data-action="remove-entity" data-index="${index}" data-entity-index="${entityIndex}" title="Delete entity" style="border:none;background:transparent;font-size:16px;line-height:1;cursor:pointer;padding:4px 4px;">✕</button>
+            </div>
+          </div>
+        `).join("");
+        return `
+          <div data-button-row data-index="${index}" draggable="true" style="position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:8px;border:1px solid var(--divider-color,#d1d5db);border-radius:12px;padding:8px 10px;background:var(--card-background-color,#fff);cursor:grab;overflow:visible;">
+            <div style="display:grid;gap:6px;min-width:0;">
+              ${entitiesHtml}
+              <button type="button" data-action="add-entity" data-index="${index}" style="justify-self:start;border:1px dashed var(--divider-color,#d1d5db);border-radius:10px;background:transparent;padding:4px 8px;font-size:16px;line-height:1;cursor:pointer;">+</button>
+            </div>
+            <div style="display:grid;grid-template-rows:auto auto;gap:6px;justify-items:center;align-self:start;">
+              <div title="Drag to sort button" aria-label="Drag to sort button" style="cursor:grab;user-select:none;font-size:18px;line-height:1;padding:4px 6px;">⋮⋮</div>
+              <button type="button" data-action="remove" data-index="${index}" title="Delete button" aria-label="Delete button" style="border:none;background:transparent;font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;">✕</button>
+            </div>
+          </div>
+        `;
+      }).join("")
+      : `<div style="padding:12px;border:1px dashed var(--divider-color,#d1d5db);border-radius:12px;opacity:.8;">No buttons yet.</div>`;
     const warnHtml = deprecated.length
       ? `<div style="margin-top:10px;background:#fff7ed;border:1px solid #fdba74;color:#9a3412;border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.35;">
           <div style="font-weight:700;">Deprecated config keys detected</div>
@@ -3115,14 +3475,44 @@ class SeagullRoomCardEditor extends HTMLElement {
       : "";
 
     this.innerHTML = `
-      <div style="padding:12px 0; opacity:.9; font-size:13px; line-height:1.4;">
+      <div style="padding:12px 0; opacity:.9; font-size:13px; line-height:1.4; overflow:visible;">
         <div style="margin-top:12px;background:var(--card-background-color,#f3f4f6);border-radius:9999px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--divider-color,#d1d5db);">
           <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Seagull Room Card</div>
           <div style="background:#0ea5e9;color:#fff;border-radius:9999px;padding:2px 8px;font-size:12px;font-weight:700;line-height:1.6;">v${SEAGULL_ROOM_CARD_VERSION}</div>
         </div>
+        <div style="margin-top:12px;display:grid;gap:10px;">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+            <label style="display:grid;gap:4px;">
+              <span>Columns</span>
+              <input type="number" min="1" step="1" data-buttons-field="cols" value="${cols}" placeholder="3">
+            </label>
+            <label style="display:grid;gap:4px;">
+              <span>Rows</span>
+              <input type="number" min="1" step="1" data-buttons-field="rows" value="${rows}" placeholder="auto">
+            </label>
+          </div>
+          <div style="display:grid;gap:10px;">${buttonsHtml}</div>
+          <button type="button" data-action="add" style="border:1px dashed var(--divider-color,#d1d5db);border-radius:12px;background:transparent;padding:10px;font-size:20px;line-height:1;cursor:pointer;">+</button>
+          <div style="font-size:12px;opacity:.72;">Editor manages <code>buttons.items</code>. Existing button aliases are normalized there after the first change.</div>
+        </div>
         ${warnHtml}
       </div>
     `;
+
+    items.forEach((_item, index) => {
+      this._buttonEntityList(index).forEach((entityValue, entityIndex) => {
+        this._ensureInlineEntitySelector(index, entityIndex, entityValue || "");
+      });
+    });
+  }
+
+  _esc(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
   }
 }
 
