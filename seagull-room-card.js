@@ -1704,44 +1704,45 @@ class SeagullRoomCard extends HTMLElement {
     if (!act) return;
     const hass = this._hass;
     const type = act.action;
+    const targetEntityId = this._primaryEntityId(act?.entity) || entityId;
 
     if (Array.isArray(act.sequence)) {
-      await this._runActionSequence(act.sequence, entityId);
+      await this._runActionSequence(act.sequence, targetEntityId);
       return;
     }
 
     if (type === "sequence") {
       const seq = Array.isArray(act.actions) ? act.actions : act.sequence;
       if (Array.isArray(seq)) {
-        await this._runActionSequence(seq, entityId);
+        await this._runActionSequence(seq, targetEntityId);
       }
       return;
     }
 
     if (type === "toggle") {
-      if (!entityId) return;
+      if (!targetEntityId) return;
 
-      if (entityId.startsWith("lock.")) {
-        const cur = hass?.states?.[entityId]?.state;
+      if (targetEntityId.startsWith("lock.")) {
+        const cur = hass?.states?.[targetEntityId]?.state;
         const svc = cur === "locked" ? "unlock" : "lock";
-        hass.callService?.("lock", svc, { entity_id: entityId });
-      } else if (entityId.startsWith("media_player.")) {
-        const cur = hass?.states?.[entityId]?.state;
+        hass.callService?.("lock", svc, { entity_id: targetEntityId });
+      } else if (targetEntityId.startsWith("media_player.")) {
+        const cur = hass?.states?.[targetEntityId]?.state;
         const svc = cur === "playing" ? "media_pause" : "media_play";
-        hass.callService?.("media_player", svc, { entity_id: entityId });
+        hass.callService?.("media_player", svc, { entity_id: targetEntityId });
       } else {
-        hass.callService?.("homeassistant", "toggle", { entity_id: entityId });
+        hass.callService?.("homeassistant", "toggle", { entity_id: targetEntityId });
       }
       return;
     }
 
     if (type === "more-info") {
-      if (!entityId) return;
+      if (!targetEntityId) return;
       this.dispatchEvent(
         new CustomEvent("hass-more-info", {
           bubbles: true,
           composed: true,
-          detail: { entityId },
+          detail: { entityId: targetEntityId },
         })
       );
       return;
@@ -1769,10 +1770,10 @@ class SeagullRoomCard extends HTMLElement {
     }
 
     if (type === "brightness") {
-      if (!entityId || !String(entityId).startsWith("light.")) return;
+      if (!targetEntityId || !String(targetEntityId).startsWith("light.")) return;
       const pctRaw = Number(act.brightness_pct ?? act.value ?? NaN);
       if (!Number.isFinite(pctRaw)) return;
-      this._setLightBrightnessPct(entityId, pctRaw);
+      this._setLightBrightnessPct(targetEntityId, pctRaw);
     }
   }
 
