@@ -1408,11 +1408,38 @@ class SeagullRoomCard extends HTMLElement {
 
   _collectGenericItems(cfg, keys = ["items"]) {
     const out = [];
+
+    const normalizeGroupItems = (item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      if (!item.group) return null;
+      const groupCfg = item.group && typeof item.group === "object" && !Array.isArray(item.group) ? item.group : item;
+      const groupEntities = Array.isArray(groupCfg.entities) ? groupCfg.entities : [];
+      const inherited = { ...groupCfg };
+      delete inherited.entities;
+      delete inherited.group;
+      return groupEntities
+        .map((entityItem) => {
+          if (typeof entityItem === "string") return { ...inherited, entity: entityItem };
+          if (!entityItem || typeof entityItem !== "object" || Array.isArray(entityItem)) return null;
+          return { ...inherited, ...entityItem };
+        })
+        .filter(Boolean);
+    };
+
     const fromArray = (arr) => {
       if (!Array.isArray(arr)) return;
       arr.forEach((item) => {
-        if (typeof item === "string") out.push({ entity: item });
-        else if (item && typeof item === "object") out.push({ ...item });
+        if (typeof item === "string") {
+          out.push({ entity: item });
+          return;
+        }
+        if (!item || typeof item !== "object") return;
+        const grouped = normalizeGroupItems(item);
+        if (grouped) {
+          out.push(...grouped);
+          return;
+        }
+        out.push({ ...item });
       });
     };
     const fromObject = (obj) => {
@@ -2018,12 +2045,44 @@ class SeagullRoomCard extends HTMLElement {
   _collectButtonItems(buttonsCfg) {
     const out = [];
 
+    const normalizeGroupItems = (item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      if (!item.group) return null;
+      const groupCfg = item.group && typeof item.group === "object" && !Array.isArray(item.group) ? item.group : item;
+      const groupEntities = Array.isArray(groupCfg.entities) ? groupCfg.entities : [];
+      const inherited = { width: 1, ...groupCfg };
+      delete inherited.entities;
+      delete inherited.group;
+      return groupEntities
+        .map((entityItem) => {
+          if (typeof entityItem === "string") return { ...inherited, entity: entityItem };
+          if (!entityItem || typeof entityItem !== "object" || Array.isArray(entityItem)) return null;
+          return { ...inherited, ...entityItem };
+        })
+        .filter(Boolean);
+    };
+
     const fromArray = (arr) => {
       if (!Array.isArray(arr)) return;
       arr.forEach((item) => {
         if (typeof item === "string") {
           out.push({ entity: item, width: 1 });
-        } else if (item && typeof item === "object") {
+          return;
+        }
+        if (!item || typeof item !== "object") return;
+
+        const grouped = normalizeGroupItems(item);
+        if (grouped) {
+          grouped.forEach((groupedItem) => {
+            const hasEntity = !!groupedItem.entity;
+            const hasIconOnly = !!groupedItem.icon;
+            const isEmpty = this._toBool(groupedItem.empty, false);
+            if (hasEntity || hasIconOnly || isEmpty) out.push(groupedItem);
+          });
+          return;
+        }
+
+        {
           const hasEntity = !!item.entity;
           const hasIconOnly = !!item.icon;
           const isEmpty = this._toBool(item.empty, false);
