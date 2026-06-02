@@ -77,6 +77,18 @@ theme: ...                   # optional
 - `buttons` (или alias `lights`) — сетка кнопок
 - `theme` — визуальные токены/палитра
 
+Действия уровня карточки задаются в корне конфига: `tap_action`, `hold_action`, `double_tap_action`.
+Для внешней страницы используйте `action: url`:
+
+```yaml
+tap_action:
+  action: url
+  url_path: https://example.com
+  new_tab: true   # опционально; по умолчанию true
+```
+
+Если нужно открыть URL в текущей вкладке, укажите `new_tab: false`.
+
 ---
 
 ## 4. Настройка блока `text`

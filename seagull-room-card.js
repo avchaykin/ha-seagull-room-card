@@ -1777,11 +1777,26 @@ class SeagullRoomCard extends HTMLElement {
 
     if (type === "navigate") {
       const path = act.navigation_path ?? act.url_path ?? act.path ?? "/";
-      if (window?.history?.pushState) {
+      const isExternal = /^https?:\/\//i.test(String(path));
+      if (isExternal) {
+        window.location.assign(path);
+      } else if (window?.history?.pushState) {
         window.history.pushState(null, "", path);
         window.dispatchEvent(new Event("location-changed"));
       } else {
         window.location.assign(path);
+      }
+      return;
+    }
+
+    if (type === "url") {
+      const url = act.url_path ?? act.url ?? act.path;
+      if (!url) return;
+      const newTab = act.new_tab !== false;
+      if (newTab) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        window.location.assign(url);
       }
       return;
     }
