@@ -43,3 +43,19 @@ buttons:
   entities:
     - entity: light.living_room
 ```
+
+## Card tap action: open external URL
+
+You can attach a card-level `tap_action` in the root config. For external pages use `action: url`:
+
+```yaml
+type: custom:seagull-room-card
+entity: light.living_room
+
+tap_action:
+  action: url
+  url_path: https://example.com
+  new_tab: true   # optional, default: true
+```
+
+Set `new_tab: false` to open the URL in the current tab.
