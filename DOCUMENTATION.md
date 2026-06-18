@@ -78,7 +78,144 @@ theme: ...                   # optional
 - `theme` — визуальные токены/палитра
 
 Действия уровня карточки задаются в корне конфига: `tap_action`, `hold_action`, `double_tap_action`.
-Для внешней страницы используйте `action: url`:
+Полное описание действий — в разделе [4. Действия](#4-действия-tap_action--hold_action--double_tap_action).
+
+---
+
+## 4. Действия: `tap_action` / `hold_action` / `double_tap_action`
+
+Действия можно задавать на трёх уровнях:
+
+1. **Карточка целиком** — в корне конфига.
+2. **Текстовый блок** — внутри `text`.
+3. **Кнопка** — внутри элемента `buttons.items[]` / `buttons.entities[]`.
+
+Поддерживаются три жеста:
+
+| Поле | Жест | Где работает |
+| --- | --- | --- |
+| `tap_action` | обычное нажатие | карточка, `text`, кнопки |
+| `hold_action` | долгое нажатие | карточка, `text`, кнопки |
+| `double_tap_action` | двойное нажатие | карточка, `text`, кнопки |
+
+Действие можно записать короткой строкой:
+
+```yaml
+tap_action: toggle
+hold_action: more-info
+```
+
+Или полным объектом:
+
+```yaml
+tap_action:
+  action: toggle
+```
+
+Также поддерживается alias `type` вместо `action`:
+
+```yaml
+tap_action:
+  type: more-info
+```
+
+### 4.1 Действия по умолчанию
+
+Для кнопок:
+
+- `tap_action`: `toggle` для обычных entity;
+- `tap_action`: `more-info` для `sensor.*` и `binary_sensor.*`;
+- `hold_action`: `more-info`;
+- `double_tap_action`: `more-info`.
+
+Для карточки и `text`:
+
+- `tap_action`: `more-info`;
+- `hold_action`: `more-info`;
+- `double_tap_action`: `more-info`.
+
+Если для действия нужна entity, карточка берёт её из:
+
+- `action.entity`, если задано явно;
+- entity текущей кнопки;
+- `text.entity` или корневой `entity` для текстового блока;
+- корневой `entity` для карточки.
+
+### 4.2 `toggle`
+
+Переключает entity.
+
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      tap_action: toggle
+```
+
+Особые случаи:
+
+- для `lock.*` карточка вызывает `lock` / `unlock` в зависимости от текущего состояния;
+- для `media_player.*` карточка вызывает `media_play` / `media_pause`.
+
+Полная запись:
+
+```yaml
+tap_action:
+  action: toggle
+```
+
+Можно указать другую entity:
+
+```yaml
+buttons:
+  items:
+    - entity: sensor.kitchen_temperature
+      tap_action:
+        action: toggle
+        entity: switch.kitchen_heater
+```
+
+### 4.3 `more-info`
+
+Открывает стандартное окно More Info для entity.
+
+```yaml
+buttons:
+  items:
+    - entity: climate.living_room
+      tap_action: more-info
+```
+
+Или явно:
+
+```yaml
+hold_action:
+  action: more-info
+  entity: sensor.living_room_temperature
+```
+
+### 4.4 `navigate`
+
+Переходит на другой dashboard/view внутри Home Assistant.
+
+```yaml
+tap_action:
+  action: navigate
+  navigation_path: /lovelace/living-room
+```
+
+Поддерживаемые поля пути:
+
+- `navigation_path`
+- `url_path`
+- `path`
+
+Если путь начинается с `http://` или `https://`, `navigate` откроет его в текущей вкладке через `window.location.assign`.
+Для внешних ссылок чаще удобнее использовать `action: url`.
+
+### 4.5 `url`
+
+Открывает внешний URL.
 
 ```yaml
 tap_action:
@@ -87,11 +224,210 @@ tap_action:
   new_tab: true   # опционально; по умолчанию true
 ```
 
-Если нужно открыть URL в текущей вкладке, укажите `new_tab: false`.
+Поддерживаемые поля URL:
+
+- `url_path`
+- `url`
+- `path`
+
+По умолчанию ссылка открывается в новой вкладке. Чтобы открыть в текущей:
+
+```yaml
+tap_action:
+  action: url
+  url_path: https://example.com
+  new_tab: false
+```
+
+### 4.6 `perform-action`
+
+Вызывает сервис Home Assistant.
+
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      hold_action:
+        action: perform-action
+        perform_action: light.turn_on
+        target:
+          entity_id: light.kitchen
+        data:
+          brightness_pct: 35
+```
+
+Поддерживаемые поля:
+
+- `perform_action` — сервис в формате `domain.service`;
+- `service` — alias для `perform_action`;
+- `target` — target service call;
+- `data` — service data;
+- `service_data` — alias для `data`.
+
+Пример с `service` / `service_data`:
+
+```yaml
+tap_action:
+  action: perform-action
+  service: script.turn_on
+  target:
+    entity_id: script.good_night
+  service_data:
+    variables:
+      room: bedroom
+```
+
+> Внутри вызова `target` и `data` объединяются. Практически это означает, что `entity_id` можно передавать как в `target`, так и в `data`, но рекомендуется использовать HA-стиль: `target.entity_id`.
+
+### 4.7 `brightness`
+
+Устанавливает яркость `light.*` в процентах.
+
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      tap_action:
+        action: brightness
+        brightness_pct: 50
+```
+
+Поддерживаемые поля значения:
+
+- `brightness_pct`
+- `value`
+
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      tap_action:
+        action: brightness
+        value: 15
+```
+
+Если `brightness` назначен на `hold_action` кнопки со светом, долгое нажатие включает интерактивную регулировку яркости: удерживайте кнопку и ведите вверх/вниз. Карточка показывает overlay с процентом и отправляет `light.turn_on` с `brightness_pct`.
+
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      tap_action: toggle
+      hold_action:
+        action: brightness
+```
+
+### 4.8 `sequence`
+
+Выполняет несколько действий последовательно.
+
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      tap_action:
+        action: sequence
+        actions:
+          - action: perform-action
+            perform_action: light.turn_on
+            target:
+              entity_id: light.kitchen
+            data:
+              brightness_pct: 70
+          - delay_ms: 500
+          - action: perform-action
+            perform_action: light.turn_on
+            target:
+              entity_id: light.kitchen_led
+```
+
+Поддерживаемые поля последовательности:
+
+- `actions`
+- `sequence`
+
+Задержку можно задать так:
+
+```yaml
+- delay_ms: 500
+```
+
+или так:
+
+```yaml
+- delay: 500
+```
+
+или просто числом миллисекунд:
+
+```yaml
+- 500
+```
+
+Внутри `sequence` шаги можно писать сокращённо. Карточка нормализует такие варианты:
+
+```yaml
+tap_action:
+  action: sequence
+  actions:
+    - service: light.turn_off
+      target:
+        entity_id: light.kitchen
+    - navigation_path: /lovelace/security
+    - actions:
+        - action: toggle
+          entity: switch.fan
+```
+
+### 4.9 Примеры по уровням
+
+Действие на всю карточку:
+
+```yaml
+type: custom:seagull-room-card
+entity: light.living_room
+tap_action:
+  action: more-info
+buttons:
+  items:
+    - entity: light.living_room
+```
+
+Действие на верхний текст:
+
+```yaml
+text:
+  value: "Living room"
+  entity: sensor.living_room_temperature
+  tap_action:
+    action: more-info
+  hold_action:
+    action: navigate
+    navigation_path: /lovelace/living-room
+```
+
+Действие на кнопку:
+
+```yaml
+buttons:
+  items:
+    - entity: light.kitchen
+      text: Kitchen
+      tap_action: toggle
+      hold_action:
+        action: more-info
+      double_tap_action:
+        action: perform-action
+        perform_action: light.turn_on
+        target:
+          entity_id: light.kitchen
+        data:
+          brightness_pct: 100
+```
 
 ---
 
-## 4. Настройка блока `text`
+## 5. Настройка блока `text`
 
 Часто используемые поля:
 - `value` (поддерживает шаблоны)
@@ -113,9 +449,9 @@ text:
 
 ---
 
-## 5. Настройка блока `buttons`
+## 6. Настройка блока `buttons`
 
-### 5.1 Layout
+### 6.1 Layout
 
 - `cols` / `columns`
 - `rows`
@@ -135,7 +471,7 @@ buttons:
     - entity: switch.tv
 ```
 
-### 5.2 Где описывать кнопки
+### 6.2 Где описывать кнопки
 
 Поддерживаются:
 - `buttons.entities`
@@ -148,7 +484,7 @@ buttons:
 
 ---
 
-## 6. Конфигурация одной кнопки
+## 7. Конфигурация одной кнопки
 
 Поддерживаемые поля (основные):
 - `entity`
@@ -176,9 +512,9 @@ buttons:
 
 ---
 
-## 7. Visibility и условная логика
+## 8. Visibility и условная логика
 
-### 7.1 Показывать кнопку по состоянию
+### 8.1 Показывать кнопку по состоянию
 
 ```yaml
 buttons:
@@ -187,7 +523,7 @@ buttons:
       show_state: "on"
 ```
 
-### 7.2 Показывать по шаблону
+### 8.2 Показывать по шаблону
 
 ```yaml
 buttons:
@@ -200,7 +536,7 @@ buttons:
 
 ---
 
-## 8. Badge-индикаторы
+## 9. Badge-индикаторы
 
 Пример dot-badge если свет включён:
 
@@ -228,7 +564,7 @@ buttons:
 
 ---
 
-## 9. Mini-кнопки
+## 10. Mini-кнопки
 
 `mini: true` включает packed-режим (4 mini в слот обычной кнопки).
 
@@ -247,7 +583,7 @@ buttons:
 
 ---
 
-## 10. Расширенные view-режимы
+## 11. Расширенные view-режимы
 
 ### Default button view
 
@@ -316,9 +652,9 @@ view:
 
 ---
 
-## 11. Примеры «под задачу»
+## 12. Примеры «под задачу»
 
-### 11.1 Свет + шторы + температура
+### 12.1 Свет + шторы + температура
 
 ```yaml
 type: custom:seagull-room-card
@@ -337,7 +673,7 @@ buttons:
       text: Climate
 ```
 
-### 11.2 Кнопка только при активном датчике
+### 12.2 Кнопка только при активном датчике
 
 ```yaml
 buttons:
@@ -350,7 +686,7 @@ buttons:
 
 ---
 
-## 12. Шаблоны: доступные helper-переменные и функции
+## 13. Шаблоны: доступные helper-переменные и функции
 
 В `{{ ... }}` выражениях карточка поддерживает JS-выражения и helpers.
 
@@ -394,7 +730,7 @@ text:
 
 ---
 
-## 13. Troubleshooting
+## 14. Troubleshooting
 
 1. Карточка не отображается:
    - проверьте resource URL;
@@ -412,7 +748,7 @@ text:
 
 ---
 
-## 14. Анализ текущей структуры конфига + предложения
+## 15. Анализ текущей структуры конфига + предложения
 
 ### Что уже хорошо
 
@@ -469,7 +805,7 @@ buttons:
 
 ---
 
-## 15. Короткая памятка (TL;DR)
+## 16. Короткая памятка (TL;DR)
 
 Для новых конфигов используйте:
 - `buttons.items`

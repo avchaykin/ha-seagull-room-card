@@ -44,7 +44,11 @@ buttons:
     - entity: light.living_room
 ```
 
-## Card tap action: open external URL
+## Actions: tap / hold / double tap
+
+Full reference for `tap_action`, `hold_action`, `double_tap_action` and supported action types (`toggle`, `more-info`, `navigate`, `url`, `perform-action`, `brightness`, `sequence`) is in **[DOCUMENTATION.md → Actions](./DOCUMENTATION.md#4-действия-tap_action--hold_action--double_tap_action)**.
+
+### Card tap action: open external URL
 
 You can attach a card-level `tap_action` in the root config. For external pages use `action: url`:
 
