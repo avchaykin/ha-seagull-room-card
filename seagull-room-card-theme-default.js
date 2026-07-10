@@ -41,6 +41,23 @@ palette:
   seagull_active_aqua: { day: "#2dd4bf", night: "#14b8a6" }
   seagull_active_tangerine: { day: "#fb923c", night: "#f97316" }
   seagull_active_mint: { day: "#34d399", night: "#10b981" }
+  seagull_inactive_red: { day: "#991b1b", night: "#7f1d1d" }
+  seagull_inactive_blue: { day: "#1d4ed8", night: "#1e40af" }
+  seagull_inactive_green: { day: "#15803d", night: "#166534" }
+  seagull_inactive_cyan: { day: "#0e7490", night: "#155e75" }
+  seagull_inactive_purple: { day: "#7e22ce", night: "#6b21a8" }
+  seagull_inactive_pink: { day: "#be185d", night: "#9d174d" }
+  seagull_inactive_lime: { day: "#4d7c0f", night: "#3f6212" }
+  seagull_inactive_rose: { day: "#be123c", night: "#9f1239" }
+  seagull_inactive_indigo: { day: "#4338ca", night: "#3730a3" }
+  seagull_inactive_emerald: { day: "#047857", night: "#065f46" }
+  seagull_inactive_amber: { day: "#b45309", night: "#92400e" }
+  seagull_inactive_orange_red: { day: "#c2410c", night: "#9a3412" }
+  seagull_inactive_cornflower: { day: "#2563eb", night: "#1d4ed8" }
+  seagull_inactive_magenta: { day: "#a21caf", night: "#86198f" }
+  seagull_inactive_aqua: { day: "#0f766e", night: "#115e59" }
+  seagull_inactive_tangerine: { day: "#ea580c", night: "#c2410c" }
+  seagull_inactive_mint: { day: "#059669", night: "#047857" }
   btn_unavailable_fg: { day: "#f8fafc", night: "#cbd5e1" }
   btn_unavailable_bg: { day: "#cbd5e1", night: "#64748b" }
   btn_border: { day: "transparent", night: "transparent" }

@@ -33,6 +33,23 @@ GitHub-safe swatches (local SVG files).
 | `seagull_active_aqua` | ![#2dd4bf](./palette-swatches/seagull_active_aqua-day.svg) | ![#14b8a6](./palette-swatches/seagull_active_aqua-night.svg) |
 | `seagull_active_tangerine` | ![#fb923c](./palette-swatches/seagull_active_tangerine-day.svg) | ![#f97316](./palette-swatches/seagull_active_tangerine-night.svg) |
 | `seagull_active_mint` | ![#34d399](./palette-swatches/seagull_active_mint-day.svg) | ![#10b981](./palette-swatches/seagull_active_mint-night.svg) |
+| `seagull_inactive_red` | `#991b1b` | `#7f1d1d` |
+| `seagull_inactive_blue` | `#1d4ed8` | `#1e40af` |
+| `seagull_inactive_green` | `#15803d` | `#166534` |
+| `seagull_inactive_cyan` | `#0e7490` | `#155e75` |
+| `seagull_inactive_purple` | `#7e22ce` | `#6b21a8` |
+| `seagull_inactive_pink` | `#be185d` | `#9d174d` |
+| `seagull_inactive_lime` | `#4d7c0f` | `#3f6212` |
+| `seagull_inactive_rose` | `#be123c` | `#9f1239` |
+| `seagull_inactive_indigo` | `#4338ca` | `#3730a3` |
+| `seagull_inactive_emerald` | `#047857` | `#065f46` |
+| `seagull_inactive_amber` | `#b45309` | `#92400e` |
+| `seagull_inactive_orange_red` | `#c2410c` | `#9a3412` |
+| `seagull_inactive_cornflower` | `#2563eb` | `#1d4ed8` |
+| `seagull_inactive_magenta` | `#a21caf` | `#86198f` |
+| `seagull_inactive_aqua` | `#0f766e` | `#115e59` |
+| `seagull_inactive_tangerine` | `#ea580c` | `#c2410c` |
+| `seagull_inactive_mint` | `#059669` | `#047857` |
 | `btn_unavailable_fg` | ![#f8fafc](./palette-swatches/btn_unavailable_fg-day.svg) | ![#cbd5e1](./palette-swatches/btn_unavailable_fg-night.svg) |
 | `btn_unavailable_bg` | ![#cbd5e1](./palette-swatches/btn_unavailable_bg-day.svg) | ![#64748b](./palette-swatches/btn_unavailable_bg-night.svg) |
 | `btn_border` | ![transparent](./palette-swatches/btn_border-day.svg) | ![transparent](./palette-swatches/btn_border-night.svg) |
@@ -77,4 +94,3 @@ Notes:
 - `reverse: true` flips preset direction.
 - `steps: N` renders the gradient as discrete color bands.
 - `solid: true` paints active arc with a single color sampled from the gradient at current value.
-
